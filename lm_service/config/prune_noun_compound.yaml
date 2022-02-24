@@ -1,0 +1,24 @@
+- - key: tag
+    value: NN
+  - key: dep
+    value: compound
+- - key: dep
+    value: amod
+- - key: tag
+    value: IN
+  - key: dep
+    value: prep
+- - how: starts
+    key: tag
+    value: NN
+  - key: dep
+    value: pobj
+- - key: dep
+    value: det
+- - key: dep
+    value: poss
+- - how: starts
+    key: tag
+    value: NN
+  - key: dep
+    value: conj

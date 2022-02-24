@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "lm_service"
+version = "0.1.0"
+description = "Convert text to graphs, (candidates). Use language models fo entity linking"
+authors = ["Alexander Belikov <abelikov@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+Flask = "^2.0.3"
+#transformers = "^4.16.2"
+Flask-RESTful = "^0.3.9"
+torch = "^1.10.2"
+spacy = "~3.1.4"
+coreferee = "^1.1.0"
+networkx = "^2.6.3"
+pandas = "^1"
+pygraphviz = "^1.9"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+
+# post install notes
+#python -m spacy download en_core_web_sm
+#python -m spacy download en_core_web_lg
+#python -m spacy download en_core_web_trf
+#sudo apt install graphviz
