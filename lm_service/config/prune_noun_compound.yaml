@@ -1,3 +1,9 @@
+- - key: dep
+    value: punct
+  - key: tag
+    value: ","
+- - key: dep
+    value: cc
 - - key: tag
     value: NN
   - key: dep
