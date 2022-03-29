@@ -1,8 +1,12 @@
 import pkgutil
 import yaml
+import sys
+import os
 import unittest
 import networkx as nx
 import spacy
+import logging
+from pathlib import Path
 from networkx.drawing.nx_agraph import to_agraph
 from lm_service.relation import fold_graph
 
@@ -334,6 +338,9 @@ graph = nx.node_link_graph(nl_data)
 
 
 class TestMetagraph(unittest.TestCase):
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    path = Path(__file__).parent
+
     def test_fold_graph(self):
         fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
         rules = yaml.load(fp, Loader=yaml.FullLoader)
@@ -344,13 +351,17 @@ class TestMetagraph(unittest.TestCase):
         roots = [n for n in graph.nodes() if graph.in_degree(n) == 0]
 
         u, v = -1, roots[0]
-        fold_graph(graph, u, v, metagraph, None, unit_graph, rules)
+        metagraph = fold_graph(graph, u, v, metagraph, None, unit_graph, rules)
 
         dot = to_agraph(metagraph)
         metagraph_name = "test_fold_graph"
         dot.layout("dot")
-        dot.draw(path=f"./figs/{metagraph_name}.png", format="png", prog="dot")
-        dot.draw(path=f"./figs/{metagraph_name}.pdf", format="pdf", prog="dot")
+        dot.draw(path=os.path.join(self.path, f"./figs/{metagraph_name}.png"), format="png", prog="dot")
+        dot.draw(path=os.path.join(self.path, f"./figs/{metagraph_name}.pdf"), format="pdf", prog="dot")
+
+        self.assertEqual(len(metagraph.nodes()), 16)
+        size_ggs = [1, 1, 1, 1, 1, 1, 1, 4, 2, 7, 1, 2, 6, 2, 2, 2]
+        self.assertEqual([len(metagraph.nodes[n]["gg"].nodes()) for n in sorted(metagraph.nodes())], size_ggs)
 
 
 if __name__ == "__main__":

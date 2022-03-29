@@ -1,12 +1,18 @@
 import coreferee
+import sys
 import spacy
 import unittest
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TestCoref(unittest.TestCase):
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+
     def test_coref(self):
-        # nlp = spacy.load("en_core_web_trf")
-        nlp = spacy.load("en_core_web_sm")
+        nlp = spacy.load("en_core_web_trf")
+        # nlp = spacy.load("en_core_web_sm")
         nlp.add_pipe("coreferee")
         doc = nlp(
             "Although he was very busy with his work, Peter had had enough of it. "
@@ -21,8 +27,8 @@ class TestCoref(unittest.TestCase):
             [[29], [34]],
         )
         for chain, gt in zip(doc._.coref_chains, gt_chains):
-            print(chain.most_specific_mention_index)
-            print(chain.mentions, gt)
+            logger.info(chain.most_specific_mention_index)
+            logger.info(f"{chain.mentions}, {gt}")
             self.assertTrue(
                 all([x.token_indexes == y for x, y in zip(chain.mentions, gt)])
             )
