@@ -1,11 +1,18 @@
 import pkgutil
 import yaml
+import sys
 import unittest
 import spacy
-from lm_service.relation import phrase_to_relations
+import logging
+from lm_service.relation import phrase_to_relations, dep_tree_from_phrase
+
+logger = logging.getLogger(__name__)
 
 
 class TestR(unittest.TestCase):
+
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
     add_dict_rules = yaml.load(fp, Loader=yaml.FullLoader)
 
@@ -19,7 +26,9 @@ class TestR(unittest.TestCase):
 
     def test_relation(self):
         document = self.phrases[0]
-        mg, r, rproj = phrase_to_relations(self.nlp, document, self.add_dict_rules)
+        _, graph = dep_tree_from_phrase(self.nlp, document)
+
+        mg, r, rproj = phrase_to_relations(graph, self.add_dict_rules)
         self.assertEqual(
             rproj,
             [

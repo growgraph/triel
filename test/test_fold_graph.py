@@ -4,7 +4,7 @@ import unittest
 import networkx as nx
 import spacy
 from networkx.drawing.nx_agraph import to_agraph
-from lm_service.relation import prune
+from lm_service.relation import fold_graph
 
 nl_data = {
     "directed": True,
@@ -334,19 +334,20 @@ graph = nx.node_link_graph(nl_data)
 
 
 class TestMetagraph(unittest.TestCase):
-    def test_prune(self):
+    def test_fold_graph(self):
         fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
         rules = yaml.load(fp, Loader=yaml.FullLoader)
 
         metagraph = nx.DiGraph()
+        unit_graph = nx.DiGraph()
 
         roots = [n for n in graph.nodes() if graph.in_degree(n) == 0]
 
         u, v = -1, roots[0]
-        prune(graph, u, v, metagraph, None, None, rules)
+        fold_graph(graph, u, v, metagraph, None, unit_graph, rules)
 
         dot = to_agraph(metagraph)
-        metagraph_name = "test_prune_metagraph"
+        metagraph_name = "test_fold_graph"
         dot.layout("dot")
         dot.draw(path=f"./figs/{metagraph_name}.png", format="png", prog="dot")
         dot.draw(path=f"./figs/{metagraph_name}.pdf", format="pdf", prog="dot")
