@@ -12,7 +12,6 @@ class TestCoref(unittest.TestCase):
 
     def test_coref(self):
         nlp = spacy.load("en_core_web_trf")
-        # nlp = spacy.load("en_core_web_sm")
         nlp.add_pipe("coreferee")
         doc = nlp(
             "Although he was very busy with his work, Peter had had enough of it. "

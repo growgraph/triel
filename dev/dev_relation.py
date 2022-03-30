@@ -7,6 +7,7 @@ import coreferee
 import hashlib
 from networkx.drawing.nx_agraph import to_agraph
 from lm_service.relation import phrase_to_relations, dep_tree_from_phrase
+from lm_service.relation import render_coref_graph
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +20,23 @@ def main(phrase, nlp):
     chash = hashlib.sha256(phrase.encode("utf-8")).hexdigest()
     rdoc, graph = dep_tree_from_phrase(nlp, phrase)
 
-    mg, r, rproj = phrase_to_relations(graph, add_dict_rules)
-    dot = to_agraph(mg)
-    dot.layout("dot")
-    dot.draw(path=f"./figs/{chash[:6]}.png", format="png", prog="dot")
-    dot.draw(path=f"./figs/{chash[:6]}.pdf", format="pdf", prog="dot")
+    metagraph, r, rproj = phrase_to_relations(graph, add_dict_rules)
+
+    coref_graph = render_coref_graph(rdoc, graph)
+
+    coref_root = [n for n in coref_graph.nodes if coref_graph.nodes[n]["tag"] == "coref_root"][0]
+    # for coref_class in coref_graph.neighbors(coref_root):
+    #
+    # rdoc._.coref_chains
+
+    # simplified
+    # chain_refs
+    # for item in ch:
+
+    # dot = to_agraph(mg)
+    # dot.layout("dot")
+    # dot.draw(path=f"./figs/{chash[:6]}.png", format="png", prog="dot")
+    # dot.draw(path=f"./figs/{chash[:6]}.pdf", format="pdf", prog="dot")
 
 
 if __name__ == "__main__":
