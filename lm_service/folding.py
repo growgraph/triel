@@ -20,6 +20,13 @@ class Leaf:
             self.tree = nx.DiGraph()
         self.tree.add_edge(u, v)
 
+    @property
+    def nodes(self):
+        if self.tree is None:
+            return []
+        else:
+            return self.tree.nodes(data=True)
+
 
 def fold_graph(
     graph: nx.DiGraph,

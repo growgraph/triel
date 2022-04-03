@@ -5,6 +5,7 @@ import pkgutil
 import yaml
 import coreferee
 import hashlib
+import networkx as nx
 from networkx.drawing.nx_agraph import to_agraph
 from lm_service.relation import (
     dep_tree_from_phrase,
@@ -12,6 +13,7 @@ from lm_service.relation import (
     render_coref_graph_reduced,
     phrase_to_relations,
 )
+from lm_service.folding import fold_graph
 
 
 def main(phrase, nlp):
@@ -28,8 +30,18 @@ def main(phrase, nlp):
     dot.draw(path=os.path.join(fig_path, f"{chash[:6]}.png"), format="png", prog="dot")
     dot.draw(path=os.path.join(fig_path, f"{chash[:6]}.pdf"), format="pdf", prog="dot")
 
-    _, relations, rproj, folded = phrase_to_relations(nx_graph, add_dict_rules)
-    dot = to_agraph(folded)
+    gmetagraph = nx.DiGraph()
+
+    roots = [n for n in nx_graph.nodes() if nx_graph.in_degree(n) == 0]
+
+    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
+    rules = yaml.load(fp, Loader=yaml.FullLoader)
+
+    for root in roots:
+        metagraph = nx.DiGraph()
+        gmetagraph.update(fold_graph(nx_graph, metagraph, None, root, None, rules))
+
+    dot = to_agraph(gmetagraph)
     dot.layout("dot")
     dot.draw(
         path=os.path.join(fig_path, f"{chash[:6]}_folded.png"), format="png", prog="dot"
@@ -37,6 +49,16 @@ def main(phrase, nlp):
     dot.draw(
         path=os.path.join(fig_path, f"{chash[:6]}_folded.pdf"), format="pdf", prog="dot"
     )
+
+    # _, relations, rproj, folded = phrase_to_relations(nx_graph, add_dict_rules)
+    # dot = to_agraph(folded)
+    # dot.layout("dot")
+    # dot.draw(
+    #     path=os.path.join(fig_path, f"{chash[:6]}_folded.png"), format="png", prog="dot"
+    # )
+    # dot.draw(
+    #     path=os.path.join(fig_path, f"{chash[:6]}_folded.pdf"), format="pdf", prog="dot"
+    # )
 
     coref_graph = render_coref_graph(rdoc, nx_graph)
     dot = to_agraph(coref_graph.graph)

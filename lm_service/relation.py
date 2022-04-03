@@ -255,16 +255,9 @@ def maybe_target(n) -> bool:
 def check_condition(graph, s, foo_condition) -> bool:
     logger.debug(f" {s} : {id(graph)} : {graph.nodes[s]}")
     flag = [foo_condition(graph.nodes[s])]
-    if "gg" in graph.nodes[s]:
-        logger.debug(
-            f" enter gg:  {id(graph.nodes[s]['gg'])} : {graph.nodes[s]['gg'].nodes()}"
-        )
-        subgraph = graph.nodes[s]["gg"]
-        flag += [
-            check_condition(subgraph, n, foo_condition)
-            for n in subgraph.nodes
-            if n != s
-        ]
+    if "leaf" in graph.nodes[s]:
+        leaf = graph.nodes[s]["leaf"]
+        flag += [foo_condition(prop) for n, prop in leaf.nodes if n != s]
     return any(flag)
 
 
@@ -326,12 +319,16 @@ def parse_first_level_relations(graph):
     # pick target, targets are down the tree
     for r, dist in distance_directed.items():
         # find min distance to source candidate on the tree wrt relation r
-        min_dist = min([dist[k] for k in target_candidates if k in dist and k != r])
-        # rarely it could target could be the same as r (if subgraph is hiding in r)
-        min_dist = min([dist[k] for k in target_candidates if k in dist and k != r])
-        # find all such targets
-        t_cand[r] = [k for k in target_candidates if k in dist and dist[k] == min_dist]
-        if not t_cand[r]:
+        # rarely target could be the same as r (if subgraph is hiding in r)
+        dist_to_targets = [dist[k] for k in target_candidates if k in dist and k != r]
+        if dist_to_targets:
+            min_dist = min(dist_to_targets)
+            # find all such targets
+            t_cand[r] = [
+                k for k in target_candidates if k in dist and dist[k] == min_dist
+            ]
+        else:
+            t_cand[r] = []
             logger.error(f" relation {r} has not target candidates")
             # raise RelationHasNoTargetCandidatesError(f" relation {r} has not target candidates")
 
@@ -365,13 +362,8 @@ def parse_first_level_relations(graph):
         s_cand[r] = decision[mask].index.tolist()
 
     for r in rs:
-        sources = sorted(s_cand[r])
-
-        # targets = [t for t in t_cand[r] if t not in s_cand[r]]
-        targets = sorted(t_cand[r])
-
-        sources = [s for s in sources if s != targets[-1]]
-        targets = [t for t in targets if t != sources[0]]
+        sources = s_cand[r]
+        targets = set(t_cand[r]) - set(s_cand[r])
 
         logger.info(
             f" relations: {[graph.nodes[s]['lower'] for s in sources]} "
@@ -390,7 +382,6 @@ def parse_first_level_relations(graph):
 def phrase_to_relations(graph: nx.DiGraph, rules):
 
     roots = [n for n in graph.nodes() if graph.in_degree(n) == 0]
-    metas = []
     relations = []
     mg = nx.DiGraph()
     for root in roots:

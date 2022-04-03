@@ -6,10 +6,27 @@ import spacy
 import coreferee
 import hashlib
 from networkx.drawing.nx_agraph import to_agraph
+from itertools import product
 from lm_service.relation import phrase_to_relations, dep_tree_from_phrase
 from lm_service.relation import render_coref_graph, render_coref_graph_reduced
 
 logger = logging.getLogger(__name__)
+
+
+def yield_star_nodes(graph, node_list):
+    """
+    yield most specific mentions for any mentions, given a coref graph
+    :param graph:
+    :param node_list:
+    :return:
+    """
+    nlist = []
+    for n in node_list:
+        if "m*" in graph.nodes[n] and n in graph.nodes[n]["m*"]:
+            nlist += [n]
+        else:
+            nlist += yield_star_nodes(graph, graph.nodes[n]["m*"])
+    return nlist
 
 
 def main(phrase, nlp):
@@ -25,17 +42,6 @@ def main(phrase, nlp):
     cg = render_coref_graph_reduced(rdoc, graph)
 
     relations_transformed = []
-
-    from itertools import product
-
-    def yield_star_nodes(graph, node_list):
-        nlist = []
-        for n in node_list:
-            if "m*" in graph.nodes[n] and n in graph.nodes[n]["m*"]:
-                nlist += [n]
-            else:
-                nlist += yield_star_nodes(graph, graph.nodes[n]["m*"])
-        return nlist
 
     for s, r, t in relations:
         s_candidates = [s]
@@ -68,12 +74,12 @@ if __name__ == "__main__":
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
 
-    phrase = (
-        "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space telescope "
-        "to determine the size of known extrasolar planets, which will allow the estimation "
-        "of their mass, density, composition and their formation"
-    )
-    main(phrase, nlp)
+    # phrase = (
+    #     "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space telescope "
+    #     "to determine the size of known extrasolar planets, which will allow the estimation "
+    #     "of their mass, density, composition and their formation"
+    # )
+    # main(phrase, nlp)
 
     phrase2 = (
         "Although he was very busy with his work, Peter had had enough of it. "
