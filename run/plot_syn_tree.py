@@ -10,7 +10,6 @@ from lm_service.relation import (
     dep_tree_from_phrase,
     render_coref_graph,
     render_coref_graph_reduced,
-    graph_to_metagraph,
     phrase_to_relations,
 )
 

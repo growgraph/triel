@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestCoref(unittest.TestCase):
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
 
     def test_coref(self):
         nlp = spacy.load("en_core_web_trf")

@@ -1,11 +1,10 @@
 from copy import deepcopy
-import spacy
-from typing import Optional, Dict
+from typing import Dict
 import pandas as pd
 from itertools import product
 import networkx as nx
-from networkx.drawing.nx_agraph import graphviz_layout, to_agraph
-from lm_service.folded import Leaf
+from networkx.drawing.nx_agraph import to_agraph
+from lm_service.folding import fold_graph
 from spacy import Language
 from spacy.tokens import Doc
 import logging
@@ -234,106 +233,6 @@ def propotion_of_pronouns(graph, mentions):
     )
 
 
-def fold_graph(
-    graph: nx.DiGraph, u, v, metagraph: nx.DiGraph, local_root, subgraph, rules
-) -> nx.DiGraph:
-    """
-
-    :param graph: original directed graph
-    :param u:
-    :param v:
-    :param metagraph:
-    :param local_root:
-    :param subgraph:
-    :param rules:
-    :return:
-    """
-    vprops = graph.nodes[v]
-    vflag = get_flag(vprops, rules)
-    if vflag:
-        # add vertex to subgraph
-        subgraph.add_node(v, **vprops)
-        if u != -1:
-            subgraph.add_edge(u, v)
-    else:
-        # u -> v and vflag is False (v should be folded)
-        subgraph = nx.DiGraph()
-        subgraph.add_node(v, **vprops)
-        # add subgraph as a node to new_graph
-        metagraph.add_node(v, gg=subgraph, **vprops)
-        if local_root is not None:
-            metagraph.add_edge(local_root, v)
-        local_root = v
-    # if u != -1:
-    #     logger.debug(
-    #         f" {u} : {graph.nodes[u]['lower']} : {v} : {graph.nodes[v]['lower']} : {vflag}"
-    #     )
-    for w in graph.successors(v):
-        metagraph = fold_graph(graph, v, w, metagraph, local_root, subgraph, rules)
-    return metagraph
-
-
-def fold_graph_v2(
-    graph: nx.DiGraph, metagraph: nx.DiGraph, u, v, local_root, rules
-) -> nx.DiGraph:
-
-    vprops = graph.nodes[v]
-    vflag = get_flag(vprops, rules)
-
-    if vflag and local_root is not None and u is not None:
-        subgraph = metagraph.nodes[local_root]["leaf"]
-        subgraph.add_node(v, **vprops)
-        subgraph.add_edge(u, v)
-    else:
-        metagraph.add_node(v, **vprops)
-        metagraph.nodes[v]["leaf"] = Leaf(v)
-        if local_root is not None:
-            metagraph.add_edge(local_root, v)
-        local_root = v
-
-    for w in graph.successors(v):
-        metagraph = fold_graph_v2(graph, metagraph, v, w, local_root, rules)
-    return metagraph
-
-
-def get_flag(props, rules):
-    conclusion = []
-    for r in rules:
-        flag = []
-        for subrule in r:
-            if "how" not in subrule:
-                flag.append(props[subrule["key"]] == subrule["value"])
-            elif subrule["how"] == "contains":
-                flag.append(subrule["value"] in props[subrule["key"]])
-        conclusion += [all(flag)]
-    return any(conclusion)
-
-
-def fold_graph_multi(guide_graph: nx.DiGraph, u, v, flag_u, graph0, rules):
-    vprops = guide_graph.nodes[v]
-    flag_v = get_flag(vprops, rules)
-    print(f"{u} {v} {flag_u} {flag_v} {id(graph0)}")
-
-    if not flag_u and flag_v:
-        working_graph = graph0.nodes[u]["g*"]
-    else:
-        working_graph = graph0
-
-    working_graph.add_node(v, **guide_graph.nodes[v])
-    working_graph.add_edge(u, v)
-
-    new_graph = nx.DiGraph()
-    new_graph2 = nx.DiGraph()
-    new_graph.add_node(v, **guide_graph.nodes[v])
-    working_graph.nodes[v]["g*"] = new_graph
-
-    new_graph2.add_node(v, **guide_graph.nodes[v])
-    new_graph.nodes[v]["g*"] = new_graph2
-
-    for w in guide_graph.neighbors(v):
-        fold_graph_multi(guide_graph, v, w, flag_v, working_graph, rules)
-
-
 def find_relation_candidates(graph):
     r_candidates = [
         v
@@ -367,18 +266,6 @@ def check_condition(graph, s, foo_condition) -> bool:
             if n != s
         ]
     return any(flag)
-
-
-# def target_condition(graph, t):
-#     flag = [("NN" in graph.nodes[t]["tag"]) or (graph.nodes[t]["dep"] == "pobj")]
-#     if "gg" in graph.nodes[t]:
-#         sgraph = graph.nodes[t]["gg"]
-#         for n in sgraph.nodes:
-#             flag += [source_condition(sgraph, n)]
-#     return any(flag)
-#     # return ("NN" in graph.nodes[t]["tag"]) or (graph.nodes[t]["dep"] == "pobj")
-#     # and not any([graph.nodes[x]["lower"] == "of" for x in graph.predecessors(t)])
-#     # )
 
 
 def parse_first_level_relations(graph):
@@ -500,13 +387,6 @@ def parse_first_level_relations(graph):
     return relations
 
 
-def graph_to_metagraph(graph: nx.DiGraph, root, rules) -> nx.DiGraph:
-    metagraph = nx.DiGraph()
-    u, v = -1, root
-    metagraph = fold_graph(graph, u, v, metagraph, None, nx.DiGraph(), rules)
-    return metagraph
-
-
 def phrase_to_relations(graph: nx.DiGraph, rules):
 
     roots = [n for n in graph.nodes() if graph.in_degree(n) == 0]
@@ -514,7 +394,7 @@ def phrase_to_relations(graph: nx.DiGraph, rules):
     relations = []
     mg = nx.DiGraph()
     for root in roots:
-        metagraph = graph_to_metagraph(graph, root, rules)
+        metagraph = fold_graph(graph, nx.DiGraph(), None, root, None, rules)
         relations += parse_first_level_relations(metagraph)
         mg.update(metagraph)
 
