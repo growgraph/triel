@@ -1,9 +1,11 @@
 from copy import deepcopy
 import spacy
+from typing import Optional, Dict
 import pandas as pd
 from itertools import product
 import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout, to_agraph
+from lm_service.folded import Leaf
 from spacy import Language
 from spacy.tokens import Doc
 import logging
@@ -25,6 +27,13 @@ logger = logging.getLogger(__name__)
 
 class RelationHasNoTargetCandidatesError(Exception):
     pass
+
+
+class CorefGraph:
+    def __init__(self, graph: nx.DiGraph, root: int, map_specific: Dict[int, int]):
+        self.graph: nx.DiGraph = graph
+        self.root: int = root
+        self.map_specific: Dict[int:int] = map_specific
 
 
 def dep_tree_from_phrase(nlp: Language, document: str) -> (nx.DiGraph, Doc):
@@ -64,19 +73,165 @@ def dep_tree_from_phrase(nlp: Language, document: str) -> (nx.DiGraph, Doc):
     return rdoc, graph
 
 
-def add_coref(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
+def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> CorefGraph:
+    """
+
+    :param rdoc:
+    :param graph:
+    :return: Di
+    """
     chains = rdoc._.coref_chains
+    vs_coref = []
     es_coref = []
-    for j, chain in enumerate(chains):
-        # print(chain.most_specific_mention_index)
-        # print([x.token_indexes for x in chain.mentions])
-        jc = j + len(rdoc)
+    jc = len(rdoc)
+
+    chain_specific_mention = dict()
+    coref_root = jc
+    vs_coref += [
+        (
+            coref_root,
+            {"label": f"{coref_root}-*-coref-root", "tag": "coref", "dep": "root"},
+        )
+    ]
+    jc += 1
+
+    for jchain, chain in enumerate(chains):
+        coref_chain = jc
+        chain_specific_mention[coref_chain] = chain[chain.most_specific_mention_index]
+        vs_coref += [
+            (
+                coref_chain,
+                {
+                    "label": f"{coref_chain}-*-coref-chain",
+                    "tag": "coref",
+                    "dep": "chain",
+                    "chain": jchain,
+                },
+            )
+        ]
+        es_coref.append((coref_root, coref_chain))
+        jc += 1
         for x in chain.mentions:
+            coref_blank = jc
+            vs_coref += [
+                (
+                    coref_blank,
+                    {
+                        "label": f"{coref_blank}-*-coref-blank",
+                        "tag": "coref",
+                        "dep": "blank",
+                        "chain": jchain,
+                    },
+                )
+            ]
+            es_coref.append((coref_chain, coref_blank))
+            jc += 1
             for y in x.token_indexes:
-                es_coref.append((jc, y))
+                es_coref.append((coref_blank, y))
+                jc += 1
+
     coref_graph = deepcopy(graph)
+    coref_graph.add_nodes_from(vs_coref)
     coref_graph.add_edges_from(es_coref)
+    cg = CorefGraph(coref_graph, coref_root, chain_specific_mention)
+    return cg
+
+
+def render_coref_graph_reduced(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
+    """
+    render a dag of type (root -> "concept" -> blank -> mentions)
+    # "concept" -> blank always 1:1
+
+    :param rdoc:
+    :param graph:
+    :return: Di
+    """
+    chains = rdoc._.coref_chains
+    vs_coref = []
+    es_coref = []
+    jc = len(rdoc)
+
+    chain_specific_mention = dict()
+    concept_specific_blank = dict()
+
+    coref_root = jc
+    vs_coref += [
+        (
+            coref_root,
+            {"label": f"{coref_root}-*-coref-root", "tag": "coref", "dep": "root"},
+        )
+    ]
+    jc += 1
+
+    mention_nodes = []
+
+    for jchain, chain in enumerate(chains):
+        coref_chain = jc
+        chain_specific_mention[coref_chain] = chain[chain.most_specific_mention_index]
+        vs_coref += [
+            (
+                coref_chain,
+                {
+                    "label": f"{coref_chain}-*-coref-chain",
+                    "tag": "coref",
+                    "dep": "chain",
+                    "chain": jchain,
+                },
+            )
+        ]
+        es_coref.append((coref_root, coref_chain))
+        jc += 1
+        for kth, x in enumerate(chain.mentions):
+            coref_blank = jc
+            if kth == chain.most_specific_mention_index:
+                concept_specific_blank[coref_chain] = coref_blank
+            vs_coref += [
+                (
+                    coref_blank,
+                    {
+                        "label": f"{coref_blank}-*-coref-blank",
+                        "tag": "coref",
+                        "dep": "blank",
+                        "chain": jchain,
+                    },
+                )
+            ]
+            es_coref.append((coref_chain, coref_blank))
+            jc += 1
+            mention_nodes.extend(x.token_indexes)
+            for y in x.token_indexes:
+                vs_coref += [(y, graph.nodes[y])]
+                es_coref.append((coref_blank, y))
+
+    coref_graph = nx.DiGraph()
+    coref_graph.add_nodes_from(vs_coref)
+    coref_graph.add_edges_from(es_coref)
+
+    for m in mention_nodes:
+        # find m_star
+        blanks = list(coref_graph.predecessors(m))
+        blank_metrics = []
+        for b in blanks:
+            # one concept per blank
+            c0 = [concept for concept in coref_graph.predecessors(b)][0]
+            best_blank_per_concept = concept_specific_blank[c0]
+            specific_mentions = list(coref_graph.successors(best_blank_per_concept))
+            blank_metrics += [
+                (
+                    best_blank_per_concept,
+                    propotion_of_pronouns(coref_graph, specific_mentions),
+                )
+            ]
+        blank_metrics = sorted(blank_metrics, key=lambda item: item[1])
+        coref_graph.nodes[m]["m*"] = list(coref_graph.successors(blank_metrics[0][0]))
+
     return coref_graph
+
+
+def propotion_of_pronouns(graph, mentions):
+    return sum([graph.nodes[m]["tag"].startswith("PRP") for m in mentions]) / len(
+        mentions
+    )
 
 
 def fold_graph(
@@ -93,42 +248,90 @@ def fold_graph(
     :param rules:
     :return:
     """
+    vprops = graph.nodes[v]
+    vflag = get_flag(vprops, rules)
+    if vflag:
+        # add vertex to subgraph
+        subgraph.add_node(v, **vprops)
+        if u != -1:
+            subgraph.add_edge(u, v)
+    else:
+        # u -> v and vflag is False (v should be folded)
+        subgraph = nx.DiGraph()
+        subgraph.add_node(v, **vprops)
+        # add subgraph as a node to new_graph
+        metagraph.add_node(v, gg=subgraph, **vprops)
+        if local_root is not None:
+            metagraph.add_edge(local_root, v)
+        local_root = v
+    # if u != -1:
+    #     logger.debug(
+    #         f" {u} : {graph.nodes[u]['lower']} : {v} : {graph.nodes[v]['lower']} : {vflag}"
+    #     )
+    for w in graph.successors(v):
+        metagraph = fold_graph(graph, v, w, metagraph, local_root, subgraph, rules)
+    return metagraph
+
+
+def fold_graph_v2(
+    graph: nx.DiGraph, metagraph: nx.DiGraph, u, v, local_root, rules
+) -> nx.DiGraph:
+
+    vprops = graph.nodes[v]
+    vflag = get_flag(vprops, rules)
+
+    if vflag and local_root is not None and u is not None:
+        subgraph = metagraph.nodes[local_root]["leaf"]
+        subgraph.add_node(v, **vprops)
+        subgraph.add_edge(u, v)
+    else:
+        metagraph.add_node(v, **vprops)
+        metagraph.nodes[v]["leaf"] = Leaf(v)
+        if local_root is not None:
+            metagraph.add_edge(local_root, v)
+        local_root = v
+
+    for w in graph.successors(v):
+        metagraph = fold_graph_v2(graph, metagraph, v, w, local_root, rules)
+    return metagraph
+
+
+def get_flag(props, rules):
     conclusion = []
     for r in rules:
         flag = []
         for subrule in r:
             if "how" not in subrule:
-                if graph.nodes[v][subrule["key"]] == subrule["value"]:
-                    flag.append(True)
-                else:
-                    flag.append(False)
+                flag.append(props[subrule["key"]] == subrule["value"])
             elif subrule["how"] == "contains":
-                if subrule["value"] in graph.nodes[v][subrule["key"]]:
-                    flag.append(True)
-                else:
-                    flag.append(False)
+                flag.append(subrule["value"] in props[subrule["key"]])
         conclusion += [all(flag)]
-    if any(conclusion):
-        # add vertex to subgraph
-        subgraph.add_node(v, **graph.nodes[v])
-        if u != -1:
-            subgraph.add_edge(u, v)
+    return any(conclusion)
+
+
+def fold_graph_multi(guide_graph: nx.DiGraph, u, v, flag_u, graph0, rules):
+    vprops = guide_graph.nodes[v]
+    flag_v = get_flag(vprops, rules)
+    print(f"{u} {v} {flag_u} {flag_v} {id(graph0)}")
+
+    if not flag_u and flag_v:
+        working_graph = graph0.nodes[u]["g*"]
     else:
-        # u -> v and v is not of subtype (does not go to subgraph)
-        subgraph = nx.DiGraph()
-        subgraph.add_node(v, **graph.nodes[v])
-        # add subgraph as a node to new_graph
-        metagraph.add_node(v, gg=subgraph, **graph.nodes[v])
-        if local_root is not None:
-            metagraph.add_edge(local_root, v)
-        local_root = v
-    if u != -1:
-        logger.debug(
-            f" {u} : {graph.nodes[u]['lower']} : {v} : {graph.nodes[v]['lower']} : {any(conclusion)}"
-        )
-    for w in graph.successors(v):
-        metagraph = fold_graph(graph, v, w, metagraph, local_root, subgraph, rules)
-    return metagraph
+        working_graph = graph0
+
+    working_graph.add_node(v, **guide_graph.nodes[v])
+    working_graph.add_edge(u, v)
+
+    new_graph = nx.DiGraph()
+    new_graph2 = nx.DiGraph()
+    new_graph.add_node(v, **guide_graph.nodes[v])
+    working_graph.nodes[v]["g*"] = new_graph
+
+    new_graph2.add_node(v, **guide_graph.nodes[v])
+    new_graph.nodes[v]["g*"] = new_graph2
+
+    for w in guide_graph.neighbors(v):
+        fold_graph_multi(guide_graph, v, w, flag_v, working_graph, rules)
 
 
 def find_relation_candidates(graph):
@@ -304,35 +507,22 @@ def graph_to_metagraph(graph: nx.DiGraph, root, rules) -> nx.DiGraph:
     return metagraph
 
 
-# def graph_to_subgraphs(graph: nx.DiGraph) -> nx.DiGraph:
-#     """
-#
-#     :param graph:
-#     :return: list of connected components
-#     """
-#     roots = [n for n in graph.nodes() if graph.in_degree(n) == 0]
-#     metas = []
-#     relations = []
-#     for root in roots:
-#         graph
-
-
 def phrase_to_relations(graph: nx.DiGraph, rules):
-    # _, graph = dep_tree_from_phrase(nlp, document)
 
     roots = [n for n in graph.nodes() if graph.in_degree(n) == 0]
     metas = []
     relations = []
+    mg = nx.DiGraph()
     for root in roots:
         metagraph = graph_to_metagraph(graph, root, rules)
         relations += parse_first_level_relations(metagraph)
-        metas += [metagraph]
+        mg.update(metagraph)
 
     def project(x):
         return graph.nodes[x]["lemma"]
 
     relations_proj = [[project(u) for u in item] for item in relations]
-    return graph, relations, relations_proj
+    return graph, relations, relations_proj, mg
 
 
 def plot_graph(graph, fields=()):

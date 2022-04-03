@@ -25,8 +25,8 @@
     value: det
 - - key: dep
     value: poss
-#- - how: starts
-#    key: tag
-#    value: NN
-#  - key: dep
-#    value: conj
+- - how: starts
+    key: tag
+    value: NN
+  - key: dep
+    value: conj

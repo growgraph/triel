@@ -31,7 +31,7 @@ class TestR(unittest.TestCase):
         document = self.phrases[0]
         _, graph = dep_tree_from_phrase(self.nlp, document)
 
-        mg, r, rproj = phrase_to_relations(graph, self.add_dict_rules)
+        mg, r, rproj, _ = phrase_to_relations(graph, self.add_dict_rules)
         self.assertEqual(
             rproj,
             [

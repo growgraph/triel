@@ -7,7 +7,7 @@ import coreferee
 import hashlib
 from networkx.drawing.nx_agraph import to_agraph
 from lm_service.relation import phrase_to_relations, dep_tree_from_phrase
-from lm_service.relation import render_coref_graph
+from lm_service.relation import render_coref_graph, render_coref_graph_reduced
 
 logger = logging.getLogger(__name__)
 
@@ -20,18 +20,42 @@ def main(phrase, nlp):
     chash = hashlib.sha256(phrase.encode("utf-8")).hexdigest()
     rdoc, graph = dep_tree_from_phrase(nlp, phrase)
 
-    metagraph, r, rproj = phrase_to_relations(graph, add_dict_rules)
+    _, relations, rproj, mg = phrase_to_relations(graph, add_dict_rules)
 
-    coref_graph = render_coref_graph(rdoc, graph)
+    cg = render_coref_graph_reduced(rdoc, graph)
 
-    coref_root = [n for n in coref_graph.nodes if coref_graph.nodes[n]["tag"] == "coref_root"][0]
-    # for coref_class in coref_graph.neighbors(coref_root):
-    #
-    # rdoc._.coref_chains
+    relations_transformed = []
 
-    # simplified
-    # chain_refs
-    # for item in ch:
+    from itertools import product
+
+    def yield_star_nodes(graph, node_list):
+        nlist = []
+        for n in node_list:
+            if "m*" in graph.nodes[n] and n in graph.nodes[n]["m*"]:
+                nlist += [n]
+            else:
+                nlist += yield_star_nodes(graph, graph.nodes[n]["m*"])
+        return nlist
+
+    for s, r, t in relations:
+        s_candidates = [s]
+        t_candidates = [t]
+        if s in cg.nodes():
+            s_candidates = yield_star_nodes(cg, cg.nodes[s]["m*"])
+        if t in cg.nodes():
+            t_candidates = yield_star_nodes(cg, cg.nodes[t]["m*"])
+
+        relations_transformed += [
+            (sp, r, tp) for sp, tp in product(s_candidates, t_candidates)
+        ]
+
+    def project(x):
+        return graph.nodes[x]["lemma"]
+
+    relations_proj = [[project(u) for u in item] for item in relations_transformed]
+
+    logger.info(relations_transformed)
+    logger.info(relations_proj)
 
     # dot = to_agraph(mg)
     # dot.layout("dot")
@@ -44,12 +68,12 @@ if __name__ == "__main__":
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
 
-    # phrase = (
-    #     "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space telescope "
-    #     "to determine the size of known extrasolar planets, which will allow the estimation "
-    #     "of their mass, density, composition and their formation"
-    # )
-    # main(phrase, nlp)
+    phrase = (
+        "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space telescope "
+        "to determine the size of known extrasolar planets, which will allow the estimation "
+        "of their mass, density, composition and their formation"
+    )
+    main(phrase, nlp)
 
     phrase2 = (
         "Although he was very busy with his work, Peter had had enough of it. "

@@ -8,7 +8,7 @@ import spacy
 import logging
 from pathlib import Path
 from networkx.drawing.nx_agraph import to_agraph
-from lm_service.relation import fold_graph
+from lm_service.relation import fold_graph, fold_graph_multi, fold_graph_v2
 
 nl_data = {
     "directed": True,
@@ -346,22 +346,102 @@ class TestMetagraph(unittest.TestCase):
         rules = yaml.load(fp, Loader=yaml.FullLoader)
 
         metagraph = nx.DiGraph()
-        unit_graph = nx.DiGraph()
 
         roots = [n for n in graph.nodes() if graph.in_degree(n) == 0]
 
-        u, v = -1, roots[0]
-        metagraph = fold_graph(graph, u, v, metagraph, None, unit_graph, rules)
+        metagraph = fold_graph_v2(graph, metagraph, None, roots[0], None, rules)
 
         dot = to_agraph(metagraph)
         metagraph_name = "test_fold_graph"
         dot.layout("dot")
-        dot.draw(path=os.path.join(self.path, f"./figs/{metagraph_name}.png"), format="png", prog="dot")
-        dot.draw(path=os.path.join(self.path, f"./figs/{metagraph_name}.pdf"), format="pdf", prog="dot")
+        dot.draw(
+            path=os.path.join(self.path, f"./figs/{metagraph_name}.png"),
+            format="png",
+            prog="dot",
+        )
+        dot.draw(
+            path=os.path.join(self.path, f"./figs/{metagraph_name}.pdf"),
+            format="pdf",
+            prog="dot",
+        )
 
-        self.assertEqual(len(metagraph.nodes()), 16)
-        size_ggs = [1, 1, 1, 1, 1, 1, 1, 4, 2, 7, 1, 2, 6, 2, 2, 2]
-        self.assertEqual([len(metagraph.nodes[n]["gg"].nodes()) for n in sorted(metagraph.nodes())], size_ggs)
+        graphs = [
+            metagraph.nodes[n]["leaf"]
+            for n in metagraph.nodes()
+            if len(metagraph.nodes[n]["leaf"]) > 0
+        ]
+        for j, mg in enumerate(graphs):
+            dot = to_agraph(mg.tree)
+            dot.layout("dot")
+            dot.draw(
+                path=os.path.join(self.path, f"./figs/{metagraph_name}_leaf_{j}.pdf"),
+                format="pdf",
+                prog="dot",
+            )
+
+        self.assertEqual(len(metagraph.nodes()), 13)
+        size_ggs = [0, 0, 0, 0, 0, 0, 0, 4, 2, 7, 0, 2, 12]
+        self.assertEqual(
+            [len(metagraph.nodes[n]["leaf"]) for n in sorted(metagraph.nodes())],
+            size_ggs,
+        )
+
+    @unittest.skip("")
+    def test_fold_graph_multi(self):
+        fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
+        rules = yaml.load(fp, Loader=yaml.FullLoader)
+
+        roots = [n for n in graph.nodes() if graph.in_degree(n) == 0]
+
+        root = roots[0]
+        working_graph = nx.DiGraph()
+        working_graph.add_node(root, **graph.nodes[root])
+        working_graph.nodes[root]["g*"] = nx.DiGraph()
+
+        for v in graph.neighbors(root):
+            fold_graph_multi(graph, root, v, False, working_graph, rules)
+
+        graphs = [working_graph]
+        # graphs = []
+
+        def discover_graphs(working_graph, graphs):
+            for n in working_graph.nodes():
+                print(f"{id(working_graph)} {n} {working_graph.nodes[n]}")
+                sg = working_graph.nodes[n]["g*"]
+                if sg.number_of_nodes() > 1 and sg not in graphs:
+                    graphs += [sg]
+                    discover_graphs(sg, graphs)
+
+        discover_graphs(working_graph, graphs)
+
+        dot = to_agraph(working_graph)
+        metagraph_name = "test_fold_graph_multi"
+        dot.layout("dot")
+        dot.draw(
+            path=os.path.join(self.path, f"./figs/{metagraph_name}.png"),
+            format="png",
+            prog="dot",
+        )
+        dot.draw(
+            path=os.path.join(self.path, f"./figs/{metagraph_name}.pdf"),
+            format="pdf",
+            prog="dot",
+        )
+
+        for j, mg in enumerate(graphs):
+            dot = to_agraph(mg)
+            metagraph_name = f"mg_{j}"
+            dot.layout("dot")
+            # dot.draw(
+            #     path=os.path.join(self.path, f"./figs/{metagraph_name}.png"),
+            #     format="png",
+            #     prog="dot",
+            # )
+            dot.draw(
+                path=os.path.join(self.path, f"./figs/{metagraph_name}.pdf"),
+                format="pdf",
+                prog="dot",
+            )
 
 
 if __name__ == "__main__":
