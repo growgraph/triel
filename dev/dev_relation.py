@@ -5,10 +5,9 @@ import sys
 import spacy
 import coreferee
 import hashlib
-from networkx.drawing.nx_agraph import to_agraph
 from itertools import product
-from lm_service.relation import phrase_to_relations, dep_tree_from_phrase
-from lm_service.relation import render_coref_graph, render_coref_graph_reduced
+from lm_service.relation import graph_to_relations, dep_tree_from_phrase
+from lm_service.relation import render_coref_graph, render_mstar_graph
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +37,9 @@ def main(phrase, nlp):
 
     rdoc, graph = dep_tree_from_phrase(nlp, phrase)
 
-    _, relations, rproj, mg = phrase_to_relations(graph, add_dict_rules)
+    _, relations, rproj, mg = graph_to_relations(graph, add_dict_rules)
 
-    cg = render_coref_graph_reduced(rdoc, graph)
+    cg = render_mstar_graph(rdoc, graph)
 
     relations_transformed = []
 
@@ -63,11 +62,6 @@ def main(phrase, nlp):
 
     logger.info(relations_transformed)
     logger.info(relations_proj)
-
-    # dot = to_agraph(mg)
-    # dot.layout("dot")
-    # dot.draw(path=f"./figs/{chash[:6]}.png", format="png", prog="dot")
-    # dot.draw(path=f"./figs/{chash[:6]}.pdf", format="pdf", prog="dot")
 
 
 if __name__ == "__main__":

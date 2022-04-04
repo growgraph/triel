@@ -73,97 +73,25 @@ def dep_tree_from_phrase(nlp: Language, document: str) -> (nx.DiGraph, Doc):
     return rdoc, graph
 
 
-def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> CorefGraph:
-    """
+def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
 
-    :param rdoc:
-    :param graph:
-    :return: Di
-    """
     chains = rdoc._.coref_chains
     vs_coref = []
     es_coref = []
-    jc = len(rdoc)
 
-    chain_specific_mention = dict()
-    coref_root = jc
-    vs_coref += [
-        (
-            coref_root,
-            {"label": f"{coref_root}-*-coref-root", "tag": "coref", "dep": "root"},
-        )
-    ]
-    jc += 1
-
-    for jchain, chain in enumerate(chains):
-        coref_chain = jc
-        chain_specific_mention[coref_chain] = chain[chain.most_specific_mention_index]
-        vs_coref += [
-            (
-                coref_chain,
-                {
-                    "label": f"{coref_chain}-*-coref-chain",
-                    "tag": "coref",
-                    "dep": "chain",
-                    "chain": jchain,
-                },
-            )
-        ]
-        es_coref.append((coref_root, coref_chain))
-        jc += 1
-        for x in chain.mentions:
-            coref_blank = jc
-            vs_coref += [
-                (
-                    coref_blank,
-                    {
-                        "label": f"{coref_blank}-*-coref-blank",
-                        "tag": "coref",
-                        "dep": "blank",
-                        "chain": jchain,
-                    },
-                )
-            ]
-            es_coref.append((coref_chain, coref_blank))
-            jc += 1
-            for y in x.token_indexes:
-                es_coref.append((coref_blank, y))
-                jc += 1
-
-    coref_graph = deepcopy(graph)
-    coref_graph.add_nodes_from(vs_coref)
-    coref_graph.add_edges_from(es_coref)
-    cg = CorefGraph(coref_graph, coref_root, chain_specific_mention)
-    return cg
-
-
-def render_coref_graph_reduced(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
-    """
-    render a dag of type (root -> "concept" -> blank -> mentions)
-    # "concept" -> blank always 1:1
-
-    :param rdoc:
-    :param graph:
-    :return: Di
-    """
-    chains = rdoc._.coref_chains
-    vs_coref = []
-    es_coref = []
-    jc = len(rdoc)
-
+    mention_nodes = []
     chain_specific_mention = dict()
     concept_specific_blank = dict()
 
-    coref_root = jc
+    coref_root = max([token.i for token in rdoc]) + 1
+    jc = coref_root + 1
+
     vs_coref += [
         (
             coref_root,
             {"label": f"{coref_root}-*-coref-root", "tag": "coref", "dep": "root"},
         )
     ]
-    jc += 1
-
-    mention_nodes = []
 
     for jchain, chain in enumerate(chains):
         coref_chain = jc
@@ -203,9 +131,19 @@ def render_coref_graph_reduced(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
                 vs_coref += [(y, graph.nodes[y])]
                 es_coref.append((coref_blank, y))
 
-    coref_graph = nx.DiGraph()
+    if full:
+        coref_graph = deepcopy(graph)
+    else:
+        coref_graph = nx.DiGraph()
+
     coref_graph.add_nodes_from(vs_coref)
     coref_graph.add_edges_from(es_coref)
+    # cg = CorefGraph(coref_graph, coref_root, chain_specific_mention)
+    return coref_graph, mention_nodes, concept_specific_blank
+
+
+def render_mstar_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
+    coref_graph, mention_nodes, concept_specific_blank = render_coref_graph(rdoc, graph)
 
     for m in mention_nodes:
         # find m_star
@@ -380,11 +318,11 @@ def parse_first_level_relations(graph):
     return relations
 
 
-def phrase_to_relations(graph: nx.DiGraph, rules):
+def graph_to_relations(graph: nx.DiGraph, rules):
 
     relations = []
 
-    # possibly better to use parse_relastions on each subtree
+    # possibly better to use parse_relations on each subtree
     mg = fold_graph_top(graph, rules)
 
     def project(x):
@@ -393,5 +331,3 @@ def phrase_to_relations(graph: nx.DiGraph, rules):
     relations += parse_first_level_relations(mg)
     relations_proj = [[project(u) for u in item] for item in relations]
     return graph, relations, relations_proj, mg
-
-

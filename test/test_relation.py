@@ -6,7 +6,7 @@ import unittest
 import spacy
 import logging
 from pathlib import Path
-from lm_service.relation import phrase_to_relations, dep_tree_from_phrase
+from lm_service.relation import graph_to_relations, dep_tree_from_phrase
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class TestR(unittest.TestCase):
         document = self.phrases[0]
         _, graph = dep_tree_from_phrase(self.nlp, document)
 
-        mg, r, rproj, _ = phrase_to_relations(graph, self.add_dict_rules)
+        mg, r, rproj, _ = graph_to_relations(graph, self.add_dict_rules)
         self.assertEqual(
             rproj,
             [

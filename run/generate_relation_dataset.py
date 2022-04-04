@@ -1,11 +1,8 @@
 import spacy
 import pandas as pd
-import unittest
-import networkx as nx
-from networkx.drawing.nx_agraph import graphviz_layout, to_agraph
 from spacy import displacy
 import yaml
-from lm_service.relation import phrase_to_relations
+from lm_service.relation import graph_to_relations
 
 
 def main():
@@ -20,11 +17,11 @@ def main():
     phrases = text.split(".")
 
     acc = []
-    for j, document in enumerate(phrases[:2]):
-        mg, r, rproj = phrase_to_relations(nlp, document, add_dict_rules)
-        for iis, triplet in zip(r, rproj):
-            acc += [[document] + list(iis) + triplet]
-    df = pd.DataFrame(acc, columns=["phrase", "iR", "iS", "iO", "R", "S", "O"])
+    # for j, document in enumerate(phrases[:2]):
+    #     mg, r, rproj = phrase_to_relations(document, add_dict_rules)
+    #     for iis, triplet in zip(r, rproj):
+    #         acc += [[document] + list(iis) + triplet]
+    # df = pd.DataFrame(acc, columns=["phrase", "iR", "iS", "iO", "R", "S", "O"])
 
 
 if __name__ == "__main__":

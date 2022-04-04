@@ -8,8 +8,7 @@ import hashlib
 from lm_service.relation import (
     dep_tree_from_phrase,
     render_coref_graph,
-    render_coref_graph_reduced,
-    phrase_to_relations,
+    render_mstar_graph,
 )
 from lm_service.folding import fold_graph_top
 from lm_service.util import plot_graph
@@ -31,13 +30,13 @@ def main(phrase, nlp):
 
     plot_graph(gmetagraph, fig_path, f"{chash[:6]}_folded")
 
-    coref_graph = render_coref_graph(rdoc, nx_graph)
+    coref_graph, _, _ = render_coref_graph(rdoc, nx_graph, full=True)
 
-    plot_graph(coref_graph.graph, fig_path, f"{chash[:6]}_coref")
+    plot_graph(coref_graph, fig_path, f"{chash[:6]}_coref")
 
-    coref_graph = render_coref_graph_reduced(rdoc, nx_graph)
+    coref_graph = render_mstar_graph(rdoc, nx_graph)
 
-    plot_graph(coref_graph, fig_path, f"{chash[:6]}_coref_reduced")
+    plot_graph(coref_graph, fig_path, f"{chash[:6]}_mstar")
 
 
 if __name__ == "__main__":

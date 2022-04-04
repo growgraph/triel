@@ -6,7 +6,6 @@ import unittest
 import networkx as nx
 import logging
 from pathlib import Path
-from networkx.drawing.nx_agraph import to_agraph
 from lm_service.folding import fold_graph
 from lm_service.util import plot_graph
 
@@ -360,7 +359,9 @@ class TestMetagraph(unittest.TestCase):
             if len(metagraph.nodes[n]["leaf"]) > 0
         ]
         for j, mg in enumerate(graphs):
-            plot_graph(mg.tree, os.path.join(self.path, "figs"), f"{metagraph_name}_leaf_{j}")
+            plot_graph(
+                mg.tree, os.path.join(self.path, "figs"), f"{metagraph_name}_leaf_{j}"
+            )
 
         self.assertEqual(len(metagraph.nodes()), 13)
         size_ggs = [0, 0, 0, 0, 0, 0, 0, 4, 2, 7, 0, 2, 12]
