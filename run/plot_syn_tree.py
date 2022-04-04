@@ -5,84 +5,39 @@ import pkgutil
 import yaml
 import coreferee
 import hashlib
-import networkx as nx
-from networkx.drawing.nx_agraph import to_agraph
 from lm_service.relation import (
     dep_tree_from_phrase,
     render_coref_graph,
     render_coref_graph_reduced,
     phrase_to_relations,
 )
-from lm_service.folding import fold_graph
+from lm_service.folding import fold_graph_top
+from lm_service.util import plot_graph
 
 
 def main(phrase, nlp):
     path = Path(__file__).parent
+
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
-    add_dict_rules = yaml.load(fp, Loader=yaml.FullLoader)
+    rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     fig_path = os.path.join(path, "figs")
     chash = hashlib.sha256(phrase.encode("utf-8")).hexdigest()
     rdoc, nx_graph = dep_tree_from_phrase(nlp, phrase)
 
-    dot = to_agraph(nx_graph)
-    dot.layout("dot")
-    dot.draw(path=os.path.join(fig_path, f"{chash[:6]}.png"), format="png", prog="dot")
-    dot.draw(path=os.path.join(fig_path, f"{chash[:6]}.pdf"), format="pdf", prog="dot")
+    plot_graph(nx_graph, fig_path, f"{chash[:6]}")
 
-    gmetagraph = nx.DiGraph()
+    gmetagraph = fold_graph_top(nx_graph, rules)
 
-    roots = [n for n in nx_graph.nodes() if nx_graph.in_degree(n) == 0]
-
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
-    rules = yaml.load(fp, Loader=yaml.FullLoader)
-
-    for root in roots:
-        metagraph = nx.DiGraph()
-        gmetagraph.update(fold_graph(nx_graph, metagraph, None, root, None, rules))
-
-    dot = to_agraph(gmetagraph)
-    dot.layout("dot")
-    dot.draw(
-        path=os.path.join(fig_path, f"{chash[:6]}_folded.png"), format="png", prog="dot"
-    )
-    dot.draw(
-        path=os.path.join(fig_path, f"{chash[:6]}_folded.pdf"), format="pdf", prog="dot"
-    )
-
-    # _, relations, rproj, folded = phrase_to_relations(nx_graph, add_dict_rules)
-    # dot = to_agraph(folded)
-    # dot.layout("dot")
-    # dot.draw(
-    #     path=os.path.join(fig_path, f"{chash[:6]}_folded.png"), format="png", prog="dot"
-    # )
-    # dot.draw(
-    #     path=os.path.join(fig_path, f"{chash[:6]}_folded.pdf"), format="pdf", prog="dot"
-    # )
+    plot_graph(gmetagraph, fig_path, f"{chash[:6]}_folded")
 
     coref_graph = render_coref_graph(rdoc, nx_graph)
-    dot = to_agraph(coref_graph.graph)
-    dot.layout("dot")
-    dot.draw(
-        path=os.path.join(fig_path, f"{chash[:6]}_coref.png"), format="png", prog="dot"
-    )
-    dot.draw(
-        path=os.path.join(fig_path, f"{chash[:6]}_coref.pdf"), format="pdf", prog="dot"
-    )
+
+    plot_graph(coref_graph.graph, fig_path, f"{chash[:6]}_coref")
 
     coref_graph = render_coref_graph_reduced(rdoc, nx_graph)
-    dot = to_agraph(coref_graph)
-    dot.layout("dot")
-    dot.draw(
-        path=os.path.join(fig_path, f"{chash[:6]}_coref_reduced.png"),
-        format="png",
-        prog="dot",
-    )
-    dot.draw(
-        path=os.path.join(fig_path, f"{chash[:6]}_coref_reduced.pdf"),
-        format="pdf",
-        prog="dot",
-    )
+
+    plot_graph(coref_graph, fig_path, f"{chash[:6]}_coref_reduced")
 
 
 if __name__ == "__main__":

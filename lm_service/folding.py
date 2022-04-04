@@ -28,6 +28,21 @@ class Leaf:
             return self.tree.nodes(data=True)
 
 
+def fold_graph_top(
+    nx_graph: nx.DiGraph,
+    rules,
+) -> nx.DiGraph:
+    gmetagraph = nx.DiGraph()
+
+    roots = [n for n in nx_graph.nodes() if nx_graph.in_degree(n) == 0]
+
+    for root in roots:
+        metagraph = nx.DiGraph()
+        gmetagraph.update(fold_graph(nx_graph, metagraph, None, root, None, rules))
+
+    return gmetagraph
+
+
 def fold_graph(
     graph: nx.DiGraph,
     metagraph: nx.DiGraph,

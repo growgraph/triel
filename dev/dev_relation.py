@@ -35,6 +35,7 @@ def main(phrase, nlp):
     add_dict_rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     chash = hashlib.sha256(phrase.encode("utf-8")).hexdigest()
+
     rdoc, graph = dep_tree_from_phrase(nlp, phrase)
 
     _, relations, rproj, mg = phrase_to_relations(graph, add_dict_rules)

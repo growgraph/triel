@@ -1,10 +1,11 @@
 from copy import deepcopy
+
 from typing import Dict
 import pandas as pd
 from itertools import product
 import networkx as nx
-from networkx.drawing.nx_agraph import to_agraph
-from lm_service.folding import fold_graph
+
+from lm_service.folding import fold_graph_top
 from spacy import Language
 from spacy.tokens import Doc
 import logging
@@ -381,35 +382,16 @@ def parse_first_level_relations(graph):
 
 def phrase_to_relations(graph: nx.DiGraph, rules):
 
-    roots = [n for n in graph.nodes() if graph.in_degree(n) == 0]
     relations = []
-    mg = nx.DiGraph()
-    for root in roots:
-        metagraph = fold_graph(graph, nx.DiGraph(), None, root, None, rules)
-        relations += parse_first_level_relations(metagraph)
-        mg.update(metagraph)
+
+    # possibly better to use parse_relastions on each subtree
+    mg = fold_graph_top(graph, rules)
 
     def project(x):
         return graph.nodes[x]["lemma"]
 
+    relations += parse_first_level_relations(mg)
     relations_proj = [[project(u) for u in item] for item in relations]
     return graph, relations, relations_proj, mg
 
 
-def plot_graph(graph, fields=()):
-    if "_id" in fields:
-        wfields = [x for x in fields if x != "_id"]
-    else:
-        wfields = fields
-
-    for n in graph.nodes:
-        if "_id" in fields:
-            ffs = [str(n)]
-        else:
-            ffs = []
-        ffs += [graph.nodes[n][f] if f in graph.nodes[n] else "0" for f in wfields]
-        graph.nodes[n]["label"] = "_".join(ffs)
-    a = to_agraph(graph)
-    a.layout("dot")
-    # graph.draw('file.png')
-    # return Image(a.draw(format="png", prog="dot"))

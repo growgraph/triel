@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 from networkx.drawing.nx_agraph import to_agraph
 from lm_service.folding import fold_graph
+from lm_service.util import plot_graph
 
 nl_data = {
     "directed": True,
@@ -350,19 +351,8 @@ class TestMetagraph(unittest.TestCase):
 
         metagraph = fold_graph(graph, metagraph, None, roots[0], None, rules)
 
-        dot = to_agraph(metagraph)
         metagraph_name = "test_fold_graph"
-        dot.layout("dot")
-        dot.draw(
-            path=os.path.join(self.path, f"./figs/{metagraph_name}.png"),
-            format="png",
-            prog="dot",
-        )
-        dot.draw(
-            path=os.path.join(self.path, f"./figs/{metagraph_name}.pdf"),
-            format="pdf",
-            prog="dot",
-        )
+        plot_graph(metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}")
 
         graphs = [
             metagraph.nodes[n]["leaf"]
@@ -370,13 +360,7 @@ class TestMetagraph(unittest.TestCase):
             if len(metagraph.nodes[n]["leaf"]) > 0
         ]
         for j, mg in enumerate(graphs):
-            dot = to_agraph(mg.tree)
-            dot.layout("dot")
-            dot.draw(
-                path=os.path.join(self.path, f"./figs/{metagraph_name}_leaf_{j}.pdf"),
-                format="pdf",
-                prog="dot",
-            )
+            plot_graph(mg.tree, os.path.join(self.path, "figs"), f"{metagraph_name}_leaf_{j}")
 
         self.assertEqual(len(metagraph.nodes()), 13)
         size_ggs = [0, 0, 0, 0, 0, 0, 0, 4, 2, 7, 0, 2, 12]
