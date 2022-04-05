@@ -3,29 +3,47 @@ from typing import Optional
 
 
 class Leaf:
-    def __init__(self, root):
+    def __init__(self, root, root_props):
         self.root = root
-        self.tree: Optional[nx.DiGraph] = None
+        self.tree: nx.DiGraph = nx.DiGraph()
+        self.tree.add_node(root, **root_props)
+        self.conj = []
 
     def __len__(self):
         return 0 if self.tree is None else self.tree.number_of_nodes()
 
+    def is_compound(self):
+        return self.tree.number_of_nodes() > 1
+
     def add_node(self, v, **vprops):
-        if self.tree is None:
-            self.tree = nx.DiGraph()
         self.tree.add_node(v, **vprops)
 
     def add_edge(self, u, v):
-        if self.tree is None:
-            self.tree = nx.DiGraph()
         self.tree.add_edge(u, v)
 
     @property
     def nodes(self):
-        if self.tree is None:
-            return []
-        else:
-            return self.tree.nodes(data=True)
+        return self.tree.nodes(data=True)
+
+    def compute_conj(self):
+        dists = nx.shortest_path_length(self.tree, self.root)
+        self.conj = [self.root]
+        conj_candidates = [
+            (i, dists[i])
+            for i, data in self.tree.nodes(data=True)
+            if data["dep"] == "conj"
+        ]
+        step = 1
+        while True:
+            conj_candidates_at_level = [
+                n for n, dist in conj_candidates if dist == step
+            ]
+            step += 1
+            if conj_candidates_at_level:
+                self.conj += conj_candidates_at_level
+            else:
+                break
+        return self.conj
 
 
 def fold_graph_top(
@@ -61,7 +79,7 @@ def fold_graph(
         subgraph.add_edge(u, v)
     else:
         metagraph.add_node(v, **vprops)
-        metagraph.nodes[v]["leaf"] = Leaf(v)
+        metagraph.nodes[v]["leaf"] = Leaf(v, vprops)
         if local_root is not None:
             metagraph.add_edge(local_root, v)
         local_root = v

@@ -200,7 +200,7 @@ def check_condition(graph, s, foo_condition) -> bool:
     return any(flag)
 
 
-def parse_first_level_relations(graph):
+def parse_relations_basic(graph):
     """
 
     :param graph: nx.Digraph is potentially a metagraph, so each source or target might be split into many
@@ -275,8 +275,22 @@ def parse_first_level_relations(graph):
     for r in rs:
         # for each relation find source candidates
         #  close to relation on the tree, negative cost preferred (in reverse direction), penalty if dep is attr
-        undirected_to_source = udm.loc[source_candidates, r]
-        cost_to_source = wdm.loc[source_candidates, r]
+
+        intersection_candidates = list(set(source_candidates) & set(udm.index))
+        if intersection_candidates:
+            undirected_to_source = udm.loc[intersection_candidates, r]
+        else:
+            s_cand[r] = []
+            continue
+
+        intersection_candidates = list(set(source_candidates) & set(wdm.index))
+        if intersection_candidates:
+            cost_to_source = wdm.loc[intersection_candidates, r]
+        else:
+            s_cand[r] = []
+            continue
+
+        # cost_to_source = wdm.loc[intersection_candidates, r]
         decision = pd.concat(
             [undirected_to_source.rename("undirected"), cost_to_source.rename("cost")],
             axis=1,
@@ -328,6 +342,68 @@ def graph_to_relations(graph: nx.DiGraph, rules):
     def project(x):
         return graph.nodes[x]["lemma"]
 
-    relations += parse_first_level_relations(mg)
+    relations += parse_relations_basic(mg)
     relations_proj = [[project(u) for u in item] for item in relations]
     return graph, relations, relations_proj, mg
+
+
+def yield_star_nodes(graph, node_list):
+    """
+    yield most specific mentions for any mentions, given a coref graph
+    :param graph:
+    :param node_list:
+    :return:
+    """
+    nlist = set()
+    for n in node_list:
+        if "m*" in graph.nodes[n] and n in graph.nodes[n]["m*"]:
+            nlist |= {n}
+        else:
+            nlist |= yield_star_nodes(graph, graph.nodes[n]["m*"])
+    return nlist
+
+
+def expand_mstar(candidates, coref_graph):
+    candidates_out = set()
+    for c in candidates:
+        if c in coref_graph.nodes():
+            candidates_out |= yield_star_nodes(coref_graph, coref_graph.nodes[c]["m*"])
+        else:
+            candidates_out |= {c}
+    return list(candidates_out)
+
+
+def expand_candidate(candidate_token: int, metagraph, coref_graph):
+
+    # t = st.tree
+    # [(t.nodes[n]["lower"], t.nodes[n]["tag"], t.nodes[n]["dep"]) for n in t.nodes() if "lower" in t.nodes[n]]
+
+    candidates = [candidate_token]
+    if metagraph.nodes[candidate_token]["leaf"].is_compound():
+        candidates = metagraph.nodes[candidate_token]["leaf"].compute_conj()
+    candidates = expand_mstar(candidates, coref_graph)
+    return candidates
+
+
+def parse_relations_advanced(phrase, nlp, rules):
+    rdoc, graph = dep_tree_from_phrase(nlp, phrase)
+
+    _, relations, rproj, metagraph = graph_to_relations(graph, rules)
+
+    coref_graph = render_mstar_graph(rdoc, graph)
+
+    relations_transformed = []
+
+    for s, r, t in relations:
+        s_candidates = expand_candidate(s, metagraph=metagraph, coref_graph=coref_graph)
+        t_candidates = expand_candidate(t, metagraph=metagraph, coref_graph=coref_graph)
+
+        relations_transformed += [
+            (sp, r, tp) for sp, tp in product(s_candidates, t_candidates)
+        ]
+
+    def project(x):
+        return graph.nodes[x]["lower"]
+
+    relations_proj = [[project(u) for u in item] for item in relations_transformed]
+    return graph, coref_graph, metagraph, relations_transformed, relations_proj

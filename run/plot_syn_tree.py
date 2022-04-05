@@ -16,11 +16,11 @@ from lm_service.util import plot_graph
 
 def main(phrase, nlp):
     path = Path(__file__).parent
+    fig_path = os.path.join(path, "figs")
 
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    fig_path = os.path.join(path, "figs")
     chash = hashlib.sha256(phrase.encode("utf-8")).hexdigest()
     rdoc, nx_graph = dep_tree_from_phrase(nlp, phrase)
 
@@ -47,8 +47,11 @@ if __name__ == "__main__":
     phrase = (
         "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space telescope "
         "to determine the size of known extrasolar planets, which will allow the estimation "
-        "of their mass, density, composition and their formation"
+        "of their mass, density, composition and their formation."
+        "Launched on 18 December 2019, it is the first Small-class "
+        "mission in ESA's Cosmic Vision science programme."
     )
+
     main(phrase, nlp)
 
     phrase2 = (

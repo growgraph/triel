@@ -356,7 +356,7 @@ class TestMetagraph(unittest.TestCase):
         graphs = [
             metagraph.nodes[n]["leaf"]
             for n in metagraph.nodes()
-            if len(metagraph.nodes[n]["leaf"]) > 0
+            if metagraph.nodes[n]["leaf"].is_compound()
         ]
         for j, mg in enumerate(graphs):
             plot_graph(
@@ -364,7 +364,7 @@ class TestMetagraph(unittest.TestCase):
             )
 
         self.assertEqual(len(metagraph.nodes()), 13)
-        size_ggs = [0, 0, 0, 0, 0, 0, 0, 4, 2, 7, 0, 2, 12]
+        size_ggs = [1, 1, 1, 1, 1, 1, 1, 4, 2, 7, 1, 2, 12]
         self.assertEqual(
             [len(metagraph.nodes[n]["leaf"]) for n in sorted(metagraph.nodes())],
             size_ggs,
