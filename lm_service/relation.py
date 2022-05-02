@@ -131,6 +131,11 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
                 vs_coref += [(y, graph.nodes[y])]
                 es_coref.append((coref_blank, y))
 
+    chs = {j: [[graph.nodes[x]["lower"] for x in item] for item in k.mentions] for j, k in enumerate(chains)}
+    logger.info(f"{chs}")
+    chs = {j: [graph.nodes[x]["lower"] for x in k.mentions[k.most_specific_mention_index]] for j, k in enumerate(chains)}
+    logger.info(f"specifics {chs}")
+
     if full:
         coref_graph = deepcopy(graph)
     else:
@@ -339,6 +344,8 @@ def graph_to_relations(graph: nx.DiGraph, rules):
     # possibly better to use parse_relations on each subtree
     mg = fold_graph_top(graph, rules)
 
+    logger.info(f"{[(n, mg.nodes[n]['lower']) for n in sorted(mg.nodes())]}")
+
     def project(x):
         return graph.nodes[x]["lemma"]
 
@@ -385,8 +392,22 @@ def expand_candidate(candidate_token: int, metagraph, coref_graph):
     return candidates
 
 
+def doc_to_chunks(rdoc):
+    """
+
+    :param rdoc:
+    :return: (root, start, end) NB: last token is at end-1
+    """
+    acc = []
+    for chunk in rdoc.noun_chunks:
+        acc += [(chunk.root.i, chunk.start, chunk.end)]
+    return acc
+
 def parse_relations_advanced(phrase, nlp, rules):
+    logging.info(f"{phrase}")
     rdoc, graph = dep_tree_from_phrase(nlp, phrase)
+
+    chunks = doc_to_chunks(rdoc)
 
     _, relations, rproj, metagraph = graph_to_relations(graph, rules)
 

@@ -7,7 +7,7 @@ import networkx as nx
 import logging
 from pathlib import Path
 from lm_service.folding import fold_graph
-from lm_service.util import plot_graph
+from lm_service.util import plot_graph, plot_leaves
 
 nl_data = {
     "directed": True,
@@ -353,15 +353,7 @@ class TestMetagraph(unittest.TestCase):
         metagraph_name = "test_fold_graph"
         plot_graph(metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}")
 
-        graphs = [
-            metagraph.nodes[n]["leaf"]
-            for n in metagraph.nodes()
-            if metagraph.nodes[n]["leaf"].is_compound()
-        ]
-        for j, mg in enumerate(graphs):
-            plot_graph(
-                mg.tree, os.path.join(self.path, "figs"), f"{metagraph_name}_leaf_{j}"
-            )
+        plot_leaves(metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}")
 
         self.assertEqual(len(metagraph.nodes()), 13)
         size_ggs = [1, 1, 1, 1, 1, 1, 1, 4, 2, 7, 1, 2, 12]
