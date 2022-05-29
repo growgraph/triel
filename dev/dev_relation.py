@@ -6,7 +6,8 @@ import spacy
 import coreferee
 import hashlib
 from itertools import product
-from lm_service.relation import graph_to_relations, dep_tree_from_phrase
+from lm_service.relation import graph_to_relations
+from lm_service.graph import dep_tree_from_phrase
 from lm_service.relation import (
     render_coref_graph,
     render_mstar_graph,

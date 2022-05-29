@@ -1,6 +1,5 @@
 import os
 from networkx.drawing.nx_agraph import to_agraph
-import requests
 
 
 def plot_graph(graph, path, name, plot_png=False, plot_pdf=True):
@@ -19,6 +18,4 @@ def plot_leaves(metagraph, path, root_fname):
         if metagraph.nodes[n]["leaf"].is_compound()
     ]
     for j, mg in enumerate(graphs):
-        plot_graph(
-            mg.tree, path, f"{root_fname}_leaf_{j}"
-        )
+        plot_graph(mg.tree, path, f"{root_fname}_leaf_{j}")

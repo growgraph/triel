@@ -6,10 +6,10 @@ import yaml
 import coreferee
 import hashlib
 from lm_service.relation import (
-    dep_tree_from_phrase,
     render_coref_graph,
     render_mstar_graph,
 )
+from lm_service.graph import dep_tree_from_phrase
 from lm_service.folding import fold_graph_top
 from lm_service.util import plot_graph
 
@@ -40,8 +40,8 @@ def main(phrase, nlp):
 
 
 if __name__ == "__main__":
-    nlp = spacy.load("en_core_web_sm")
-    # nlp = spacy.load("en_core_web_trf")
+    # nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
 
     phrase = (

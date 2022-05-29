@@ -6,11 +6,15 @@ from itertools import product
 import networkx as nx
 
 from lm_service.folding import fold_graph_top
-from spacy import Language
 from spacy.tokens import Doc
 import logging
 
 # import pygraphviz as pgv
+from lm_service.graph import dep_tree_from_phrase
+
+from dataclasses import dataclass
+from typing import Optional, List, Set
+
 
 logger = logging.getLogger(__name__)
 
@@ -29,48 +33,82 @@ class RelationHasNoTargetCandidatesError(Exception):
     pass
 
 
+class ACandidate:
+    @staticmethod
+    def concretize(x, graph):
+        # return lemma if not entity, otherwise return text
+        return (
+            graph.nodes[x]["lemma"]
+            if not graph.nodes[x]["ent_iob"] not in (0, 2)
+            else graph.nodes[x]["text"]
+        )
+
+@dataclass
+class Relation(ACandidate):
+    r0: Optional[int] = None
+    passive: bool = False
+    tokens: Optional[List[int]] = None
+
+    def project_to_text(self, graph):
+        return [ACandidate.concretize(r, graph) for r in self.tokens]
+
+    def project_to_text_str(self, graph):
+        return f"{self.project_to_text(graph)}"
+
+
+@dataclass
+class TripleCandidate:
+    source: int
+    relation: Relation
+    target: int
+
+    def project_to_text(self, graph):
+        s = ACandidate.concretize(self.source, graph)
+        t = ACandidate.concretize(self.target, graph)
+        r = self.relation.project_to_text(graph)
+        return s, r, t
+
+
+class RelationPile:
+    def __init__(self, relations: List[Relation]):
+        self.relations: List[Relation] = relations
+        self.tokens: Set[int] = set([x for r in self.relations for x in r.tokens])
+        # self.map: pd.DataFrame = pd.DataFrame(
+        #     [(r._id, x) for r in self.relations for x in r.tokens],
+        #     columns=["rid", "token"],
+        # )
+        self.map: Dict[int, List[int]] = {r.r0: [x for x in r.tokens] for r in self.relations}
+
+    def __repr__(self):
+        return str(self.map)
+
+    def __iter__(self):
+        for r in self.relations:
+            yield r
+
+
+class SourcePile:
+    def __init__(self, sources: List[int]):
+        self.data: List[int] = sources
+
+
+class TargetPile:
+    def __init__(self, targets: List[int]):
+        self.data: List[int] = targets
+
+
+@dataclass
+class CandidatePile:
+    sources: SourcePile
+    targets: TargetPile
+    relations: RelationPile
+
+
 class CorefGraph:
     def __init__(self, graph: nx.DiGraph, root: int, map_specific: Dict[int, int]):
         self.graph: nx.DiGraph = graph
         self.root: int = root
         self.map_specific: Dict[int:int] = map_specific
-
-
-def dep_tree_from_phrase(nlp: Language, document: str) -> (nx.DiGraph, Doc):
-    """
-    given nlp and a phrase (string) - yield spacy doc and a digraph representing syn parsing
-    :param nlp:
-    :param document:
-    :return:
-    """
-    graph = nx.DiGraph()
-
-    rdoc = nlp(document)
-    vs = [
-        (
-            token.i,
-            {
-                "lower": token.lower_,
-                "dep": token.dep_,
-                "tag": token.tag_,
-                "lemma": token.lemma_,
-                "label": f"{token.i}-{token.lower_}-{token.dep_}-{token.tag_}",
-            },
-        )
-        for token in rdoc
-    ]
-    # root = [v[0] for v in vs if v[1]["dep"] == "ROOT"][0]
-    # FYI https://spacy.io/docs/api/token
-    # https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html
-    es = []
-    for token in rdoc:
-        for child in token.children:
-            es.append((token.i, child.i))
-
-    graph.add_nodes_from(vs)
-    graph.add_edges_from(es)
-
-    return rdoc, graph
 
 
 def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
@@ -131,9 +169,15 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
                 vs_coref += [(y, graph.nodes[y])]
                 es_coref.append((coref_blank, y))
 
-    chs = {j: [[graph.nodes[x]["lower"] for x in item] for item in k.mentions] for j, k in enumerate(chains)}
+    chs = {
+        j: [[graph.nodes[x]["lower"] for x in item] for item in k.mentions]
+        for j, k in enumerate(chains)
+    }
     logger.info(f"{chs}")
-    chs = {j: [graph.nodes[x]["lower"] for x in k.mentions[k.most_specific_mention_index]] for j, k in enumerate(chains)}
+    chs = {
+        j: [graph.nodes[x]["lower"] for x in k.mentions[k.most_specific_mention_index]]
+        for j, k in enumerate(chains)
+    }
     logger.info(f"specifics {chs}")
 
     if full:
@@ -181,11 +225,55 @@ def find_relation_candidates(graph):
     r_candidates = [
         v
         for v in graph.nodes()
-        if graph.nodes[v]["tag"][:2] == "VB"
-        # and graph.nodes[v]["tag"] != "VBN"
-        and graph.nodes[v]["dep"] != "aux"
+        if graph.nodes[v]["tag"][:2] == "VB" and graph.nodes[v]["dep"] != "aux"
     ]
     return r_candidates
+
+
+def find_relation_candidates_new(graph: nx.DiGraph):
+    r_candidates = []
+    for v in graph.nodes():
+        cand = Relation()
+        if graph.nodes[v]["tag"].startswith("VB"):
+            # TODO check graph.nodes[v]["dep"] != "aux"
+            if len(list(graph.successors(v))) > 0:
+                cand.tokens = [v]
+            for w in graph.successors(v):
+                if graph.nodes[w]["tag"].startswith("VB"):
+                    if (
+                        graph.nodes[v]["tag"] == "VBN"
+                        and
+                        # VBN or VBZ
+                        (
+                            "VB" in graph.nodes[w]["tag"]
+                            # auxpass or aux
+                            and "aux" in graph.nodes[w]["dep"]
+                        )
+                    ):
+                        cand.tokens = [w] + cand.tokens
+                        cand.passive = True
+                    elif (
+                        graph.nodes[v]["tag"] == "VBZ"
+                        and graph.nodes[w]["tag"] == "VBN"
+                        and graph.nodes[w]["dep"] == "advcl"
+                    ):
+                        cand.tokens = cand.tokens + [w]
+                        cand.passive = True
+                if (
+                    graph.nodes[w]["tag"] == "IN" and graph.nodes[w]["dep"] == "prep"
+                ) or (
+                    graph.nodes[w]["tag"] == "IN" and graph.nodes[w]["dep"] == "agent"
+                ):
+                    cand.tokens = cand.tokens + [w]
+            if graph.nodes[v]["tag"] == "VBN" and graph.nodes[v]["dep"] == "acl":
+                cand.passive = True
+        if cand.tokens:
+            r_candidates += [cand]
+    for j, r in enumerate(r_candidates):
+        r.r0 = j
+
+    rp = RelationPile(relations=r_candidates)
+    return rp
 
 
 def maybe_source(n) -> bool:
@@ -205,33 +293,38 @@ def check_condition(graph, s, foo_condition) -> bool:
     return any(flag)
 
 
-def parse_relations_basic(graph):
-    """
+def find_candidates(graph: nx.DiGraph):
+    rp = find_relation_candidates_new(graph)
 
-    :param graph: nx.Digraph is potentially a metagraph, so each source or target might be split into many
-
-    :return:
-    """
-
-    relations = []
-    rs = find_relation_candidates(graph)
     source_candidates = [
         i for i in graph.nodes if check_condition(graph, i, maybe_source)
     ]
     target_candidates = [
         i for i in graph.nodes if check_condition(graph, i, maybe_target)
     ]
-    logger.info(f" relations: {rs} {[graph.nodes[r]['lower'] for r in rs]}")
+
+    logger.info(f" relations: {rp}")
+    for r in rp.relations:
+        logger.info(f" relations: {[graph.nodes[r0]['lower'] for r0 in r.tokens]}")
     logger.info(
         f" sources: {source_candidates} {[graph.nodes[r]['lower'] for r in source_candidates]}"
     )
     logger.info(
         f" targets: {target_candidates} {[graph.nodes[r]['lower'] for r in target_candidates]}"
     )
+
+    return CandidatePile(
+        relations=rp,
+        sources=SourcePile(source_candidates),
+        targets=TargetPile(target_candidates),
+    )
+
+
+def compute_distances(graph: nx.DiGraph, rp: RelationPile):
+
     undirected = graph.to_undirected()
     greverse = graph.reverse()
     nx.set_edge_attributes(greverse, values=-1, name="weight")
-
     gextra = graph.copy()
     nx.set_edge_attributes(gextra, values=1, name="weight")
 
@@ -240,73 +333,114 @@ def parse_relations_basic(graph):
         weight="weight",
     )
 
-    paths = {r: nx.shortest_path(gextra, r) for r in rs}
+    # compute distances
+    paths = {r: nx.shortest_path(gextra, r) for r in rp.tokens}
     path_weights = {
         r: {v: nx.path_weight(gextra, pp, "weight") for v, pp in batch.items()}
         for r, batch in paths.items()
     }
 
-    distance_directed = {r: nx.shortest_path_length(graph, r) for r in rs}
+    distance_directed = {r: nx.shortest_path_length(graph, r) for r in rp.tokens}
+
     # dm = pd.DataFrame.from_dict(distance_directed).sort_index(axis=0)
 
     # distance_reverse = {r: nx.shortest_path_length(greverse, r) for r in rs}
     # rdm = pd.DataFrame.from_dict(distance_reverse).sort_index(axis=0)
 
-    distance_undirected = {r: nx.shortest_path_length(undirected, r) for r in rs}
+    distance_undirected = {r: nx.shortest_path_length(undirected, r) for r in rp.tokens}
+
+    # undirected graph distance matrix
     udm = pd.DataFrame.from_dict(distance_undirected).sort_index(axis=0)
 
+    # weighted graph distance matrix
     wdm = pd.DataFrame.from_dict(path_weights).sort_index(axis=0)
+
+    return undirected, distance_directed, udm, wdm
+
+
+def parse_relations_basic(graph):
+    """
+    find triplets in a dep graph:
+        a. find relation candidates
+        b. find source candidates
+        c. find target candidates
+
+    :param graph: nx.Digraph
+
+    :return:
+    """
+
+    triples = []
+
+    cp = find_candidates(graph)
+
+    # create relevant graphs for distance calculations : undirected, reversed ...
+
+    undirected, distance_directed, udm, wdm = compute_distances(graph, cp.relations)
 
     t_cand = dict()
     s_cand = dict()
 
-    # pick target, targets are down the tree
-    for r, dist in distance_directed.items():
-        # find min distance to source candidate on the tree wrt relation r
-        # rarely target could be the same as r (if subgraph is hiding in r)
-        dist_to_targets = [dist[k] for k in target_candidates if k in dist and k != r]
-        if dist_to_targets:
-            min_dist = min(dist_to_targets)
+    target_candidates = cp.targets.data
+    source_candidates = cp.sources.data
+
+    # find targets per relation; targets are down the tree
+    for r_parent, rels in cp.relations.map.items():
+        dist_r_parent = []
+        for r in rels:
+            dist = distance_directed[r]
+        # for r, dist in distance_directed.items():
+            # find min distance to source candidate on the tree wrt relation r
+            # target could be the same as r (if subgraph is hiding in r)
+            dist_to_targets = [(r, k, dist[k]) for k in target_candidates if k in dist and k not in rels]
+            dist_r_parent += dist_to_targets
+
+        if dist_r_parent:
+            min_dist = min([d for _, _, d in dist_r_parent])
             # find all such targets
-            t_cand[r] = [
-                k for k in target_candidates if k in dist and dist[k] == min_dist
-            ]
-        else:
-            t_cand[r] = []
-            logger.error(f" relation {r} has not target candidates")
+            t_cand[r_parent] = set([
+                target for relation_part, target, d_rk in dist_r_parent if d_rk == min_dist
+            ])
+
+        if not dist_r_parent:
+            t_cand[r_parent] = set()
+            logger.error(f" relation {r_parent} has not target candidates")
             # raise RelationHasNoTargetCandidatesError(f" relation {r} has not target candidates")
 
-    # pick sources; sources might be up the tree, using undirected graph
-    for r in rs:
-        # for each relation find source candidates
-        #  close to relation on the tree, negative cost preferred (in reverse direction), penalty if dep is attr
+    udm_source = list(set(source_candidates) & set(udm.index))
+    wdm_source = list(set(source_candidates) & set(wdm.index))
 
-        intersection_candidates = list(set(source_candidates) & set(udm.index))
-        if intersection_candidates:
-            undirected_to_source = udm.loc[intersection_candidates, r]
-        else:
-            s_cand[r] = []
+    # find sources per relation; sources may be up the tree, using undirected graph
+    # for each relation find source candidates
+    # a. close to relation on the tree
+    # b. negative cost preferred (close in reverse direction),
+    # c. add penalty if dep is attr for given node
+    for r_parent, rels in cp.relations.map.items():
+        try:
+            undirected_to_source = udm.loc[udm_source, rels].unstack()
+        except ValueError:
+            s_cand[r_parent] = []
             continue
 
-        intersection_candidates = list(set(source_candidates) & set(wdm.index))
-        if intersection_candidates:
-            cost_to_source = wdm.loc[intersection_candidates, r]
-        else:
-            s_cand[r] = []
+        try:
+            cost_to_source = wdm.loc[wdm_source, rels].unstack()
+        except ValueError:
+            s_cand[r_parent] = []
             continue
 
-        # cost_to_source = wdm.loc[intersection_candidates, r]
         decision = pd.concat(
             [undirected_to_source.rename("undirected"), cost_to_source.rename("cost")],
             axis=1,
         )
 
+        # if candidate is "attr" or "dobj" add penalty (because they are likely to be targets
         decision["syn_penalty"] = pd.Series(
             decision.index.map(
-                lambda x: int(graph.nodes[x]["dep"] in ["attr", "dobj"])
+                lambda x: int(graph.nodes[x[1]]["dep"] in ["attr", "dobj"])
             ),
             index=decision.index,
         )
+
         decision["mcost"] = (
             decision["undirected"] + decision["cost"] + decision["syn_penalty"]
         )
@@ -317,41 +451,38 @@ def parse_relations_basic(graph):
         )
         top_row = decision.iloc[0]
         mask = (decision == top_row).all(axis=1)
-        s_cand[r] = decision[mask].index.tolist()
+        s_cand[r_parent] = decision[mask].index.get_level_values(1).tolist()
 
-    for r in rs:
-        sources = s_cand[r]
-        targets = set(t_cand[r]) - set(s_cand[r])
+    for r in cp.relations:
+        sources = s_cand[r.r0]
+        targets = set(t_cand[r.r0]) - set(s_cand[r.r0])
 
-        logger.info(
-            f" relations: {[graph.nodes[s]['lower'] for s in sources]} "
-            f"{graph.nodes[r]['lower']} {[graph.nodes[t]['lower'] for t in targets]}"
-        )
         for s, t in product(sources, targets):
             path = nx.shortest_path(undirected, s, t)
-            if r in path and s != t:
-                relations += [(s, r, t)]
+            if any([token in path for token in r.tokens]) and s != t:
+                triples += [TripleCandidate(s, r, t)]
                 logger.info(
-                    f" {graph.nodes[s]['lower']}, {graph.nodes[r]['lower']}, {graph.nodes[t]['lower']}"
+                    f" {graph.nodes[s]['lower']}, {r.project_to_text_str(graph)}, {graph.nodes[t]['lower']}"
                 )
-    return relations
+    return triples
 
 
 def graph_to_relations(graph: nx.DiGraph, rules):
 
     relations = []
 
-    # possibly better to use parse_relations on each subtree
-    mg = fold_graph_top(graph, rules)
+    # fold graph : fold certain vertices, representing context into subgraphs
+    folded_graph = fold_graph_top(graph, rules)
 
-    logger.info(f"{[(n, mg.nodes[n]['lower']) for n in sorted(mg.nodes())]}")
+    logger.info(
+        f"{[(n, folded_graph.nodes[n]['lower']) for n in sorted(folded_graph.nodes())]}"
+    )
 
-    def project(x):
-        return graph.nodes[x]["lemma"]
+    # extract relation from the folded graph
+    relations += parse_relations_basic(folded_graph)
 
-    relations += parse_relations_basic(mg)
-    relations_proj = [[project(u) for u in item] for item in relations]
-    return graph, relations, relations_proj, mg
+    relations_proj = [tri.project_to_text(graph) for tri in relations]
+    return graph, relations, relations_proj, folded_graph
 
 
 def yield_star_nodes(graph, node_list):
@@ -403,11 +534,13 @@ def doc_to_chunks(rdoc):
         acc += [(chunk.root.i, chunk.start, chunk.end)]
     return acc
 
+
 def parse_relations_advanced(phrase, nlp, rules):
     logging.info(f"{phrase}")
+
     rdoc, graph = dep_tree_from_phrase(nlp, phrase)
 
-    chunks = doc_to_chunks(rdoc)
+    # chunks = doc_to_chunks(rdoc)
 
     _, relations, rproj, metagraph = graph_to_relations(graph, rules)
 

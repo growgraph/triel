@@ -6,7 +6,8 @@ import unittest
 import spacy
 import logging
 from pathlib import Path
-from lm_service.relation import graph_to_relations, dep_tree_from_phrase
+from lm_service.relation import graph_to_relations
+from lm_service.graph import dep_tree_from_phrase
 
 logger = logging.getLogger(__name__)
 
@@ -28,15 +29,15 @@ class TestR(unittest.TestCase):
 
     def test_relation(self):
         document = self.phrases[0]
-        _, graph = dep_tree_from_phrase(self.nlp, document)
+        rdoc, graph = dep_tree_from_phrase(self.nlp, document)
 
         mg, r, rproj, _ = graph_to_relations(graph, self.add_dict_rules)
         self.assertEqual(
             rproj,
             [
-                ["CHEOPS", "be", "telescope"],
-                ["CHEOPS", "determine", "size"],
-                ["size", "allow", "estimation"],
+                ("CHEOPS", ["be"], "telescope"),
+                ("telescope", ["determine"], "size"),
+                ("size", ["allow"], "estimation"),
             ],
         )
 

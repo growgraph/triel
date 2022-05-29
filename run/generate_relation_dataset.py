@@ -1,23 +1,23 @@
 import spacy
 import coreferee
 import pandas as pd
-from spacy import displacy
 import sys
 import networkx as nx
 import pkgutil
 import os
-from pathlib import Path
 import yaml
 import logging
 import argparse
 from lm_service.relation import parse_relations_advanced
 from lm_service.util import plot_graph, plot_leaves
+from lm_service.preprocessing import normalize_input_text
 
 
-def main(nlp, text, fig_path, head=None, window_size=2):
+def main(nlp, text, fig_path, head=None, window_size=2, plot_flag=True):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
-    phrases = text.split(".")
+
+    phrases = normalize_input_text(text)
 
     acc = []
 
@@ -25,7 +25,8 @@ def main(nlp, text, fig_path, head=None, window_size=2):
     if head is not None:
         nmax = min([nmax, head])
     for i in range(nmax):
-        fragment = ".".join(phrases[i : i + window_size])
+        fragment = " ".join(phrases[i : i + window_size])
+        print(fragment)
         (
             graph,
             coref_graph,
@@ -35,8 +36,6 @@ def main(nlp, text, fig_path, head=None, window_size=2):
         ) = parse_relations_advanced(fragment, nlp, rules)
         acc += [(i, fragment, relations_transformed, relations_proj)]
 
-        plot_flag = False
-        plot_flag = True
         for text_triplet in relations_proj:
             s, r, t = text_triplet
             # if s == r or r == t:
@@ -85,9 +84,12 @@ if __name__ == "__main__":
         stream=sys.stdout,
     )
 
-    parser.add_argument("--head", nargs="?", type=int, help="number of phrases to parse")
+    parser.add_argument(
+        "--head", nargs="?", type=int, help="number of phrases to parse"
+    )
     parser.add_argument("--outpath", type=str, help="output folder path")
     parser.add_argument("--input-txt", type=str, help="input text file path")
+    parser.add_argument("--plot", action="store_true")
 
     args = parser.parse_args()
 
@@ -96,5 +98,4 @@ if __name__ == "__main__":
 
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
-    main(nlp, text, os.path.expanduser(args.outpath), args.head)
-
+    main(nlp, text, os.path.expanduser(args.outpath), args.head, args.plot)

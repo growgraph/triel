@@ -30,3 +30,5 @@
     value: NN
   - key: dep
     value: conj
+- - key: tag
+    value: CD
