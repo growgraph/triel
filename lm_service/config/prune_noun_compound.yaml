@@ -1,34 +1,34 @@
-- - key: dep
+- - key: dep_
     value: punct
-  - key: tag
+  - key: tag_
     value: ","
-- - key: dep
+- - key: dep_
     value: cc
-- - key: tag
+- - key: tag_
     value: NN
-  - key: dep
+  - key: dep_
     value: compound
-- - key: dep
+- - key: dep_
     value: aux
-- - key: dep
+- - key: dep_
     value: amod
-- - key: tag
-    value: IN
-  - key: dep
-    value: prep
-- - how: starts
-    key: tag
-    value: NN
-  - key: dep
-    value: pobj
-- - key: dep
+#- - key: tag_
+#    value: IN
+#  - key: dep__
+#    value: prep
+#- - how: starts
+#    key: tag_
+#    value: NN
+#  - key: dep_
+#    value: pobj
+- - key: dep_
     value: det
-- - key: dep
+- - key: dep_
     value: poss
 - - how: starts
-    key: tag
+    key: tag_
     value: NN
-  - key: dep
+  - key: dep_
     value: conj
-- - key: tag
+- - key: tag_
     value: CD

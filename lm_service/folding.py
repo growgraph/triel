@@ -31,7 +31,7 @@ class Leaf:
         conj_candidates = [
             (i, dists[i])
             for i, data in self.tree.nodes(data=True)
-            if data["dep"] == "conj"
+            if data["dep_"] == "conj"
         ]
         step = 1
         while True:

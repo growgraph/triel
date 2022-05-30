@@ -31,13 +31,13 @@ class TestR(unittest.TestCase):
         document = self.phrases[0]
         rdoc, graph = dep_tree_from_phrase(self.nlp, document)
 
-        mg, r, rproj, _ = graph_to_relations(graph, self.add_dict_rules)
+        mg, r, triples_projected, _ = graph_to_relations(graph, self.add_dict_rules)
         self.assertEqual(
-            rproj,
+            triples_projected,
             [
-                ("CHEOPS", ["be"], "telescope"),
-                ("telescope", ["determine"], "size"),
-                ("size", ["allow"], "estimation"),
+                ("CHEOPS", "be", "telescope"),
+                ("telescope", "determine", "size"),
+                ("size", "allow", "estimation"),
             ],
         )
 

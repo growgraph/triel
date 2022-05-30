@@ -11,13 +11,17 @@ import argparse
 from lm_service.relation import parse_relations_advanced
 from lm_service.util import plot_graph, plot_leaves
 from lm_service.preprocessing import normalize_input_text
+from lm_service.graph import transform_advcl
 
 
-def main(nlp, text, fig_path, head=None, window_size=2, plot_flag=True):
+def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    phrases = normalize_input_text(text)
+    # phrases = normalize_input_text(text)
+
+    phrases = normalize_input_text(text, terminal_full_stop=False)
+    phrases = [transform_advcl(nlp, p) for p in phrases]
 
     acc = []
 
@@ -25,30 +29,24 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_flag=True):
     if head is not None:
         nmax = min([nmax, head])
     for i in range(nmax):
-        fragment = " ".join(phrases[i : i + window_size])
-        print(fragment)
+        fragment = ". ".join(phrases[i : i + window_size])
         (
             graph,
             coref_graph,
             metagraph,
-            relations_transformed,
-            relations_proj,
+            triples_expanded,
+            triples_proj,
         ) = parse_relations_advanced(fragment, nlp, rules)
-        acc += [(i, fragment, relations_transformed, relations_proj)]
-
-        for text_triplet in relations_proj:
-            s, r, t = text_triplet
-            # if s == r or r == t:
-            #     plot_flag = True
-        if plot_flag:
+        acc += [(i, fragment, triples_expanded, triples_proj)]
+        if plot:
             plot_graph(graph, fig_path, f"fragment_{i}_full")
             plot_graph(metagraph, fig_path, f"fragment_{i}_mg")
             plot_graph(coref_graph, fig_path, f"fragment_{i}_coref")
             plot_leaves(metagraph, fig_path, f"fragment_{i}")
 
-    sources = [s for _, _, _, relations_proj in acc for s, _, _ in relations_proj]
-    relations = [r for _, _, _, relations_proj in acc for _, r, _ in relations_proj]
-    targets = [t for _, _, _, relations_proj in acc for _, _, t in relations_proj]
+    sources = [s for _, _, _, triples_proj in acc for s, _, _ in triples_proj]
+    relations = [r for _, _, _, triples_proj in acc for _, r, _ in triples_proj]
+    targets = [t for _, _, _, triples_proj in acc for _, _, t in triples_proj]
 
     tokens = sorted(set(sources) | set(targets) | set(relations))
     token_map = {t: ii for ii, t in enumerate(tokens)}
@@ -65,10 +63,9 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_flag=True):
     plot_graph(g, fig_path, f"doc")
 
     dacc = []
-    for i, phrase, relations, text_relations in acc:
-
-        for relation, text_relation in zip(text_relations, relations):
-            dacc += [[i] + list(relation) + list(text_relation) + [phrase]]
+    for i, phrase, triples, text_triples in acc:
+        for triple, text_relation in zip(triples, text_triples):
+            dacc += [[i] + [triple.source, triple.relation.tokens, triple.target] + list(text_relation) + [phrase]]
     df = pd.DataFrame(dacc, columns=["ip", "is", "ir", "it", "s", "r", "t", "phrase"])
     df.to_csv(os.path.join(fig_path, "relations.csv"))
 
@@ -98,4 +95,4 @@ if __name__ == "__main__":
 
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
-    main(nlp, text, os.path.expanduser(args.outpath), args.head, args.plot)
+    main(nlp, text, fig_path=os.path.expanduser(args.outpath), head=args.head, plot=args.plot)

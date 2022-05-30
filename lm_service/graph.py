@@ -17,9 +17,10 @@ def dep_tree_from_phrase(nlp: Language, document: str) -> (nx.DiGraph, Doc):
         (
             token.i,
             {
+                "i": token.i,
+                "dep_": token.dep_,
+                "tag_": token.tag_,
                 "lower": token.lower_,
-                "dep": token.dep_,
-                "tag": token.tag_,
                 "lemma": token.lemma_,
                 "ent_iob": token.ent_iob,
                 "text": token.text,
@@ -28,7 +29,7 @@ def dep_tree_from_phrase(nlp: Language, document: str) -> (nx.DiGraph, Doc):
         )
         for token in rdoc
     ]
-    # root = [v[0] for v in vs if v[1]["dep"] == "ROOT"][0]
+    # root = [v[0] for v in vs if v[1]["dep_"] == "ROOT"][0]
     # FYI https://spacy.io/docs/api/token
     # https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html
     es = []
@@ -51,13 +52,13 @@ def transform_advcl(nlp: Language, phrase):
     """
     # find vbz
     rdoc, graph = dep_tree_from_phrase(nlp, phrase)
-    vbzs = [u for u in graph.nodes() if graph.nodes[u]["tag"] == "VBZ"]
+    vbzs = [u for u in graph.nodes() if graph.nodes[u]["tag_"] == "VBZ"]
     # for each vbz perform operation
     for root in vbzs:
         succs = list(graph.successors(root))
         while succs:
             s = succs.pop()
-            if graph.nodes[s]["tag"] == "VBN" and graph.nodes[s]["dep"] == "advcl":
+            if graph.nodes[s]["tag_"] == "VBN" and graph.nodes[s]["dep_"] == "advcl":
                 subgraph = nx.ego_graph(graph, root, radius=50)
                 subgraph.remove_edge(root, s)
                 component = nx.ego_graph(subgraph, s, radius=50)
@@ -72,7 +73,7 @@ def transform_advcl(nlp: Language, phrase):
                 map_component_ix.update(map_main_component_ix)
                 graph = nx.relabel_nodes(graph, map_component_ix)
                 succs = [map_component_ix[x] for x in succs]
-            elif graph.nodes[s]["dep"] == "punct":
+            elif graph.nodes[s]["dep_"] == "punct":
                 graph.remove_edge(root, s)
                 graph.remove_node(s)
     phrase_rep = [graph.nodes[i]["text"] for i in sorted(graph.nodes)]
