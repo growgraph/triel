@@ -56,6 +56,7 @@ class Relation(ACandidate):
     @property
     def tokens(self):
         return [t.i for t in self.atokens]
+
     r0: Optional[int] = None
     passive: bool = False
     atokens: Optional[List[Token]] = field(default_factory=list)
@@ -281,9 +282,7 @@ def find_relation_candidates_new(graph: nx.DiGraph):
                     ):
                         cand.atokens = cand.atokens + [wtoken]
                         cand.passive = True
-                if (
-                    wtoken.tag_ == "IN" and wtoken.dep_ == "prep"
-                ) or (
+                if (wtoken.tag_ == "IN" and wtoken.dep_ == "prep") or (
                     wtoken.tag_ == "IN" and wtoken.dep_ == "agent"
                 ):
                     if any([t.tag_ == "IN" for t in cand.atokens]):

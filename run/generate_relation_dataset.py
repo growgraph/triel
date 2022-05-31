@@ -65,7 +65,12 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
     dacc = []
     for i, phrase, triples, text_triples in acc:
         for triple, text_relation in zip(triples, text_triples):
-            dacc += [[i] + [triple.source, triple.relation.tokens, triple.target] + list(text_relation) + [phrase]]
+            dacc += [
+                [i]
+                + [triple.source, triple.relation.tokens, triple.target]
+                + list(text_relation)
+                + [phrase]
+            ]
     df = pd.DataFrame(dacc, columns=["ip", "is", "ir", "it", "s", "r", "t", "phrase"])
     df.to_csv(os.path.join(fig_path, "relations.csv"))
 
@@ -95,4 +100,10 @@ if __name__ == "__main__":
 
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
-    main(nlp, text, fig_path=os.path.expanduser(args.outpath), head=args.head, plot=args.plot)
+    main(
+        nlp,
+        text,
+        fig_path=os.path.expanduser(args.outpath),
+        head=args.head,
+        plot=args.plot,
+    )
