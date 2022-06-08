@@ -1,3 +1,5 @@
+import logging
+import hashlib
 from copy import deepcopy
 
 from typing import Dict
@@ -7,7 +9,6 @@ import networkx as nx
 
 from lm_service.folding import fold_graph_top
 from spacy.tokens import Doc
-import logging
 
 # import pygraphviz as pgv
 from lm_service.graph import dep_tree_from_phrase
@@ -88,10 +89,6 @@ class RelationPile:
     def __init__(self, relations: List[Relation]):
         self.relations: List[Relation] = relations
         self.tokens: Set[int] = set([x for r in self.relations for x in r.tokens])
-        # self.map: pd.DataFrame = pd.DataFrame(
-        #     [(r._id, x) for r in self.relations for x in r.tokens],
-        #     columns=["rid", "token"],
-        # )
         self.map: Dict[int, List[int]] = {
             r.r0: [x for x in r.tokens] for r in self.relations
         }
@@ -130,7 +127,7 @@ class CorefGraph:
 
 def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
 
-    chains = rdoc._.coref_chains
+    chains = rdoc._.coref_chains if rdoc._.coref_chains is not None else []
     vs_coref = []
     es_coref = []
 
@@ -204,7 +201,6 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
 
     coref_graph.add_nodes_from(vs_coref)
     coref_graph.add_edges_from(es_coref)
-    # cg = CorefGraph(coref_graph, coref_root, chain_specific_mention)
     return coref_graph, mention_nodes, concept_specific_blank
 
 
@@ -247,7 +243,7 @@ def find_relation_candidates(graph):
     return r_candidates
 
 
-def find_relation_candidates_new(graph: nx.DiGraph):
+def find_relation_candidates_new(graph: nx.DiGraph) -> RelationPile:
     r_candidates = []
     for v in graph.nodes():
         cand = Relation()
@@ -298,8 +294,7 @@ def find_relation_candidates_new(graph: nx.DiGraph):
     for j, r in enumerate(r_candidates):
         r.r0 = j
 
-    rp = RelationPile(relations=r_candidates)
-    return rp
+    return RelationPile(relations=r_candidates)
 
 
 def maybe_source(n) -> bool:
@@ -404,8 +399,8 @@ def parse_relations_basic(graph):
 
     undirected, distance_directed, udm, wdm = compute_distances(graph, cp.relations)
 
-    t_cand = dict()
-    s_cand = dict()
+    target_per_relation = dict()
+    sources_per_relation = dict()
 
     target_candidates = cp.targets.data
     source_candidates = cp.sources.data
@@ -419,16 +414,16 @@ def parse_relations_basic(graph):
             # find min distance to source candidate on the tree wrt relation r
             # target could be the same as r (if subgraph is hiding in r)
             dist_to_targets = [
-                (r, k, dist[k])
-                for k in target_candidates
-                if k in dist and k not in rels
+                (r, target, dist[target])
+                for target in target_candidates
+                if target in dist and target not in rels
             ]
             dist_r_parent += dist_to_targets
 
         if dist_r_parent:
             min_dist = min([d for _, _, d in dist_r_parent])
             # find all such targets
-            t_cand[r_parent] = set(
+            target_per_relation[r_parent] = set(
                 [
                     target
                     for relation_part, target, d_rk in dist_r_parent
@@ -437,7 +432,7 @@ def parse_relations_basic(graph):
             )
 
         if not dist_r_parent:
-            t_cand[r_parent] = set()
+            target_per_relation[r_parent] = set()
             logger.error(f" relation {r_parent} has not target candidates")
             # raise RelationHasNoTargetCandidatesError(f" relation {r} has not target candidates")
 
@@ -453,13 +448,13 @@ def parse_relations_basic(graph):
         try:
             undirected_to_source = udm.loc[udm_source, rels].unstack()
         except ValueError:
-            s_cand[r_parent] = []
+            sources_per_relation[r_parent] = []
             continue
 
         try:
             cost_to_source = wdm.loc[wdm_source, rels].unstack()
         except ValueError:
-            s_cand[r_parent] = []
+            sources_per_relation[r_parent] = []
             continue
 
         decision = pd.concat(
@@ -485,11 +480,13 @@ def parse_relations_basic(graph):
         )
         top_row = decision.iloc[0]
         mask = (decision == top_row).all(axis=1)
-        s_cand[r_parent] = decision[mask].index.get_level_values(1).tolist()
+        sources_per_relation[r_parent] = (
+            decision[mask].index.get_level_values(1).tolist()
+        )
 
     for r in cp.relations:
-        sources = s_cand[r.r0]
-        targets = set(t_cand[r.r0]) - set(s_cand[r.r0])
+        sources = sources_per_relation[r.r0]
+        targets = set(target_per_relation[r.r0]) - set(sources_per_relation[r.r0])
 
         for s, t in product(sources, targets):
             path = nx.shortest_path(undirected, s, t)
@@ -570,7 +567,7 @@ def doc_to_chunks(rdoc):
 
 
 def parse_relations_advanced(
-    phrase, nlp, rules
+    phrase, nlp, rules, filter_pronouns=True
 ) -> Tuple[
     nx.DiGraph,
     nx.DiGraph,
@@ -603,5 +600,56 @@ def parse_relations_advanced(
             for sp, tp in product(s_candidates, t_candidates)
         ]
 
+    if filter_pronouns:
+        triples_expanded = [
+            tri
+            for tri in triples_expanded
+            if graph.nodes[tri.source]["tag_"] != "PRP"
+            and graph.nodes[tri.target]["tag_"] != "PRP"
+        ]
+
     triples_proj = [tri.project_to_text(graph) for tri in triples_expanded]
     return graph, coref_graph, metagraph, triples_expanded, triples_proj
+
+
+def add_hash(triples_expanded, graph):
+    agg = []
+
+    for tri in triples_expanded:
+        source_txt = ACandidate.concretize(tri.source, graph)
+        target_txt = ACandidate.concretize(tri.target, graph)
+        relation_txt = tri.relation.project_to_text_str(graph)
+
+        subitem = [
+            {
+                "hash": hashlib.sha256(source_txt.encode("utf-8")).hexdigest(),
+                "text": source_txt,
+                "type": "source",
+            },
+            {
+                "hash": hashlib.sha256(relation_txt.encode("utf-8")).hexdigest(),
+                "text": relation_txt,
+                "type": "relation",
+            },
+            {
+                "hash": hashlib.sha256(target_txt.encode("utf-8")).hexdigest(),
+                "text": target_txt,
+                "type": "target",
+            },
+        ]
+
+        item = {"triple": subitem}
+
+        item["triple_meta"] = {
+            "hash": hashlib.sha256(
+                (
+                    hashlib.sha256(source_txt.encode("utf-8")).hexdigest()
+                    + hashlib.sha256(relation_txt.encode("utf-8")).hexdigest()
+                    + hashlib.sha256(target_txt.encode("utf-8")).hexdigest()
+                ).encode("utf-8")
+            ).hexdigest(),
+            "type": "meta",
+        }
+
+        agg += [item]
+    return agg

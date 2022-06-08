@@ -18,8 +18,6 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    # phrases = normalize_input_text(text)
-
     phrases = normalize_input_text(text, terminal_full_stop=False)
     phrases = [transform_advcl(nlp, p) for p in phrases]
 
