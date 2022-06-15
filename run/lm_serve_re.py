@@ -39,7 +39,7 @@ def re():
             triples_proj,
         ) = parse_relations_advanced(fragment, nlp, rules)
 
-        return jsonify({"result": triples_proj}), 200
+        return jsonify({"triples": triples_proj}), 200
 
 
 @app.route("/lm/re_v2", methods=["POST"])
