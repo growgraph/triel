@@ -92,4 +92,4 @@ if __name__ == "__main__":
             r = add_hash(triples_expanded, graph)
             return jsonify({"triples": r}), 200
 
-    app.run(port=wsgi_re.port, host='0.0.0.0')
+    app.run(port=wsgi_re.port, host=wsgi_re.host)

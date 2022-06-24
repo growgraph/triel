@@ -186,7 +186,7 @@ xmltodict = "^0.12.0"
 type = "git"
 url = "ssh://git@github.com/alexander-belikov/graph_cast.git"
 reference = "main"
-resolved_reference = "951000edb7972621bd306697c5377068b704f72a"
+resolved_reference = "e65e41dedb3de12efa76624b7efc2b802e5c6633"
 
 [[package]]
 name = "h11"
