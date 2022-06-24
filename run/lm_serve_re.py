@@ -91,5 +91,5 @@ if __name__ == "__main__":
             ) = parse_relations_advanced(fragment, nlp, rules)
             r = add_hash(triples_expanded, graph)
             return jsonify({"triples": r}), 200
-
+    print(f" wsgi: host {wsgi_re.host}")
     app.run(port=wsgi_re.port, host=wsgi_re.host)
