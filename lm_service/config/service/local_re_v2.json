@@ -1,0 +1,7 @@
+{
+    "protocol": "http",
+    "ip_addr": "localhost",
+    "port": 8592,
+    "db_type": "wsgi",
+    "path": "/lm/re_v2"
+}
