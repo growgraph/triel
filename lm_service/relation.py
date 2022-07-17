@@ -10,7 +10,7 @@ import networkx as nx
 
 from spacy.tokens import Doc
 
-from lm_service.folding import fold_graph_top
+from lm_service.folding import fold_graph_top, get_flag
 
 # import pygraphviz as pgv
 from lm_service.graph import dep_tree_from_phrase, excise_node
@@ -179,6 +179,7 @@ def find_candidates_bfs(
     q: deque[int],
     candidate_pile: ACandidatePile,
     how: ACandidateKind,
+    **kwargs,
 ):
     """
 
@@ -194,7 +195,7 @@ def find_candidates_bfs(
 
     foo_map = {
         ACandidateKind.RELATION: find_relation_subtree,
-        ACandidateKind.SOURCE: find_relation_subtree,
+        ACandidateKind.SOURCE: find_st_subtree,
         ACandidateKind.TARGET: find_relation_subtree,
     }
 
@@ -207,14 +208,14 @@ def find_candidates_bfs(
 
     successors = set(graph.successors(current_vertex))
     if current_vertex not in candidate_pile.tokens:
-        foo(graph, deque([(current_vertex, 0)]), current_relation)
+        foo(graph, deque([(current_vertex, 0)]), current_relation, **kwargs)
 
     if not current_relation.empty:
         candidate_pile.append(current_relation)
 
     q.extend(successors & set(graph.nodes))
 
-    find_candidates_bfs(graph, q, candidate_pile, how)
+    find_candidates_bfs(graph, q, candidate_pile, how, **kwargs)
 
 
 def find_relation_subtree(
@@ -231,10 +232,17 @@ def find_relation_subtree(
     if not q:
         return
     current_vertex, level = q.popleft()
-    if level > 1:
+    if (
+        current_relation.empty
+        and level > 0
+        or (
+            not current_relation.empty
+            and level - current_relation.max_level() > 1
+        )
+    ):
         return
 
-    vtoken = Token(**graph.nodes[current_vertex])
+    vtoken = Token(**graph.nodes[current_vertex], **{"_level": level})
 
     len_current_relation = len(current_relation)
 
@@ -261,6 +269,57 @@ def find_relation_subtree(
     if len(current_relation) > len_current_relation:
         excise_node(graph, current_vertex)
     find_relation_subtree(graph, q, current_relation)
+
+
+def find_st_subtree(
+    graph: nx.DiGraph,
+    q: deque[(int, int)],
+    current_st: ACandidateType,
+    rules=None,
+):
+    """
+
+    :param graph:
+    :param q: (!) the initial call should have only a single vertex in q
+    :param current_st: source or target
+    :param rules:
+    :return:
+    """
+
+    if not q:
+        return
+    current_vertex, level = q.popleft()
+    # print(current_vertex, graph.nodes[current_vertex], level, current_st.max_level(), )
+    if (
+        current_st.empty
+        and level > 0
+        or (
+            not current_st.empty
+            and (
+                (level - current_st.max_level() > 1)
+                or (current_st._tokens[0].dep_ == "ccomp")
+            )
+        )
+    ):
+        return
+
+    vtoken = Token(**graph.nodes[current_vertex], **{"_level": level})
+
+    len_current_relation = len(current_st)
+
+    if level == 0 and current_st.empty:
+        if (("NN" in vtoken.tag_) or (vtoken.tag_ == "PRP")) or (
+            vtoken.dep_ == "ccomp"
+        ):
+            current_st.append(vtoken)
+    elif level > 0 and not current_st.empty:
+        vflag = get_flag(vtoken.__dict__, rules)
+        if vflag:
+            current_st.append(vtoken)
+    q.extend((v, level + 1) for v in graph.successors(current_vertex))
+    if len(current_st) > len_current_relation:
+        excise_node(graph, current_vertex)
+        find_st_subtree(graph, q, current_st, rules)
 
 
 def find_relation_candidates_obsolete(graph: nx.DiGraph) -> ACandidatePile:

@@ -58,7 +58,8 @@ if __name__ == "__main__":
         "They travelled to Spain because they loved the country very much.",
         "Peter would have caught the fish with a fishing rod, if not the"
         " darkness. ",
-        "The medium was affected by the radiation",
+        "The medium was affected by the near-field radiation",
+        "He treated her unfairly.",
     ]
 
     for phrase in phrases:

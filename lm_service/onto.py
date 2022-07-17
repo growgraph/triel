@@ -22,6 +22,9 @@ class ACandidate:
     def __len__(self) -> int:
         return len(self._tokens)
 
+    def max_level(self) -> int:
+        return 0 if self.empty else max(t._level for t in self._tokens)
+
     @staticmethod
     def concretize(x, graph):
         # return lemma if not entity, otherwise return text
@@ -78,6 +81,7 @@ class Token:
         self.tag_: str = kwargs.get("tag_", "")
         self.lower: str = kwargs.get("lower", "")
         self.lemma: str = kwargs.get("lemma", "")
+        self._level: int = kwargs.get("_level", 0)
 
     def __repr__(self):
         content = [f" {k} : {v}" for k, v in self.__dict__.items()]

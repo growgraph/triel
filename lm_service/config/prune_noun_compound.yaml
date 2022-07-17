@@ -4,10 +4,6 @@
     value: ","
 - - key: dep_
     value: cc
-- - key: tag_
-    value: NN
-  - key: dep_
-    value: compound
 - - key: dep_
     value: aux
 - - key: dep_
@@ -30,5 +26,10 @@
     value: NN
   - key: dep_
     value: conj
+- - how: starts
+    key: tag_
+    value: NN
+  - key: dep_
+    value: compound
 - - key: tag_
     value: CD

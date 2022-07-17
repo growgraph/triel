@@ -25,7 +25,7 @@ class TestR(unittest.TestCase):
     path = Path(__file__).parent
 
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
-    add_dict_rules = yaml.load(fp, Loader=yaml.FullLoader)
+    rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     with open(os.path.join(path, f"./data/cheops.txt"), "r") as f:
         text = f.read()
@@ -42,7 +42,7 @@ class TestR(unittest.TestCase):
         " composition and their formation.",
     ]
 
-    # @unittest.skip("")
+    @unittest.skip("")
     def test_relation_candidates(self):
 
         piles = []
@@ -71,20 +71,51 @@ class TestR(unittest.TestCase):
             },
         )
 
-    @unittest.skip("")
-    def test_source_candidates(self):
+    # @unittest.skip("")
+    def test_st_candidates(self):
 
         piles = []
         for document in self.documents:
             rdoc, graph = dep_tree_from_phrase(self.nlp, document)
             roots = [n for n, d in graph.in_degree() if d == 0]
             rp = ACandidatePile()
-            find_candidates_bfs(graph, deque(roots), rp, ACandidateKind.SOURCE)
+            find_candidates_bfs(
+                graph, deque(roots), rp, ACandidateKind.SOURCE, rules=self.rules
+            )
             piles += [rp]
 
         self.assertEqual(
             [len(rp) for rp in piles],
-            [1, 3],
+            [2, 7],
+        )
+
+        self.assertEqual(
+            {
+                k: [[t.lemma for t in c._tokens] for c in p.candidates]
+                for k, p in enumerate(piles)
+            },
+            {
+                0: [["medium", "the"], ["radiation", "the", "field", "near"]],
+                1: [
+                    ["CHEOPS"],
+                    ["telescope", "a", "european", "space"],
+                    ["Satellite", "CHaracterising", "ExOPlanets"],
+                    ["size", "the"],
+                    ["estimation", "the"],
+                    ["planet", "know", "extrasolar"],
+                    [
+                        "mass",
+                        "their",
+                        ",",
+                        "density",
+                        ",",
+                        "composition",
+                        "and",
+                        "formation",
+                        "their",
+                    ],
+                ],
+            },
         )
 
 
