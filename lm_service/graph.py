@@ -1,6 +1,12 @@
+from itertools import product
 import networkx as nx
 from spacy import Language
 from spacy.tokens import Doc
+
+
+def excise_node(graph, u):
+    graph.add_edges_from(product(graph.predecessors(u), graph.successors(u)))
+    graph.remove_node(u)
 
 
 def dep_tree_from_phrase(nlp: Language, document: str) -> (nx.DiGraph, Doc):

@@ -8,11 +8,12 @@ import pandas as pd
 from itertools import product
 import networkx as nx
 
-from lm_service.folding import fold_graph_top
 from spacy.tokens import Doc
 
+from lm_service.folding import fold_graph_top
+
 # import pygraphviz as pgv
-from lm_service.graph import dep_tree_from_phrase
+from lm_service.graph import dep_tree_from_phrase, excise_node
 
 from typing import List, Tuple
 
@@ -23,6 +24,7 @@ from lm_service.onto import (
     Relation,
     TripleCandidate,
     ACandidatePile,
+    ACandidateKind,
     CandidatePile,
 )
 
@@ -172,33 +174,47 @@ def propotion_of_pronouns(graph, mentions):
     ) / len(mentions)
 
 
-def find_relation_candidates_bfs(
+def find_candidates_bfs(
     graph: nx.DiGraph,
     q: deque[int],
-    relation_pile: ACandidatePile,
+    candidate_pile: ACandidatePile,
+    how: ACandidateKind,
 ):
+    """
+
+    :param graph: please provide a copy graph, find_candidates_bfs potentially modifies graph structure
+    :param q: deque to keep track of vertices while traversing
+    :param candidate_pile: pile to accumulate candidates
+    :param how:
+    :return:
+    """
     # VB, VBP, VBZ, VBD, VBG, VBN
     # auxiliary verb uses of be, have, do, and get: AUX
     # the infinitive to is PART
 
+    foo_map = {
+        ACandidateKind.RELATION: find_relation_subtree,
+        ACandidateKind.SOURCE: find_relation_subtree,
+        ACandidateKind.TARGET: find_relation_subtree,
+    }
+
+    foo = foo_map[how]
     if not q:
         return
 
     current_vertex = q.popleft()
     current_relation = Relation()
 
-    if current_vertex not in relation_pile.tokens:
-        find_relation_subtree(
-            graph, deque([(current_vertex, 0)]), current_relation
-        )
+    successors = set(graph.successors(current_vertex))
+    if current_vertex not in candidate_pile.tokens:
+        foo(graph, deque([(current_vertex, 0)]), current_relation)
 
-    print(current_vertex, current_relation)
     if not current_relation.empty:
-        relation_pile.append(current_relation)
+        candidate_pile.append(current_relation)
 
-    q.extend(list(graph.successors(current_vertex)))
+    q.extend(successors & set(graph.nodes))
 
-    find_relation_candidates_bfs(graph, q, relation_pile)
+    find_candidates_bfs(graph, q, candidate_pile, how)
 
 
 def find_relation_subtree(
@@ -220,6 +236,8 @@ def find_relation_subtree(
 
     vtoken = Token(**graph.nodes[current_vertex])
 
+    len_current_relation = len(current_relation)
+
     if level == 0 and current_relation.empty:
         if vtoken.tag_.startswith("VB") and vtoken.dep_ != "amod":
             current_relation.append(vtoken)
@@ -240,7 +258,8 @@ def find_relation_subtree(
         ):
             current_relation.append(vtoken)
     q.extend((v, level + 1) for v in graph.successors(current_vertex))
-
+    if len(current_relation) > len_current_relation:
+        excise_node(graph, current_vertex)
     find_relation_subtree(graph, q, current_relation)
 
 
@@ -250,7 +269,6 @@ def find_relation_candidates_obsolete(graph: nx.DiGraph) -> ACandidatePile:
         cand = Relation()
 
         if graph.nodes[v]["tag_"].startswith("VB"):
-            print(v, graph.nodes[v])
             # TODO check graph.nodes[v]["dep_"] != "aux"
             vtoken = Token(**graph.nodes[v])
             if vtoken.tag_ == "VBN" and vtoken.dep_ == "acl":
@@ -325,8 +343,10 @@ def find_candidates(graph: nx.DiGraph) -> CandidatePile:
     roots = [n for n, d in graph.in_degree() if d == 0]
 
     rp = ACandidatePile()
-    for r in roots:
-        find_relation_candidates_bfs(graph, r, Relation(), rp)
+
+    find_candidates_bfs(
+        deepcopy(graph), deque(roots), rp, ACandidateKind.RELATION
+    )
 
     source_candidates = [
         i for i in graph.nodes if check_condition(graph, i, maybe_source)

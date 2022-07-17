@@ -133,3 +133,5 @@ dmypy.json
 
 # dev
 .dev/
+
+**/*pdf

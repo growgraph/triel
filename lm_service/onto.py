@@ -1,4 +1,5 @@
 from __future__ import annotations
+from enum import Enum
 from dataclasses import dataclass
 from typing import Optional, List, Set, Dict
 from typing import TypeVar
@@ -17,6 +18,9 @@ class ACandidate:
         self.passive: bool = False
         self._tokens: List[Token] = list()
         self.added: bool = False
+
+    def __len__(self) -> int:
+        return len(self._tokens)
 
     @staticmethod
     def concretize(x, graph):
@@ -80,17 +84,20 @@ class Token:
         return f"Token fields:" + " |".join(content)
 
 
-# @dataclass
+class ACandidateKind(Enum):
+    RELATION = 1
+    SOURCE = 2
+    TARGET = 3
+
+
 class Relation(ACandidate):
     pass
 
 
-# @dataclass
 class Source(ACandidate):
     pass
 
 
-# @dataclass
 class Target(ACandidate):
     pass
 

@@ -60,5 +60,6 @@ if __name__ == "__main__":
         " darkness. ",
         "The medium was affected by the radiation",
     ]
+
     for phrase in phrases:
         main(phrase, nlp)
