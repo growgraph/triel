@@ -58,7 +58,10 @@ def transform_advcl(nlp: Language, phrase):
         succs = list(graph.successors(root))
         while succs:
             s = succs.pop()
-            if graph.nodes[s]["tag_"] == "VBN" and graph.nodes[s]["dep_"] == "advcl":
+            if (
+                graph.nodes[s]["tag_"] == "VBN"
+                and graph.nodes[s]["dep_"] == "advcl"
+            ):
                 subgraph = nx.ego_graph(graph, root, radius=50)
                 subgraph.remove_edge(root, s)
                 component = nx.ego_graph(subgraph, s, radius=50)
@@ -68,7 +71,10 @@ def transform_advcl(nlp: Language, phrase):
                     zip(sorted(component.nodes), ixs[-len(component.nodes) :])
                 )
                 map_main_component_ix = dict(
-                    zip(sorted(main_component.nodes), ixs[: len(main_component.nodes)])
+                    zip(
+                        sorted(main_component.nodes),
+                        ixs[: len(main_component.nodes)],
+                    )
                 )
                 map_component_ix.update(map_main_component_ix)
                 graph = nx.relabel_nodes(graph, map_component_ix)

@@ -351,14 +351,21 @@ class TestMetagraph(unittest.TestCase):
         metagraph = fold_graph(graph, metagraph, None, roots[0], None, rules)
 
         metagraph_name = "test_fold_graph"
-        plot_graph(metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}")
+        plot_graph(
+            metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}"
+        )
 
-        plot_leaves(metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}")
+        plot_leaves(
+            metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}"
+        )
 
         self.assertEqual(len(metagraph.nodes()), 13)
         size_ggs = [1, 1, 1, 1, 1, 1, 1, 4, 2, 7, 1, 2, 12]
         self.assertEqual(
-            [len(metagraph.nodes[n]["leaf"]) for n in sorted(metagraph.nodes())],
+            [
+                len(metagraph.nodes[n]["leaf"])
+                for n in sorted(metagraph.nodes())
+            ],
             size_ggs,
         )
 

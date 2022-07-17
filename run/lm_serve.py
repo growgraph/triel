@@ -42,7 +42,10 @@ def score():
 if __name__ == "__main__":
     logging.basicConfig(
         filename="lm_service.log",
-        format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
+        format=(
+            "%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s:"
+            " %(message)s"
+        ),
         datefmt="%Y-%m-%d %H:%M:%S",
         level=logging.INFO,
         filemode="w",
@@ -52,7 +55,9 @@ if __name__ == "__main__":
     model = "facebook/bart-large-mnli"
 
     # model = AutoModelForMaskedLM.from_pretrained("xlm-roberta-base", output_hidden_states=True)
-    classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+    classifier = pipeline(
+        "zero-shot-classification", model="facebook/bart-large-mnli"
+    )
     tokenizer = AutoTokenizer.from_pretrained("xlm-roberta-base")
     print("models loaded")
     app.run()

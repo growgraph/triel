@@ -7,8 +7,11 @@ import spacy
 import logging
 from pathlib import Path
 import coreferee
-from pprint import pprint
-from lm_service.relation import graph_to_relations, parse_relations_advanced, add_hash
+from lm_service.relation import (
+    graph_to_relations,
+    parse_relations_advanced,
+    add_hash,
+)
 from lm_service.preprocessing import normalize_input_text
 from lm_service.graph import transform_advcl
 from lm_service.graph import dep_tree_from_phrase
@@ -36,7 +39,9 @@ class TestR(unittest.TestCase):
         document = self.phrases[0]
         rdoc, graph = dep_tree_from_phrase(self.nlp, document)
 
-        mg, r, triples_projected, _ = graph_to_relations(graph, self.add_dict_rules)
+        mg, r, triples_projected, _ = graph_to_relations(
+            graph, self.add_dict_rules
+        )
         self.assertEqual(
             triples_projected,
             [
@@ -61,7 +66,9 @@ class TestR(unittest.TestCase):
                 metagraph,
                 triples_expanded,
                 triples_proj,
-            ) = parse_relations_advanced(fragment, self.nlp, self.add_dict_rules)
+            ) = parse_relations_advanced(
+                fragment, self.nlp, self.add_dict_rules
+            )
             r = add_hash(triples_expanded, graph)
             agg.extend(r)
 

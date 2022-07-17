@@ -69,7 +69,9 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
                 + list(text_relation)
                 + [phrase]
             ]
-    df = pd.DataFrame(dacc, columns=["ip", "is", "ir", "it", "s", "r", "t", "phrase"])
+    df = pd.DataFrame(
+        dacc, columns=["ip", "is", "ir", "it", "s", "r", "t", "phrase"]
+    )
     df.to_csv(os.path.join(fig_path, "relations.csv"))
 
 
@@ -77,7 +79,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     logging.basicConfig(
-        format="%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s",
+        format=(
+            "%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s"
+        ),
         datefmt="%Y-%m-%d %H:%M:%S",
         level=logging.INFO,
         filemode="w",

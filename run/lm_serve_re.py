@@ -50,7 +50,10 @@ def re():
 if __name__ == "__main__":
     logging.basicConfig(
         filename="lm_service.log",
-        format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
+        format=(
+            "%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s:"
+            " %(message)s"
+        ),
         datefmt="%Y-%m-%d %H:%M:%S",
         level=logging.INFO,
         filemode="w",
@@ -91,5 +94,6 @@ if __name__ == "__main__":
             ) = parse_relations_advanced(fragment, nlp, rules)
             r = add_hash(triples_expanded, graph)
             return jsonify({"triples": r}), 200
+
     print(f" wsgi: host {wsgi_re.host}")
     app.run(port=wsgi_re.port, host=wsgi_re.host)

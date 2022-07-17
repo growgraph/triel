@@ -40,23 +40,25 @@ def main(phrase, nlp):
 
 
 if __name__ == "__main__":
-    # nlp = spacy.load("en_core_web_sm")
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
 
-    phrase = (
-        "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space telescope "
-        "to determine the size of known extrasolar planets, which will allow the estimation "
-        "of their mass, density, composition and their formation."
-        "Launched on 18 December 2019, it is the first Small-class "
-        "mission in ESA's Cosmic Vision science programme."
-    )
-
-    main(phrase, nlp)
-
-    phrase2 = (
+    phrases = [
+        "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+        " telescope to determine the size of known extrasolar planets, which"
+        " will allow the estimation of their mass, density, composition and"
+        " their formation. Launched on 18 December 2019, it is the first"
+        " Small-class mission in ESA's Cosmic Vision science programme.",
+        "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+        " telescope to determine the size of known extrasolar planets,"
+        " which will allow the estimation of their mass, density,"
+        " composition and their formation.",
         "Although he was very busy with his work, Peter had had enough of it. "
         "He and his wife decided they needed a holiday. "
-        "They travelled to Spain because they loved the country very much."
-    )
-    main(phrase2, nlp)
+        "They travelled to Spain because they loved the country very much.",
+        "Peter would have caught the fish with a fishing rod, if not the"
+        " darkness. ",
+        "The medium was affected by the radiation",
+    ]
+    for phrase in phrases:
+        main(phrase, nlp)

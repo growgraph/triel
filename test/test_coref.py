@@ -14,9 +14,9 @@ class TestCoref(unittest.TestCase):
         nlp = spacy.load("en_core_web_trf")
         nlp.add_pipe("coreferee")
         doc = nlp(
-            "Although he was very busy with his work, Peter had had enough of it. "
-            "He and his wife decided they needed a holiday. "
-            "They travelled to Spain because they loved the country very much."
+            "Although he was very busy with his work, Peter had had enough of"
+            " it. He and his wife decided they needed a holiday. They travelled"
+            " to Spain because they loved the country very much."
         )
 
         gt_chains = (

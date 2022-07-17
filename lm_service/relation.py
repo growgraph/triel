@@ -1,8 +1,9 @@
+from __future__ import annotations
 import logging
 import hashlib
 from copy import deepcopy
+from collections import deque
 
-from typing import Dict
 import pandas as pd
 from itertools import product
 import networkx as nx
@@ -13,9 +14,17 @@ from spacy.tokens import Doc
 # import pygraphviz as pgv
 from lm_service.graph import dep_tree_from_phrase
 
-from dataclasses import dataclass, field
-from typing import Optional, List, Set, Tuple
+from typing import List, Tuple
 
+from lm_service.onto import (
+    ACandidate,
+    ACandidateType,
+    Token,
+    Relation,
+    TripleCandidate,
+    ACandidatePile,
+    CandidatePile,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,99 +39,13 @@ logger = logging.getLogger(__name__)
 """
 
 
-class RelationHasNoTargetCandidatesError(Exception):
-    pass
-
-
-class ACandidate:
-    @staticmethod
-    def concretize(x, graph):
-        # return lemma if not entity, otherwise return text
-        return (
-            graph.nodes[x]["lemma"]
-            if not graph.nodes[x]["ent_iob"] not in (0, 2)
-            else graph.nodes[x]["text"]
-        )
-
-
-class Token:
-    def __init__(self, i, dep_, tag_, **kwargs):
-        self.i: int = i
-        self.dep_: str = dep_
-        self.tag_: str = tag_
-
-
-@dataclass
-class Relation(ACandidate):
-    @property
-    def tokens(self):
-        return [t.i for t in self.atokens]
-
-    r0: Optional[int] = None
-    passive: bool = False
-    atokens: Optional[List[Token]] = field(default_factory=list)
-
-    def project_to_text(self, graph):
-        ll = [ACandidate.concretize(r, graph) for r in self.tokens]
-        return ll
-
-    def project_to_text_str(self, graph):
-        ll = self.project_to_text(graph)
-        txt = "".join([ll[0]] + [x.capitalize() for x in ll[1:]])
-        return txt
-
-
-@dataclass
-class TripleCandidate:
-    source: int
-    relation: Relation
-    target: int
-
-    def project_to_text(self, graph):
-        s = ACandidate.concretize(self.source, graph)
-        t = ACandidate.concretize(self.target, graph)
-        r = self.relation.project_to_text_str(graph)
-        return s, r, t
-
-
-class RelationPile:
-    def __init__(self, relations: List[Relation]):
-        self.relations: List[Relation] = relations
-        self.tokens: Set[int] = set([x for r in self.relations for x in r.tokens])
-        self.map: Dict[int, List[int]] = {
-            r.r0: [x for x in r.tokens] for r in self.relations
-        }
-
-    def __repr__(self):
-        return str(self.map)
-
-    def __iter__(self):
-        for r in self.relations:
-            yield r
-
-
-class SourcePile:
-    def __init__(self, sources: List[int]):
-        self.data: List[int] = sources
-
-
-class TargetPile:
-    def __init__(self, targets: List[int]):
-        self.data: List[int] = targets
-
-
-@dataclass
-class CandidatePile:
-    sources: SourcePile
-    targets: TargetPile
-    relations: RelationPile
-
-
 class CorefGraph:
-    def __init__(self, graph: nx.DiGraph, root: int, map_specific: Dict[int, int]):
+    def __init__(
+        self, graph: nx.DiGraph, root: int, map_specific: dict[int, int]
+    ):
         self.graph: nx.DiGraph = graph
         self.root: int = root
-        self.map_specific: Dict[int:int] = map_specific
+        self.map_specific: dict[int:int] = map_specific
 
 
 def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
@@ -141,13 +64,19 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
     vs_coref += [
         (
             coref_root,
-            {"label": f"{coref_root}-*-coref-root", "tag_": "coref", "dep_": "root"},
+            {
+                "label": f"{coref_root}-*-coref-root",
+                "tag_": "coref",
+                "dep_": "root",
+            },
         )
     ]
 
     for jchain, chain in enumerate(chains):
         coref_chain = jc
-        chain_specific_mention[coref_chain] = chain[chain.most_specific_mention_index]
+        chain_specific_mention[coref_chain] = chain[
+            chain.most_specific_mention_index
+        ]
         vs_coref += [
             (
                 coref_chain,
@@ -189,7 +118,10 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
     }
     logger.info(f"{chs}")
     chs = {
-        j: [graph.nodes[x]["lower"] for x in k.mentions[k.most_specific_mention_index]]
+        j: [
+            graph.nodes[x]["lower"]
+            for x in k.mentions[k.most_specific_mention_index]
+        ]
         for j, k in enumerate(chains)
     }
     logger.info(f"specifics {chs}")
@@ -205,7 +137,9 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
 
 
 def render_mstar_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
-    coref_graph, mention_nodes, concept_specific_blank = render_coref_graph(rdoc, graph)
+    coref_graph, mention_nodes, concept_specific_blank = render_coref_graph(
+        rdoc, graph
+    )
 
     for m in mention_nodes:
         # find m_star
@@ -215,7 +149,9 @@ def render_mstar_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
             # one concept per blank
             c0 = [concept for concept in coref_graph.predecessors(b)][0]
             best_blank_per_concept = concept_specific_blank[c0]
-            specific_mentions = list(coref_graph.successors(best_blank_per_concept))
+            specific_mentions = list(
+                coref_graph.successors(best_blank_per_concept)
+            )
             blank_metrics += [
                 (
                     best_blank_per_concept,
@@ -223,38 +159,105 @@ def render_mstar_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
                 )
             ]
         blank_metrics = sorted(blank_metrics, key=lambda item: item[1])
-        coref_graph.nodes[m]["m*"] = list(coref_graph.successors(blank_metrics[0][0]))
+        coref_graph.nodes[m]["m*"] = list(
+            coref_graph.successors(blank_metrics[0][0])
+        )
 
     return coref_graph
 
 
 def propotion_of_pronouns(graph, mentions):
-    return sum([graph.nodes[m]["tag_"].startswith("PRP") for m in mentions]) / len(
-        mentions
-    )
+    return sum(
+        [graph.nodes[m]["tag_"].startswith("PRP") for m in mentions]
+    ) / len(mentions)
 
 
-def find_relation_candidates(graph):
-    r_candidates = [
-        v
-        for v in graph.nodes()
-        if graph.nodes[v]["tag_"][:2] == "VB" and graph.nodes[v]["dep_"] != "aux"
-    ]
-    return r_candidates
+def find_relation_candidates_bfs(
+    graph: nx.DiGraph,
+    q: deque[int],
+    relation_pile: ACandidatePile,
+):
+    # VB, VBP, VBZ, VBD, VBG, VBN
+    # auxiliary verb uses of be, have, do, and get: AUX
+    # the infinitive to is PART
+
+    if not q:
+        return
+
+    current_vertex = q.popleft()
+    current_relation = Relation()
+
+    if current_vertex not in relation_pile.tokens:
+        find_relation_subtree(
+            graph, deque([(current_vertex, 0)]), current_relation
+        )
+
+    print(current_vertex, current_relation)
+    if not current_relation.empty:
+        relation_pile.append(current_relation)
+
+    q.extend(list(graph.successors(current_vertex)))
+
+    find_relation_candidates_bfs(graph, q, relation_pile)
 
 
-def find_relation_candidates_new(graph: nx.DiGraph) -> RelationPile:
+def find_relation_subtree(
+    graph: nx.DiGraph, q: deque[(int, int)], current_relation: ACandidateType
+):
+    """
+
+    :param graph:
+    :param q: (!) the initial call should have only a single vertex in q
+    :param current_relation:
+    :return:
+    """
+
+    if not q:
+        return
+    current_vertex, level = q.popleft()
+    if level > 1:
+        return
+
+    vtoken = Token(**graph.nodes[current_vertex])
+
+    if level == 0 and current_relation.empty:
+        if vtoken.tag_.startswith("VB") and vtoken.dep_ != "amod":
+            current_relation.append(vtoken)
+            if vtoken.dep_ == "acl":
+                current_relation.passive = True
+    elif level > 0 and not current_relation.empty:
+        # auxpass or aux
+        if (vtoken.tag_.startswith("VB") or (vtoken.tag_ == "MD")) and (
+            "aux" in vtoken.dep_
+        ):
+            current_relation.prepend(vtoken)
+            # current_relation.passive = True
+        # elif vtoken.tag_.startswith("VB") and vtoken.dep_ == "advcl":
+        #     current_relation.append(vtoken)
+        #     current_relation.passive = True
+        elif (vtoken.tag_ == "IN" and vtoken.dep_ == "prep") or (
+            vtoken.tag_ == "IN" and vtoken.dep_ == "agent"
+        ):
+            current_relation.append(vtoken)
+    q.extend((v, level + 1) for v in graph.successors(current_vertex))
+
+    find_relation_subtree(graph, q, current_relation)
+
+
+def find_relation_candidates_obsolete(graph: nx.DiGraph) -> ACandidatePile:
     r_candidates = []
     for v in graph.nodes():
         cand = Relation()
+
         if graph.nodes[v]["tag_"].startswith("VB"):
+            print(v, graph.nodes[v])
             # TODO check graph.nodes[v]["dep_"] != "aux"
             vtoken = Token(**graph.nodes[v])
             if vtoken.tag_ == "VBN" and vtoken.dep_ == "acl":
                 cand.passive = True
 
             if len(list(graph.successors(v))) > 0:
-                cand.atokens = [vtoken]
+                cand._tokens = [vtoken]
             for w in graph.successors(v):
                 wtoken = Token(**graph.nodes[w])
 
@@ -269,40 +272,44 @@ def find_relation_candidates_new(graph: nx.DiGraph) -> RelationPile:
                             and "aux" in wtoken.dep_
                         )
                     ):
-                        cand.atokens = [wtoken] + cand.atokens
+                        cand._tokens = [wtoken] + cand._tokens
                         cand.passive = True
                     elif (
                         vtoken.tag_ == "VBZ"
                         and wtoken.tag_ == "VBN"
                         and wtoken.dep_ == "advcl"
                     ):
-                        cand.atokens = cand.atokens + [wtoken]
+                        cand._tokens = cand._tokens + [wtoken]
                         cand.passive = True
                 if (wtoken.tag_ == "IN" and wtoken.dep_ == "prep") or (
                     wtoken.tag_ == "IN" and wtoken.dep_ == "agent"
                 ):
-                    if any([t.tag_ == "IN" for t in cand.atokens]):
+                    if any([t.tag_ == "IN" for t in cand._tokens]):
                         cand2 = deepcopy(cand)
-                        for j, t in enumerate(cand2.atokens):
+                        for j, t in enumerate(cand2._tokens):
                             if t.tag_ == "IN":
-                                cand2.atokens[j] = wtoken
+                                cand2._tokens[j] = wtoken
                         r_candidates += [cand2]
                     else:
-                        cand.atokens = cand.atokens + [wtoken]
+                        cand._tokens = cand._tokens + [wtoken]
         if cand.tokens:
             r_candidates += [cand]
     for j, r in enumerate(r_candidates):
         r.r0 = j
 
-    return RelationPile(relations=r_candidates)
+    return ACandidatePile(candidates=r_candidates)
 
 
 def maybe_source(n) -> bool:
-    return (("NN" in n["tag_"]) or (n["tag_"] == "PRP")) and (n["dep_"] != "pobj")
+    return (("NN" in n["tag_"]) or (n["tag_"] == "PRP")) and (
+        n["dep_"] != "pobj"
+    )
 
 
 def maybe_target(n) -> bool:
-    return ("NN" in n["tag_"]) or (n["dep_"] == "pobj") or (n["dep_"] == "ccomp")
+    return (
+        ("NN" in n["tag_"]) or (n["dep_"] == "pobj") or (n["dep_"] == "ccomp")
+    )
 
 
 def check_condition(graph, s, foo_condition) -> bool:
@@ -314,8 +321,12 @@ def check_condition(graph, s, foo_condition) -> bool:
     return any(flag)
 
 
-def find_candidates(graph: nx.DiGraph):
-    rp = find_relation_candidates_new(graph)
+def find_candidates(graph: nx.DiGraph) -> CandidatePile:
+    roots = [n for n, d in graph.in_degree() if d == 0]
+
+    rp = ACandidatePile()
+    for r in roots:
+        find_relation_candidates_bfs(graph, r, Relation(), rp)
 
     source_candidates = [
         i for i in graph.nodes if check_condition(graph, i, maybe_source)
@@ -325,23 +336,27 @@ def find_candidates(graph: nx.DiGraph):
     ]
 
     logger.info(f" relations: {rp}")
-    for r in rp.relations:
-        logger.info(f" relations: {[graph.nodes[r0]['lower'] for r0 in r.tokens]}")
+    for r in rp.candidates:
+        logger.info(
+            f" relations: {[graph.nodes[r0]['lower'] for r0 in r.tokens]}"
+        )
     logger.info(
-        f" sources: {source_candidates} {[graph.nodes[r]['lower'] for r in source_candidates]}"
+        " sources:"
+        f" {source_candidates} {[graph.nodes[r]['lower'] for r in source_candidates]}"
     )
     logger.info(
-        f" targets: {target_candidates} {[graph.nodes[r]['lower'] for r in target_candidates]}"
+        " targets:"
+        f" {target_candidates} {[graph.nodes[r]['lower'] for r in target_candidates]}"
     )
 
     return CandidatePile(
         relations=rp,
-        sources=SourcePile(source_candidates),
-        targets=TargetPile(target_candidates),
+        sources=ACandidatePile(source_candidates),
+        targets=ACandidatePile(target_candidates),
     )
 
 
-def compute_distances(graph: nx.DiGraph, rp: RelationPile):
+def compute_distances(graph: nx.DiGraph, rp: ACandidatePile):
 
     undirected = graph.to_undirected()
     greverse = graph.reverse()
@@ -361,14 +376,18 @@ def compute_distances(graph: nx.DiGraph, rp: RelationPile):
         for r, batch in paths.items()
     }
 
-    distance_directed = {r: nx.shortest_path_length(graph, r) for r in rp.tokens}
+    distance_directed = {
+        r: nx.shortest_path_length(graph, r) for r in rp.tokens
+    }
 
     # dm = pd.DataFrame.from_dict(distance_directed).sort_index(axis=0)
 
     # distance_reverse = {r: nx.shortest_path_length(greverse, r) for r in rs}
     # rdm = pd.DataFrame.from_dict(distance_reverse).sort_index(axis=0)
 
-    distance_undirected = {r: nx.shortest_path_length(undirected, r) for r in rp.tokens}
+    distance_undirected = {
+        r: nx.shortest_path_length(undirected, r) for r in rp.tokens
+    }
 
     # undirected graph distance matrix
     udm = pd.DataFrame.from_dict(distance_undirected).sort_index(axis=0)
@@ -397,7 +416,9 @@ def parse_relations_basic(graph):
 
     # create relevant graphs for distance calculations : undirected, reversed ...
 
-    undirected, distance_directed, udm, wdm = compute_distances(graph, cp.relations)
+    undirected, distance_directed, udm, wdm = compute_distances(
+        graph, cp.relations
+    )
 
     target_per_relation = dict()
     sources_per_relation = dict()
@@ -458,7 +479,10 @@ def parse_relations_basic(graph):
             continue
 
         decision = pd.concat(
-            [undirected_to_source.rename("undirected"), cost_to_source.rename("cost")],
+            [
+                undirected_to_source.rename("undirected"),
+                cost_to_source.rename("cost"),
+            ],
             axis=1,
         )
 
@@ -486,21 +510,27 @@ def parse_relations_basic(graph):
 
     for r in cp.relations:
         sources = sources_per_relation[r.r0]
-        targets = set(target_per_relation[r.r0]) - set(sources_per_relation[r.r0])
+        targets = set(target_per_relation[r.r0]) - set(
+            sources_per_relation[r.r0]
+        )
 
         for s, t in product(sources, targets):
             path = nx.shortest_path(undirected, s, t)
             if any([token in path for token in r.tokens]) and s != t:
                 triples += [TripleCandidate(s, r, t)]
                 logger.info(
-                    f" {graph.nodes[s]['lower']}, {r.project_to_text_str(graph)}, {graph.nodes[t]['lower']}"
+                    f" {graph.nodes[s]['lower']},"
+                    f" {r.project_to_text_str(graph)},"
+                    f" {graph.nodes[t]['lower']}"
                 )
     return triples
 
 
 def graph_to_relations(
     graph: nx.DiGraph, rules
-) -> Tuple[nx.DiGraph, List[TripleCandidate], List[Tuple[str, str, str]], nx.DiGraph]:
+) -> Tuple[
+    nx.DiGraph, List[TripleCandidate], List[Tuple[str, str, str]], nx.DiGraph
+]:
 
     # fold graph : fold certain vertices, representing context into subgraphs
     folded_graph = fold_graph_top(graph, rules)
@@ -536,7 +566,9 @@ def expand_mstar(candidates, coref_graph):
     candidates_out = set()
     for c in candidates:
         if c in coref_graph.nodes():
-            candidates_out |= yield_star_nodes(coref_graph, coref_graph.nodes[c]["m*"])
+            candidates_out |= yield_star_nodes(
+                coref_graph, coref_graph.nodes[c]["m*"]
+            )
         else:
             candidates_out |= {c}
     return list(candidates_out)
@@ -627,7 +659,9 @@ def add_hash(triples_expanded, graph):
                 "type": "source",
             },
             {
-                "hash": hashlib.sha256(relation_txt.encode("utf-8")).hexdigest(),
+                "hash": hashlib.sha256(
+                    relation_txt.encode("utf-8")
+                ).hexdigest(),
                 "text": relation_txt,
                 "type": "relation",
             },
