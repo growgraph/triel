@@ -22,6 +22,7 @@ from lm_service.onto import (
     ACandidateType,
     Token,
     Relation,
+    SourceOrTarget,
     TripleCandidate,
     ACandidatePile,
     ACandidateKind,
@@ -194,9 +195,13 @@ def find_candidates_bfs(
     # the infinitive to is PART
 
     foo_map = {
-        ACandidateKind.RELATION: find_relation_subtree,
-        ACandidateKind.SOURCE: find_st_subtree,
-        ACandidateKind.TARGET: find_relation_subtree,
+        ACandidateKind.RELATION: find_relation_subtree_dfs,
+        ACandidateKind.SOURCE_TARGET: find_st_subtree_dfs,
+    }
+
+    foo_map_class = {
+        ACandidateKind.RELATION: Relation,
+        ACandidateKind.SOURCE_TARGET: SourceOrTarget,
     }
 
     foo = foo_map[how]
@@ -204,21 +209,22 @@ def find_candidates_bfs(
         return
 
     current_vertex = q.popleft()
-    current_relation = Relation()
+    current_relation = foo_map_class[how]()
 
     successors = set(graph.successors(current_vertex))
     if current_vertex not in candidate_pile.tokens:
         foo(graph, deque([(current_vertex, 0)]), current_relation, **kwargs)
 
     if not current_relation.empty:
+        current_relation.sort()
         candidate_pile.append(current_relation)
 
     q.extend(successors & set(graph.nodes))
-
+    # print("\n")
     find_candidates_bfs(graph, q, candidate_pile, how, **kwargs)
 
 
-def find_relation_subtree(
+def find_relation_subtree_dfs(
     graph: nx.DiGraph, q: deque[(int, int)], current_relation: ACandidateType
 ):
     """
@@ -231,7 +237,8 @@ def find_relation_subtree(
 
     if not q:
         return
-    current_vertex, level = q.popleft()
+    current_vertex, level = q.pop()
+    # print(current_vertex, end="->")
     if (
         current_relation.empty
         and level > 0
@@ -265,13 +272,18 @@ def find_relation_subtree(
             vtoken.tag_ == "IN" and vtoken.dep_ == "agent"
         ):
             current_relation.append(vtoken)
-    q.extend((v, level + 1) for v in graph.successors(current_vertex))
+
+    successors = list(graph.successors(current_vertex))
+
     if len(current_relation) > len_current_relation:
-        excise_node(graph, current_vertex)
-    find_relation_subtree(graph, q, current_relation)
+        if level > 0:
+            excise_node(graph, current_vertex)
+        for v in successors:
+            q.append((v, level + 1))
+            find_relation_subtree_dfs(graph, q, current_relation)
 
 
-def find_st_subtree(
+def find_st_subtree_dfs(
     graph: nx.DiGraph,
     q: deque[(int, int)],
     current_st: ACandidateType,
@@ -288,8 +300,16 @@ def find_st_subtree(
 
     if not q:
         return
-    current_vertex, level = q.popleft()
-    # print(current_vertex, graph.nodes[current_vertex], level, current_st.max_level(), )
+    # current_vertex, level = q.popleft()
+    current_vertex, level = q.pop()
+    # print(current_vertex, end="->")
+
+    # print(
+    #     current_vertex,
+    #     graph.nodes[current_vertex],
+    #     level,
+    #     current_st.max_level(),
+    # )
     if (
         current_st.empty
         and level > 0
@@ -316,10 +336,21 @@ def find_st_subtree(
         vflag = get_flag(vtoken.__dict__, rules)
         if vflag:
             current_st.append(vtoken)
-    q.extend((v, level + 1) for v in graph.successors(current_vertex))
+
+    # q.extend((v, level + 1) for v in graph.successors(current_vertex))
+
+    successors = list(graph.successors(current_vertex))
+
     if len(current_st) > len_current_relation:
-        excise_node(graph, current_vertex)
-        find_st_subtree(graph, q, current_st, rules)
+        if level > 0:
+            excise_node(graph, current_vertex)
+        for v in successors:
+            q.append((v, level + 1))
+            find_st_subtree_dfs(graph, q, current_st, rules)
+
+    # if len(current_st) > len_current_relation:
+    #     excise_node(graph, current_vertex)
+    #     find_st_subtree_dfs(graph, q, current_st, rules)
 
 
 def find_relation_candidates_obsolete(graph: nx.DiGraph) -> ACandidatePile:

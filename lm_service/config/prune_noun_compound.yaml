@@ -1,22 +1,13 @@
 - - key: dep_
     value: punct
-  - key: tag_
-    value: ","
+#  - key: tag_
+#    value: ","
 - - key: dep_
     value: cc
 - - key: dep_
     value: aux
 - - key: dep_
     value: amod
-#- - key: tag_
-#    value: IN
-#  - key: dep__
-#    value: prep
-#- - how: starts
-#    key: tag_
-#    value: NN
-#  - key: dep_
-#    value: pobj
 - - key: dep_
     value: det
 - - key: dep_
@@ -33,3 +24,12 @@
     value: compound
 - - key: tag_
     value: CD
+- - key: tag_
+    value: IN
+  - key: dep_
+    value: prep
+- - how: starts
+    key: tag_
+    value: NN
+  - key: dep_
+    value: pobj

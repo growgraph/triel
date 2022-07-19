@@ -14,7 +14,8 @@ ACandidateType = TypeVar("ACandidateType", bound="ACandidate")
 
 class ACandidate:
     def __init__(self):
-        self.r0: Optional[int] = None
+        self.r0: Optional[int] = None  # position in a CandidatePile
+        self.root: Optional[int] = None  # index of root token
         self.passive: bool = False
         self._tokens: List[Token] = list()
         self.added: bool = False
@@ -56,6 +57,8 @@ class ACandidate:
         return txt
 
     def append(self, token: Token):
+        if self.empty:
+            self.root = token.i
         self._tokens += [token]
 
     def prepend(self, token: Token):
@@ -68,6 +71,9 @@ class ACandidate:
         return (
             f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
         )
+
+    def sort(self):
+        self._tokens = sorted(self._tokens, key=lambda x: x.i)
 
 
 class Token:
@@ -90,11 +96,16 @@ class Token:
 
 class ACandidateKind(Enum):
     RELATION = 1
-    SOURCE = 2
-    TARGET = 3
+    SOURCE_TARGET = 2
+    SOURCE = 3
+    TARGET = 4
 
 
 class Relation(ACandidate):
+    pass
+
+
+class SourceOrTarget(ACandidate):
     pass
 
 
