@@ -7,7 +7,6 @@ import os
 import unittest
 import spacy
 from pathlib import Path
-import coreferee
 from lm_service.preprocessing import normalize_input_text
 from lm_service.graph import transform_advcl
 from lm_service.graph import dep_tree_from_phrase
@@ -38,7 +37,6 @@ class TestR(unittest.TestCase):
         text = f.read()
 
     nlp = spacy.load("en_core_web_trf")
-    nlp.add_pipe("coreferee")
 
     phrases = normalize_input_text(text, terminal_full_stop=False)
     documents = [
@@ -47,9 +45,10 @@ class TestR(unittest.TestCase):
         " telescope to determine the size of known extrasolar planets,"
         " which will allow the estimation of their mass, density,"
         " composition and their formation.",
+        "He treated her unfairly."
     ]
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_relation_candidates(self):
 
         piles = []
@@ -64,7 +63,7 @@ class TestR(unittest.TestCase):
 
         self.assertEqual(
             [len(rp) for rp in piles],
-            [1, 3],
+            [1, 3, 1],
         )
 
         self.assertEqual(
@@ -75,10 +74,11 @@ class TestR(unittest.TestCase):
             {
                 0: [["be", "affect", "by"]],
                 1: [["be"], ["determine"], ["will", "allow"]],
+                2: [["treat"]],
             },
         )
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_st_candidates(self):
 
         piles = []
@@ -97,7 +97,7 @@ class TestR(unittest.TestCase):
 
         self.assertEqual(
             [len(rp) for rp in piles],
-            [2, 5],
+            [2, 5, 2],
         )
 
         self.assertEqual(
@@ -130,13 +130,15 @@ class TestR(unittest.TestCase):
                         "formation",
                     ],
                 ],
+                2: [['he'], ['she']]
             },
         )
 
     def test_relation_subtree_dfs(self):
 
         piles = []
-        vertices_of_interest = [deque([(3, 0)]), deque([(22, 0)])]
+        vertices_of_interest = [3, 22, 1]
+        vertices_of_interest = [deque([(x, 0)]) for x in vertices_of_interest]
         for deq, document in zip(vertices_of_interest, self.documents):
             rdoc, graph = dep_tree_from_phrase(self.nlp, document)
             cr = Relation()
@@ -146,17 +148,18 @@ class TestR(unittest.TestCase):
 
         self.assertEqual(
             [len(rp) for rp in piles],
-            [3, 2],
+            [3, 2, 1],
         )
 
         self.assertEqual(
             {k: p.tokens for k, p in enumerate(piles)},
-            {0: [2, 3, 4], 1: [21, 22]},
+            {0: [2, 3, 4], 1: [21, 22], 2: [1]},
         )
 
     def test_st_subtree_dfs(self):
         piles = []
-        vertices_of_interest = [deque([(9, 0)]), deque([(24, 0)])]
+        vertices_of_interest = [9, 24, 2]
+        vertices_of_interest = [deque([(x, 0)]) for x in vertices_of_interest]
         for deq, document in zip(vertices_of_interest, self.documents):
             rdoc, graph = dep_tree_from_phrase(self.nlp, document)
             st = SourceOrTarget()
@@ -166,7 +169,7 @@ class TestR(unittest.TestCase):
 
         self.assertEqual(
             [len(rp) for rp in piles],
-            [5, 12],
+            [5, 12, 1],
         )
 
         self.assertEqual(
@@ -174,6 +177,7 @@ class TestR(unittest.TestCase):
             {
                 0: [5, 6, 7, 8, 9],
                 1: [23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+                2: [2]
             },
         )
 
@@ -204,7 +208,7 @@ class TestR(unittest.TestCase):
             sizes += [(sa, sb, sc)]
         self.assertEqual(
             sizes,
-            [(10, 8, 3), (36, 35, 12)],
+            [(10, 8, 3), (36, 35, 12), (5, 5, 5)],
         )
 
 

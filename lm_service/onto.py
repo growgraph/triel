@@ -58,7 +58,7 @@ class ACandidate:
 
     def append(self, token: Token):
         if self.empty:
-            self.root = token.i
+            self.root = token
         self._tokens += [token]
 
     def prepend(self, token: Token):
@@ -131,8 +131,8 @@ class TripleCandidate:
 
 
 class ACandidatePile:
-    def __init__(self, candidates: List[Relation] | None = None):
-        self.candidates: List[Relation] = (
+    def __init__(self, candidates: List[ACandidateType] | None = None):
+        self.candidates: List[ACandidateType] = (
             [] if candidates is None else candidates
         )
 
@@ -154,7 +154,7 @@ class ACandidatePile:
         for r in self.candidates:
             yield r
 
-    def append(self, r: Relation):
+    def append(self, r: ACandidateType):
         r.r0 = len(self.candidates)
         self.candidates += [r]
 

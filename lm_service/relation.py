@@ -429,40 +429,44 @@ def check_condition(graph, s, foo_condition) -> bool:
     return any(flag)
 
 
-def find_candidates(graph: nx.DiGraph) -> CandidatePile:
+def find_candidates(graph: nx.DiGraph, rules) -> CandidatePile:
     roots = [n for n, d in graph.in_degree() if d == 0]
-
-    rp = ACandidatePile()
+    relation_pile = ACandidatePile()
+    source_target_pile = ACandidatePile()
 
     find_candidates_bfs(
-        deepcopy(graph), deque(roots), rp, ACandidateKind.RELATION
+        graph,
+        deque(roots),
+        relation_pile,
+        ACandidateKind.RELATION,
     )
+    find_candidates_bfs(
+        graph,
+        deque(roots),
+        source_target_pile,
+        ACandidateKind.SOURCE_TARGET,
+        rules=rules,
+    )
+    source_candidates, target_candidates = sieve_sources_targets(source_target_pile)
 
-    source_candidates = [
-        i for i in graph.nodes if check_condition(graph, i, maybe_source)
-    ]
-    target_candidates = [
-        i for i in graph.nodes if check_condition(graph, i, maybe_target)
-    ]
-
-    logger.info(f" relations: {rp}")
-    for r in rp.candidates:
-        logger.info(
-            f" relations: {[graph.nodes[r0]['lower'] for r0 in r.tokens]}"
-        )
-    logger.info(
-        " sources:"
-        f" {source_candidates} {[graph.nodes[r]['lower'] for r in source_candidates]}"
-    )
-    logger.info(
-        " targets:"
-        f" {target_candidates} {[graph.nodes[r]['lower'] for r in target_candidates]}"
-    )
+    logger.info(f" relations: {relation_pile}")
+    # for r in relation_pile.candidates:
+    #     logger.info(
+    #         f" relations: {[graph.nodes[r0]['lower'] for r0 in r.tokens]}"
+    #     )
+    # logger.info(
+    #     " sources:"
+    #     f" {source_candidates} {[graph.nodes[r]['lower'] for r in source_candidates]}"
+    # )
+    # logger.info(
+    #     " targets:"
+    #     f" {target_candidates} {[graph.nodes[r]['lower'] for r in target_candidates]}"
+    # )
 
     return CandidatePile(
-        relations=rp,
-        sources=ACandidatePile(source_candidates),
-        targets=ACandidatePile(target_candidates),
+        relations=relation_pile,
+        sources=source_candidates,
+        targets=target_candidates,
     )
 
 
@@ -508,7 +512,7 @@ def compute_distances(graph: nx.DiGraph, rp: ACandidatePile):
     return undirected, distance_directed, udm, wdm
 
 
-def parse_relations_basic(graph):
+def parse_relations_basic(graph, rules):
     """
     find triplets in a dep graph:
         a. find relation candidates
@@ -522,22 +526,22 @@ def parse_relations_basic(graph):
 
     triples = []
 
-    cp = find_candidates(graph)
+    pile = find_candidates(graph, rules)
 
     # create relevant graphs for distance calculations : undirected, reversed ...
 
     undirected, distance_directed, udm, wdm = compute_distances(
-        graph, cp.relations
+        graph, pile.relations
     )
 
     target_per_relation = dict()
     sources_per_relation = dict()
 
-    target_candidates = cp.targets.data
-    source_candidates = cp.sources.data
+    target_candidates = pile.targets.data
+    source_candidates = pile.sources.data
 
     # find targets per relation; targets are down the tree
-    for r_parent, rels in cp.relations.map.items():
+    for r_parent, rels in pile.relations.map.items():
         dist_r_parent = []
         for r in rels:
             dist = distance_directed[r]
@@ -575,7 +579,7 @@ def parse_relations_basic(graph):
     # a. close to relation on the tree
     # b. negative cost preferred (close in reverse direction),
     # c. add penalty if dep is attr for given node
-    for r_parent, rels in cp.relations.map.items():
+    for r_parent, rels in pile.relations.map.items():
         try:
             undirected_to_source = udm.loc[udm_source, rels].unstack()
         except ValueError:
@@ -618,7 +622,7 @@ def parse_relations_basic(graph):
             decision[mask].index.get_level_values(1).tolist()
         )
 
-    for r in cp.relations:
+    for r in pile.relations:
         sources = sources_per_relation[r.r0]
         targets = set(target_per_relation[r.r0]) - set(
             sources_per_relation[r.r0]
@@ -636,6 +640,18 @@ def parse_relations_basic(graph):
     return triples
 
 
+def sieve_sources_targets(
+    pile: ACandidatePile,
+) -> tuple[ACandidatePile, ACandidatePile]:
+    sources, targets = ACandidatePile(), ACandidatePile()
+    for c in pile:
+        if not c.root.dep_ == "pobj":
+            sources.append(c)
+        if True:
+            targets.append(c)
+    return sources, targets
+
+
 def graph_to_relations(
     graph: nx.DiGraph, rules
 ) -> Tuple[
@@ -643,17 +659,17 @@ def graph_to_relations(
 ]:
 
     # fold graph : fold certain vertices, representing context into subgraphs
-    folded_graph = fold_graph_top(graph, rules)
+    # graph = fold_graph_top(graph, rules)
 
-    logger.info(
-        f"{[(n, folded_graph.nodes[n]['lower']) for n in sorted(folded_graph.nodes())]}"
-    )
+    # logger.info(
+    #     f"{[(n, folded_graph.nodes[n]['lower']) for n in sorted(folded_graph.nodes())]}"
+    # )
 
     # extract relation from the folded graph
-    triples = parse_relations_basic(folded_graph)
+    triples = parse_relations_basic(graph, rules)
 
     triples_projected = [tri.project_to_text(graph) for tri in triples]
-    return graph, triples, triples_projected, folded_graph
+    return graph, triples, triples_projected, graph
 
 
 def yield_star_nodes(graph, node_list):
