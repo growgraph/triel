@@ -8,7 +8,7 @@ import os
 import yaml
 import logging
 import argparse
-from lm_service.relation import parse_relations_advanced
+from lm_service.relation import phrase_to_relations
 from lm_service.util import plot_graph, plot_leaves
 from lm_service.preprocessing import normalize_input_text
 from lm_service.graph import transform_advcl
@@ -34,7 +34,7 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
             metagraph,
             triples_expanded,
             triples_proj,
-        ) = parse_relations_advanced(fragment, nlp, rules)
+        ) = phrase_to_relations(fragment, nlp, rules)
         acc += [(i, fragment, triples_expanded, triples_proj)]
         if plot:
             plot_graph(graph, fig_path, f"fragment_{i}_full")

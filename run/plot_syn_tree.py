@@ -9,7 +9,7 @@ from lm_service.relation import (
     render_coref_graph,
     render_mstar_graph,
 )
-from lm_service.graph import dep_tree_from_phrase
+from lm_service.graph import phrase_to_deptree
 from lm_service.folding import fold_graph_top
 from lm_service.util import plot_graph
 
@@ -22,7 +22,7 @@ def main(phrase, nlp):
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     chash = hashlib.sha256(phrase.encode("utf-8")).hexdigest()
-    rdoc, nx_graph = dep_tree_from_phrase(nlp, phrase)
+    rdoc, nx_graph = phrase_to_deptree(nlp, phrase)
 
     plot_graph(nx_graph, fig_path, f"{chash[:6]}")
 

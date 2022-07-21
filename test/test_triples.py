@@ -10,13 +10,13 @@ from pathlib import Path
 import coreferee
 from lm_service.relation import (
     graph_to_relations,
-    parse_relations_advanced,
+    phrase_to_relations,
     add_hash,
     sieve_sources_targets,
 )
 from lm_service.preprocessing import normalize_input_text
 from lm_service.graph import transform_advcl
-from lm_service.graph import dep_tree_from_phrase
+from lm_service.graph import phrase_to_deptree
 from lm_service.onto import (
     Relation,
     ACandidatePile,
@@ -25,6 +25,8 @@ from lm_service.onto import (
 )
 from lm_service.relation import (
     find_candidates_bfs,
+    graph_to_candidate_pile,
+    compute_distances,
 )
 
 logger = logging.getLogger(__name__)
@@ -58,36 +60,26 @@ class TestR(unittest.TestCase):
 
         sizes = []
         for document in self.documents:
-            rdoc, graph = dep_tree_from_phrase(self.nlp, document)
-            roots = [n for n, d in graph.in_degree() if d == 0]
-            relation_pile = ACandidatePile()
-            source_target_pile = ACandidatePile()
-            find_candidates_bfs(
-                graph,
-                deque(roots),
-                relation_pile,
-                ACandidateKind.RELATION,
+            rdoc, graph = phrase_to_deptree(self.nlp, document)
+            cp = graph_to_candidate_pile(graph, rules=self.rules)
+
+    def test_distances(self):
+        sizes = []
+        for document in self.documents:
+            rdoc, graph = phrase_to_deptree(self.nlp, document)
+            pile = graph_to_candidate_pile(graph, self.rules)
+            undirected, distance_directed, udm, wdm = compute_distances(
+                graph, pile.relations
             )
-            find_candidates_bfs(
-                graph,
-                deque(roots),
-                source_target_pile,
-                ACandidateKind.SOURCE_TARGET,
-                rules=self.rules,
-            )
-            sources, targets = sieve_sources_targets(source_target_pile)
-            sizes += [(len(sources), len(targets))]
-        self.assertEqual(
-            sizes,
-            [(1, 2), (5, 5)],
-        )
 
     @unittest.skip("")
     def test_relation(self):
         document = self.phrases[0]
-        rdoc, graph = dep_tree_from_phrase(self.nlp, document)
+        rdoc, graph = phrase_to_deptree(self.nlp, document)
 
-        mg, r, triples_projected, _ = graph_to_relations(graph, self.rules)
+        # mg, r, triples_projected, _ = graph_to_relations(graph, self.rules)
+        triples = graph_to_relations(graph, self.rules)
+        triples_projected = [tri.project_to_text(graph) for tri in triples]
         self.assertEqual(
             triples_projected,
             [
@@ -113,7 +105,7 @@ class TestR(unittest.TestCase):
                 metagraph,
                 triples_expanded,
                 triples_proj,
-            ) = parse_relations_advanced(fragment, self.nlp, self.rules)
+            ) = phrase_to_relations(fragment, self.nlp, self.rules)
             r = add_hash(triples_expanded, graph)
             agg.extend(r)
 

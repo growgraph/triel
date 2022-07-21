@@ -10,7 +10,7 @@ from flask_restful import Api, reqparse
 from graph_cast.util import ResourceHandler
 from graph_cast.db.factory import ConfigFactory
 
-from lm_service.relation import parse_relations_advanced, add_hash
+from lm_service.relation import phrase_to_relations, add_hash
 from lm_service.preprocessing import normalize_input_text
 from lm_service.graph import transform_advcl
 
@@ -42,7 +42,7 @@ def re():
             metagraph,
             triples_expanded,
             triples_proj,
-        ) = parse_relations_advanced(fragment, nlp, rules)
+        ) = phrase_to_relations(fragment, nlp, rules)
 
         return jsonify({"triples": triples_proj}), 200
 
@@ -91,7 +91,7 @@ if __name__ == "__main__":
                 metagraph,
                 triples_expanded,
                 triples_proj,
-            ) = parse_relations_advanced(fragment, nlp, rules)
+            ) = phrase_to_relations(fragment, nlp, rules)
             r = add_hash(triples_expanded, graph)
             return jsonify({"triples": r}), 200
 

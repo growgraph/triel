@@ -9,7 +9,7 @@ def excise_node(graph, u):
     graph.remove_node(u)
 
 
-def dep_tree_from_phrase(nlp: Language, document: str) -> (nx.DiGraph, Doc):
+def phrase_to_deptree(nlp: Language, document: str) -> (nx.DiGraph, Doc):
     """
     given nlp and a phrase (string) - yield spacy doc and a digraph representing syn parsing
     :param nlp:
@@ -57,7 +57,7 @@ def transform_advcl(nlp: Language, phrase):
     :return:
     """
     # find vbz
-    rdoc, graph = dep_tree_from_phrase(nlp, phrase)
+    rdoc, graph = phrase_to_deptree(nlp, phrase)
     vbzs = [u for u in graph.nodes() if graph.nodes[u]["tag_"] == "VBZ"]
     # for each vbz perform operation
     for root in vbzs:

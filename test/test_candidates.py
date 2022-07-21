@@ -1,3 +1,7 @@
+"""
+test candidate extraction
+"""
+
 import pkgutil
 import logging
 from collections import deque
@@ -9,7 +13,7 @@ import spacy
 from pathlib import Path
 from lm_service.preprocessing import normalize_input_text
 from lm_service.graph import transform_advcl
-from lm_service.graph import dep_tree_from_phrase
+from lm_service.graph import phrase_to_deptree
 from lm_service.onto import (
     Relation,
     ACandidatePile,
@@ -45,7 +49,7 @@ class TestR(unittest.TestCase):
         " telescope to determine the size of known extrasolar planets,"
         " which will allow the estimation of their mass, density,"
         " composition and their formation.",
-        "He treated her unfairly."
+        "He treated her unfairly.",
     ]
 
     # @unittest.skip("")
@@ -53,7 +57,7 @@ class TestR(unittest.TestCase):
 
         piles = []
         for document in self.documents:
-            rdoc, graph = dep_tree_from_phrase(self.nlp, document)
+            rdoc, graph = phrase_to_deptree(self.nlp, document)
             roots = [n for n, d in graph.in_degree() if d == 0]
             rp = ACandidatePile()
             find_candidates_bfs(
@@ -83,7 +87,7 @@ class TestR(unittest.TestCase):
 
         piles = []
         for document in self.documents:
-            rdoc, graph = dep_tree_from_phrase(self.nlp, document)
+            rdoc, graph = phrase_to_deptree(self.nlp, document)
             roots = [n for n, d in graph.in_degree() if d == 0]
             rp = ACandidatePile()
             find_candidates_bfs(
@@ -130,7 +134,7 @@ class TestR(unittest.TestCase):
                         "formation",
                     ],
                 ],
-                2: [['he'], ['she']]
+                2: [["he"], ["she"]],
             },
         )
 
@@ -140,7 +144,7 @@ class TestR(unittest.TestCase):
         vertices_of_interest = [3, 22, 1]
         vertices_of_interest = [deque([(x, 0)]) for x in vertices_of_interest]
         for deq, document in zip(vertices_of_interest, self.documents):
-            rdoc, graph = dep_tree_from_phrase(self.nlp, document)
+            rdoc, graph = phrase_to_deptree(self.nlp, document)
             cr = Relation()
             find_relation_subtree_dfs(graph, deq, cr)
             cr.sort()
@@ -161,7 +165,7 @@ class TestR(unittest.TestCase):
         vertices_of_interest = [9, 24, 2]
         vertices_of_interest = [deque([(x, 0)]) for x in vertices_of_interest]
         for deq, document in zip(vertices_of_interest, self.documents):
-            rdoc, graph = dep_tree_from_phrase(self.nlp, document)
+            rdoc, graph = phrase_to_deptree(self.nlp, document)
             st = SourceOrTarget()
             find_st_subtree_dfs(graph, deq, st, rules=self.rules)
             st.sort()
@@ -177,15 +181,20 @@ class TestR(unittest.TestCase):
             {
                 0: [5, 6, 7, 8, 9],
                 1: [23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
-                2: [2]
+                2: [2],
             },
         )
 
     def test_consecutive_candidates(self):
+        """
+        the essense of this test is to demonstrate that when a relation or a source/target are identifed,
+        the subgraph correspondng to it is excised, leaving only the root node
+        :return:
+        """
 
         sizes = []
         for document in self.documents:
-            rdoc, graph = dep_tree_from_phrase(self.nlp, document)
+            rdoc, graph = phrase_to_deptree(self.nlp, document)
             roots = [n for n, d in graph.in_degree() if d == 0]
             relation_pile = ACandidatePile()
             source_target_pile = ACandidatePile()

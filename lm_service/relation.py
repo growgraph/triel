@@ -13,7 +13,7 @@ from spacy.tokens import Doc
 from lm_service.folding import fold_graph_top, get_flag
 
 # import pygraphviz as pgv
-from lm_service.graph import dep_tree_from_phrase, excise_node
+from lm_service.graph import phrase_to_deptree, excise_node
 
 from typing import List, Tuple
 
@@ -429,7 +429,7 @@ def check_condition(graph, s, foo_condition) -> bool:
     return any(flag)
 
 
-def find_candidates(graph: nx.DiGraph, rules) -> CandidatePile:
+def graph_to_candidate_pile(graph: nx.DiGraph, rules) -> CandidatePile:
     roots = [n for n, d in graph.in_degree() if d == 0]
     relation_pile = ACandidatePile()
     source_target_pile = ACandidatePile()
@@ -447,7 +447,9 @@ def find_candidates(graph: nx.DiGraph, rules) -> CandidatePile:
         ACandidateKind.SOURCE_TARGET,
         rules=rules,
     )
-    source_candidates, target_candidates = sieve_sources_targets(source_target_pile)
+    source_candidates, target_candidates = sieve_sources_targets(
+        source_target_pile
+    )
 
     logger.info(f" relations: {relation_pile}")
     # for r in relation_pile.candidates:
@@ -470,28 +472,40 @@ def find_candidates(graph: nx.DiGraph, rules) -> CandidatePile:
     )
 
 
-def compute_distances(graph: nx.DiGraph, rp: ACandidatePile):
+def compute_distances(graph: nx.DiGraph, pile: ACandidatePile):
 
-    undirected = graph.to_undirected()
-    greverse = graph.reverse()
-    nx.set_edge_attributes(greverse, values=-1, name="weight")
-    gextra = graph.copy()
-    nx.set_edge_attributes(gextra, values=1, name="weight")
+    g_undirected = graph.to_undirected()
+    g_reversed = graph.reverse()
 
-    gextra.add_weighted_edges_from(
-        [(u, v, greverse.edges[u, v]["weight"]) for u, v in greverse.edges],
+    nx.set_edge_attributes(g_reversed, values=-1, name="weight")
+
+    g_original = graph.copy()
+    nx.set_edge_attributes(g_original, values=1, name="weight")
+
+    g_original.add_weighted_edges_from(
+        [(u, v, g_reversed.edges[u, v]["weight"]) for u, v in g_reversed.edges],
         weight="weight",
     )
 
     # compute distances
-    paths = {r: nx.shortest_path(gextra, r) for r in rp.tokens}
-    path_weights = {
-        r: {v: nx.path_weight(gextra, pp, "weight") for v, pp in batch.items()}
-        for r, batch in paths.items()
-    }
+    # g_original | dag paths
+    # paths = {c.root.i: nx.shortest_path(g_original, c.root.i) for c in pile.candidates}
 
+    # g_original | (root, vertex) : weight
+    # path_weights = {
+    #     (r, v): nx.path_weight(g_original, pp, "weight")
+    #     for r, batch in paths.items() for v, pp in batch.items()
+    # }
+
+    # distance_directed = {
+    #     c.root.i: nx.shortest_path_length(graph, c.root.i) for c in pile.candidates
+    # }
+
+    # # g_original | (root, vertex) : weight
     distance_directed = {
-        r: nx.shortest_path_length(graph, r) for r in rp.tokens
+        (c.root.i, v): ll
+        for c in pile.candidates
+        for v, ll in nx.shortest_path_length(graph, c.root.i).items()
     }
 
     # dm = pd.DataFrame.from_dict(distance_directed).sort_index(axis=0)
@@ -499,20 +513,30 @@ def compute_distances(graph: nx.DiGraph, rp: ACandidatePile):
     # distance_reverse = {r: nx.shortest_path_length(greverse, r) for r in rs}
     # rdm = pd.DataFrame.from_dict(distance_reverse).sort_index(axis=0)
 
+    # distance_undirected = {
+    #     r: nx.shortest_path_length(g_undirected, r) for r in pile.tokens
+    # }
+
     distance_undirected = {
-        r: nx.shortest_path_length(undirected, r) for r in rp.tokens
+        (c.root.i, v): ll
+        for c in pile.candidates
+        for v, ll in nx.shortest_path_length(g_undirected, c.root.i).items()
     }
 
     # undirected graph distance matrix
-    udm = pd.DataFrame.from_dict(distance_undirected).sort_index(axis=0)
+    udm = pd.DataFrame(
+        distance_undirected.values(), index=distance_undirected.keys()
+    ).sort_index()
 
     # weighted graph distance matrix
-    wdm = pd.DataFrame.from_dict(path_weights).sort_index(axis=0)
+    wdm = pd.DataFrame(
+        distance_directed.values(), index=distance_directed.keys()
+    ).sort_index()
 
-    return undirected, distance_directed, udm, wdm
+    return g_undirected, distance_directed
 
 
-def parse_relations_basic(graph, rules):
+def graph_to_relations(graph, rules):
     """
     find triplets in a dep graph:
         a. find relation candidates
@@ -520,25 +544,26 @@ def parse_relations_basic(graph, rules):
         c. find target candidates
 
     :param graph: nx.Digraph
+    :param rules: nx.Digraph
 
     :return:
     """
 
     triples = []
 
-    pile = find_candidates(graph, rules)
+    pile = graph_to_candidate_pile(graph, rules)
 
     # create relevant graphs for distance calculations : undirected, reversed ...
 
-    undirected, distance_directed, udm, wdm = compute_distances(
-        graph, pile.relations
-    )
+    undirected, distance_directed = compute_distances(graph, pile.relations)
+
+    # WIP
 
     target_per_relation = dict()
     sources_per_relation = dict()
 
-    target_candidates = pile.targets.data
-    source_candidates = pile.sources.data
+    target_candidates = pile.targets.tokens
+    source_candidates = pile.sources.tokens
 
     # find targets per relation; targets are down the tree
     for r_parent, rels in pile.relations.map.items():
@@ -652,26 +677,6 @@ def sieve_sources_targets(
     return sources, targets
 
 
-def graph_to_relations(
-    graph: nx.DiGraph, rules
-) -> Tuple[
-    nx.DiGraph, List[TripleCandidate], List[Tuple[str, str, str]], nx.DiGraph
-]:
-
-    # fold graph : fold certain vertices, representing context into subgraphs
-    # graph = fold_graph_top(graph, rules)
-
-    # logger.info(
-    #     f"{[(n, folded_graph.nodes[n]['lower']) for n in sorted(folded_graph.nodes())]}"
-    # )
-
-    # extract relation from the folded graph
-    triples = parse_relations_basic(graph, rules)
-
-    triples_projected = [tri.project_to_text(graph) for tri in triples]
-    return graph, triples, triples_projected, graph
-
-
 def yield_star_nodes(graph, node_list):
     """
     yield most specific mentions for any mentions, given a coref graph
@@ -724,7 +729,7 @@ def doc_to_chunks(rdoc):
     return acc
 
 
-def parse_relations_advanced(
+def phrase_to_relations(
     phrase, nlp, rules, filter_pronouns=True
 ) -> Tuple[
     nx.DiGraph,
@@ -735,28 +740,29 @@ def parse_relations_advanced(
 ]:
     logging.info(f"{phrase}")
 
-    rdoc, graph = dep_tree_from_phrase(nlp, phrase)
+    rdoc, graph = phrase_to_deptree(nlp, phrase)
 
     # chunks = doc_to_chunks(rdoc)
 
-    _, triples, triples_projected, metagraph = graph_to_relations(graph, rules)
+    triples = graph_to_relations(graph, rules)
+    # _, triples, triples_projected, metagraph = graph_to_relations2(graph, rules)
 
     coref_graph = render_mstar_graph(rdoc, graph)
 
     triples_expanded = []
 
-    for triple in triples:
-        s_candidates = expand_candidate(
-            triple.source, metagraph=metagraph, coref_graph=coref_graph
-        )
-        t_candidates = expand_candidate(
-            triple.target, metagraph=metagraph, coref_graph=coref_graph
-        )
-
-        triples_expanded += [
-            TripleCandidate(source=sp, relation=triple.relation, target=tp)
-            for sp, tp in product(s_candidates, t_candidates)
-        ]
+    # for triple in triples:
+    #     s_candidates = expand_candidate(
+    #         triple.source, metagraph=metagraph, coref_graph=coref_graph
+    #     )
+    #     t_candidates = expand_candidate(
+    #         triple.target, metagraph=metagraph, coref_graph=coref_graph
+    #     )
+    #
+    #     triples_expanded += [
+    #         TripleCandidate(source=sp, relation=triple.relation, target=tp)
+    #         for sp, tp in product(s_candidates, t_candidates)
+    #     ]
 
     if filter_pronouns:
         triples_expanded = [
