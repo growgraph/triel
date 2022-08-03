@@ -14,10 +14,10 @@ ACandidateType = TypeVar("ACandidateType", bound="ACandidate")
 
 class ACandidate:
     def __init__(self):
-        self.r0: Optional[int] = None  # position in a CandidatePile
-        self.root: Optional[int] = None  # index of root token
+        self.r0: int | None = None  # position in a CandidatePile
+        self.root: Token | None = None  # index of root token
         self.passive: bool = False
-        self._tokens: List[Token] = list()
+        self._tokens: list[Token] = list()
         self.added: bool = False
 
     def __len__(self) -> int:
@@ -119,9 +119,9 @@ class Target(ACandidate):
 
 @dataclass
 class TripleCandidate:
-    source: int
+    source: Source
     relation: Relation
-    target: int
+    target: Target
 
     def project_to_text(self, graph):
         s = ACandidate.concretize(self.source, graph)
@@ -132,16 +132,46 @@ class TripleCandidate:
 
 class ACandidatePile:
     def __init__(self, candidates: List[ACandidateType] | None = None):
-        self.candidates: List[ACandidateType] = (
-            [] if candidates is None else candidates
-        )
+        self.iroot_to_candidate = {}
+        self._candidates: List[ACandidateType] = []
+        if candidates is not None:
+            for c in candidates:
+                self.append(c)
 
     def __len__(self) -> int:
         return len(self.candidates)
 
+    def __getitem__(self, key) -> ACandidateType:
+        """
+
+        :return: relation index in pile : relation tokens
+        """
+
+        return self.iroot_to_candidate[key]
+
     @property
-    def map(self) -> Dict[int, List[int]]:
+    def candidates(self):
+        """
+
+        :return: relation index in pile : relation tokens
+        """
+        return self._candidates
+
+    @property
+    def map(self) -> dict[int, list[int]]:
+        """
+
+        :return: relation index in pile : relation tokens
+        """
         return {r.r0: [x for x in r.tokens] for r in self.candidates}
+
+    @property
+    def roots(self) -> list[Token]:
+        return [r.root for r in self.candidates]
+
+    @property
+    def iroots(self) -> list[int]:
+        return [r.root.i for r in self.candidates]
 
     @property
     def tokens(self) -> Set[int]:
@@ -156,10 +186,17 @@ class ACandidatePile:
 
     def append(self, r: ACandidateType):
         r.r0 = len(self.candidates)
-        self.candidates += [r]
+        self.iroot_to_candidate[r.root.i] = r
+        self._candidates += [r]
 
     def __iadd__(self, rp: ACandidatePile):
-        self.candidates += rp.candidates
+        """
+        usage: pile_a += pile_b
+        :param rp:
+        :return:
+        """
+        for c in rp:
+            self.append(c)
         return self
 
 

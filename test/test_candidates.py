@@ -72,7 +72,7 @@ class TestR(unittest.TestCase):
 
         self.assertEqual(
             {
-                k: [[t.lemma for t in c._tokens] for c in p.candidates]
+                k: [[t.lemma for t in c._tokens] for c in p._candidates]
                 for k, p in enumerate(piles)
             },
             {
@@ -106,7 +106,7 @@ class TestR(unittest.TestCase):
 
         self.assertEqual(
             {
-                k: [[t.lemma for t in c._tokens] for c in p.candidates]
+                k: [[t.lemma for t in c._tokens] for c in p._candidates]
                 for k, p in enumerate(piles)
             },
             {

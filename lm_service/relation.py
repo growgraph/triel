@@ -23,6 +23,8 @@ from lm_service.onto import (
     Token,
     Relation,
     SourceOrTarget,
+    Source,
+    Target,
     TripleCandidate,
     ACandidatePile,
     ACandidateKind,
@@ -472,68 +474,54 @@ def graph_to_candidate_pile(graph: nx.DiGraph, rules) -> CandidatePile:
     )
 
 
-def compute_distances(graph: nx.DiGraph, pile: ACandidatePile):
-
+def generate_extra_graphs(graph: nx.DiGraph) -> tuple[nx.Graph, nx.DiGraph, nx.Graph]:
     g_undirected = graph.to_undirected()
     g_reversed = graph.reverse()
 
     nx.set_edge_attributes(g_reversed, values=-1, name="weight")
 
-    g_original = graph.copy()
-    nx.set_edge_attributes(g_original, values=1, name="weight")
+    g_weighted = graph.copy()
 
-    g_original.add_weighted_edges_from(
+    nx.set_edge_attributes(g_weighted, values=1, name="weight")
+
+    # distance wrt to weights defined in this way will be 0 for the same level
+    # +1 or -1 for level k to k+1 and vice versa
+    g_weighted.add_weighted_edges_from(
         [(u, v, g_reversed.edges[u, v]["weight"]) for u, v in g_reversed.edges],
         weight="weight",
     )
 
-    # compute distances
-    # g_original | dag paths
-    # paths = {c.root.i: nx.shortest_path(g_original, c.root.i) for c in pile.candidates}
+    return g_undirected, g_reversed, g_weighted
 
-    # g_original | (root, vertex) : weight
-    # path_weights = {
-    #     (r, v): nx.path_weight(g_original, pp, "weight")
-    #     for r, batch in paths.items() for v, pp in batch.items()
-    # }
 
-    # distance_directed = {
-    #     c.root.i: nx.shortest_path_length(graph, c.root.i) for c in pile.candidates
-    # }
+def compute_distances(graph: nx.DiGraph, g_undirected: nx.Graph, g_weighted: nx.Graph, pile: ACandidatePile):
 
-    # # g_original | (root, vertex) : weight
+    # (u, v) : distance
     distance_directed = {
         (c.root.i, v): ll
-        for c in pile.candidates
+        for c in pile
         for v, ll in nx.shortest_path_length(graph, c.root.i).items()
     }
 
-    # dm = pd.DataFrame.from_dict(distance_directed).sort_index(axis=0)
-
-    # distance_reverse = {r: nx.shortest_path_length(greverse, r) for r in rs}
-    # rdm = pd.DataFrame.from_dict(distance_reverse).sort_index(axis=0)
-
-    # distance_undirected = {
-    #     r: nx.shortest_path_length(g_undirected, r) for r in pile.tokens
-    # }
-
+    # (u, v) : distance
     distance_undirected = {
         (c.root.i, v): ll
-        for c in pile.candidates
+        for c in pile
         for v, ll in nx.shortest_path_length(g_undirected, c.root.i).items()
     }
 
-    # undirected graph distance matrix
-    udm = pd.DataFrame(
-        distance_undirected.values(), index=distance_undirected.keys()
-    ).sort_index()
+    # compute distances
+    # gextra | dag paths
+    paths = {c.root.i: nx.shortest_path(g_weighted, c.root.i) for c in pile}
 
-    # weighted graph distance matrix
-    wdm = pd.DataFrame(
-        distance_directed.values(), index=distance_directed.keys()
-    ).sort_index()
+    # g_original | (root, vertex) : weight
+    distance_levels = {
+        (r, v): nx.path_weight(g_weighted, pp, "weight")
+        for r, batch in paths.items()
+        for v, pp in batch.items()
+    }
 
-    return g_undirected, distance_directed
+    return distance_undirected, distance_directed, distance_levels
 
 
 def graph_to_relations(graph, rules):
@@ -554,114 +542,126 @@ def graph_to_relations(graph, rules):
     pile = graph_to_candidate_pile(graph, rules)
 
     # create relevant graphs for distance calculations : undirected, reversed ...
+    g_undirected, g_reversed, g_weighted = generate_extra_graphs(graph)
 
-    undirected, distance_directed = compute_distances(graph, pile.relations)
+    distance_undirected, distance_directed, distance_levels = compute_distances(
+        graph=graph, g_undirected=g_undirected, g_weighted=g_weighted, pile=pile.relations
+    )
+    # distance_undirected, distance_directed
 
-    # WIP
-
-    target_per_relation = dict()
-    sources_per_relation = dict()
-
-    target_candidates = pile.targets.tokens
-    source_candidates = pile.sources.tokens
+    target_candidate_roots = pile.targets.iroots
+    source_candidate_roots = pile.sources.iroots
+    relation_candidate_roots = pile.relations.iroots
 
     # find targets per relation; targets are down the tree
-    for r_parent, rels in pile.relations.map.items():
-        dist_r_parent = []
-        for r in rels:
-            dist = distance_directed[r]
-            # for r, dist in distance_directed.items():
-            # find min distance to source candidate on the tree wrt relation r
-            # target could be the same as r (if subgraph is hiding in r)
-            dist_to_targets = [
-                (r, target, dist[target])
-                for target in target_candidates
-                if target in dist and target not in rels
-            ]
-            dist_r_parent += dist_to_targets
+    dist_to_targets: dict[int, dict[int, int]] = {
+        r: {
+            t: distance_directed[r, t]
+            for t in target_candidate_roots
+            if (r, t) in distance_directed
+        }
+        for r in relation_candidate_roots
+    }
 
-        if dist_r_parent:
-            min_dist = min([d for _, _, d in dist_r_parent])
-            # find all such targets
-            target_per_relation[r_parent] = set(
-                [
-                    target
-                    for relation_part, target, d_rk in dist_r_parent
-                    if d_rk == min_dist
-                ]
-            )
+    min_dists: dict[int, int] = {
+        r: min(item.values()) if item else -1
+        for r, item in dist_to_targets.items()
+    }
 
-        if not dist_r_parent:
-            target_per_relation[r_parent] = set()
-            logger.error(f" relation {r_parent} has not target candidates")
-            # raise RelationHasNoTargetCandidatesError(f" relation {r} has not target candidates")
+    target_per_relation: dict[int, set[int]] = {
+        r: {t for t, d in item.items() if d == min_dists[r]} if item else set()
+        for r, item in dist_to_targets.items()
+    }
 
-    udm_source = list(set(source_candidates) & set(udm.index))
-    wdm_source = list(set(source_candidates) & set(wdm.index))
+    # WIP
 
     # find sources per relation; sources may be up the tree, using undirected graph
     # for each relation find source candidates
     # a. close to relation on the tree
     # b. negative cost preferred (close in reverse direction),
     # c. add penalty if dep is attr for given node
-    for r_parent, rels in pile.relations.map.items():
-        try:
-            undirected_to_source = udm.loc[udm_source, rels].unstack()
-        except ValueError:
-            sources_per_relation[r_parent] = []
-            continue
 
-        try:
-            cost_to_source = wdm.loc[wdm_source, rels].unstack()
-        except ValueError:
-            sources_per_relation[r_parent] = []
-            continue
+    # distance_undirected, distance_directed, distance_levels
 
-        decision = pd.concat(
-            [
-                undirected_to_source.rename("undirected"),
-                cost_to_source.rename("cost"),
-            ],
-            axis=1,
-        )
+    # find targets per relation; targets are down the tree
+    udist_to_sources: list[tuple] = [
+        (r, s, distance_undirected[r, s])
+        for r in relation_candidate_roots
+        for s in source_candidate_roots
+        if (r, s) in distance_undirected
+    ]
 
-        # if candidate is "attr" or "dobj" add penalty (because they are likely to be targets
-        decision["syn_penalty"] = pd.Series(
-            decision.index.map(
-                lambda x: int(graph.nodes[x[1]]["dep_"] in ["attr", "dobj"])
-            ),
-            index=decision.index,
-        )
+    ldist_to_sources: list[tuple] = [
+        (r, s, distance_levels[r, s])
+        for r in relation_candidate_roots
+        for s in source_candidate_roots
+        if (r, s) in distance_levels
+    ]
 
-        decision["mcost"] = (
-            decision["undirected"] + decision["cost"] + decision["syn_penalty"]
-        )
+    udm = pd.DataFrame(udist_to_sources, columns=["r", "s", "ud"]).sort_values(
+        ["r", "s"]
+    )
+    ldm = pd.DataFrame(ldist_to_sources, columns=["r", "s", "ld"]).sort_values(
+        ["r", "s"]
+    )
+    decision = pd.merge(udm, ldm, on=["r", "s"], how="outer")
 
-        decision = decision.sort_values(
-            ["mcost", "undirected", "cost", "syn_penalty"],
-            ascending=[True, True, True, True],
-        )
-        top_row = decision.iloc[0]
-        mask = (decision == top_row).all(axis=1)
-        sources_per_relation[r_parent] = (
-            decision[mask].index.get_level_values(1).tolist()
-        )
+    # for each source add penalty if its dep_ is "attr" or "dobj"
+    targetlike_penalty = pd.DataFrame(
+        [(s.i, int(s.dep_ in ["attr", "dobj"])) for s in pile.sources.roots],
+        columns=["s", "syn_penalty"],
+    )
+    decision = decision.merge(targetlike_penalty, how="left", on="s")
 
-    for r in pile.relations:
-        sources = sources_per_relation[r.r0]
-        targets = set(target_per_relation[r.r0]) - set(
-            sources_per_relation[r.r0]
-        )
+    decision["mcost"] = (
+        decision["ud"] + decision["ld"] + decision["syn_penalty"]
+    )
 
-        for s, t in product(sources, targets):
-            path = nx.shortest_path(undirected, s, t)
-            if any([token in path for token in r.tokens]) and s != t:
-                triples += [TripleCandidate(s, r, t)]
-                logger.info(
-                    f" {graph.nodes[s]['lower']},"
-                    f" {r.project_to_text_str(graph)},"
-                    f" {graph.nodes[t]['lower']}"
+    # source decisions are based on mcost
+
+    s = decision.set_index(["r", "s"])["mcost"]
+
+    # mask minimum values of mcost per relation
+    mask = s.eq(s.groupby(level=0).transform("min"))
+
+    s = s[mask].reset_index(level=1)["s"]
+    sources_per_relation = s.groupby(level=0).apply(list).to_dict()
+
+    for iroot in pile.relations.iroots:
+        sources = sources_per_relation[iroot]
+        targets = list(set(target_per_relation[iroot]) - set(sources))
+
+        if sources and targets:
+            for s, t in product(sources, targets):
+                path = nx.shortest_path(g_undirected, s, t)
+                # to make sure relation is in dep tree path between the source and the target
+                if s != t and iroot in path:
+                    triples += [
+                        TripleCandidate(
+                            source=pile.sources[s],
+                            relation=pile.relations[iroot],
+                            target=pile.targets[t],
+                        )
+                    ]
+        elif not sources:
+            triples += [
+                TripleCandidate(
+                    source=Source(),
+                    relation=pile.relations[iroot],
+                    target=pile.targets[t],
                 )
+                for t in targets
+            ]
+        elif not targets:
+            triples += [
+                TripleCandidate(
+                    source=pile.sources[s],
+                    relation=pile.relations[iroot],
+                    target=Target(),
+                )
+                for s in sources
+            ]
+
     return triples
 
 
