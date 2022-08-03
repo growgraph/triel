@@ -15,25 +15,16 @@ ACandidateType = TypeVar("ACandidateType", bound="ACandidate")
 class ACandidate:
     def __init__(self):
         self.r0: int | None = None  # position in a CandidatePile
-        self.root: Token | None = None  # index of root token
         self.passive: bool = False
         self._tokens: list[Token] = list()
         self.added: bool = False
+        self.root: Token  # index of root token
 
     def __len__(self) -> int:
         return len(self._tokens)
 
     def max_level(self) -> int:
         return 0 if self.empty else max(t._level for t in self._tokens)
-
-    @staticmethod
-    def concretize(x, graph):
-        # return lemma if not entity, otherwise return text
-        return (
-            graph.nodes[x]["lemma"]
-            if not graph.nodes[x]["ent_iob"] not in (0, 2)
-            else graph.nodes[x]["text"]
-        )
 
     @property
     def tokens(self):
@@ -47,12 +38,25 @@ class ACandidate:
     def contains_vb(self):
         return any(t.tag_.startswith("VB") for t in self._tokens)
 
-    def project_to_text(self, graph):
-        ll = [ACandidate.concretize(r, graph) for r in self.tokens]
-        return ll
+    def project_to_text(self):
+        """
+            see https://spacy.io/api/token#attributes
+            if entity - return text, otherwise return lemma
+        :param graph:
+        :return:
+        """
+        pp = []
+        for x in self._tokens:
+            if x.dep_ == "punct":
+                continue
+            if x.ent_iob in (0, 2):
+                pp += [x.text]
+            else:
+                pp += [x.lemma]
+        return pp
 
-    def project_to_text_str(self, graph):
-        ll = self.project_to_text(graph)
+    def project_to_text_str(self):
+        ll = self.project_to_text()
         txt = "".join([ll[0]] + [x.capitalize() for x in ll[1:]])
         return txt
 
@@ -87,6 +91,8 @@ class Token:
         self.tag_: str = kwargs.get("tag_", "")
         self.lower: str = kwargs.get("lower", "")
         self.lemma: str = kwargs.get("lemma", "")
+        self.text: str = kwargs.get("text", "")
+        self.ent_iob: str = kwargs.get("ent_iob", 0)
         self._level: int = kwargs.get("_level", 0)
 
     def __repr__(self):
@@ -123,17 +129,18 @@ class TripleCandidate:
     relation: Relation
     target: Target
 
-    def project_to_text(self, graph):
-        s = ACandidate.concretize(self.source, graph)
-        t = ACandidate.concretize(self.target, graph)
-        r = self.relation.project_to_text_str(graph)
-        return s, r, t
+    def project_to_text(self):
+        return (
+            self.source.project_to_text_str(),
+            self.relation.project_to_text_str(),
+            self.target.project_to_text_str(),
+        )
 
 
 class ACandidatePile:
     def __init__(self, candidates: List[ACandidateType] | None = None):
-        self.iroot_to_candidate = {}
-        self._candidates: List[ACandidateType] = []
+        self.iroot_to_candidate: dict[int, ACandidateType] = {}
+        self._candidates: list[ACandidateType] = []
         if candidates is not None:
             for c in candidates:
                 self.append(c)

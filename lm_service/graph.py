@@ -9,7 +9,7 @@ def excise_node(graph, u):
     graph.remove_node(u)
 
 
-def phrase_to_deptree(nlp: Language, document: str) -> (nx.DiGraph, Doc):
+def phrase_to_deptree(nlp: Language, document: str) -> tuple[Doc, nx.DiGraph]:
     """
     given nlp and a phrase (string) - yield spacy doc and a digraph representing syn parsing
     :param nlp:

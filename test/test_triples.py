@@ -27,7 +27,7 @@ from lm_service.relation import (
     find_candidates_bfs,
     graph_to_candidate_pile,
     compute_distances,
-    generate_extra_graphs
+    generate_extra_graphs,
 )
 
 logger = logging.getLogger(__name__)
@@ -74,7 +74,12 @@ class TestR(unittest.TestCase):
                 distance_undirected,
                 distance_directed,
                 distance_levels,
-            ) = compute_distances(graph, g_undirected=g_undirected, g_weighted=g_weighted, pile=pile.relations)
+            ) = compute_distances(
+                graph,
+                g_undirected=g_undirected,
+                g_weighted=g_weighted,
+                pile=pile.relations,
+            )
 
     # @unittest.skip("")
     def test_relation(self):
@@ -83,7 +88,8 @@ class TestR(unittest.TestCase):
 
         # mg, r, triples_projected, _ = graph_to_relations(graph, self.rules)
         triples = graph_to_relations(graph, self.rules)
-        # triples_projected = [tri.project_to_text(graph) for tri in triples]
+        triples_projected = [tri.project_to_text() for tri in triples]
+        print("")
         # self.assertEqual(
         #     triples_projected,
         #     [
