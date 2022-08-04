@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import dataclasses
+from copy import deepcopy
 from enum import Enum
 from typing import List, Set, TypeVar
+
+from lemminflect import getAllInflections, getInflection, getLemma
 
 
 class RelationHasNoTargetCandidatesError(Exception):
@@ -15,7 +18,6 @@ ACandidateType = TypeVar("ACandidateType", bound="ACandidate")
 class ACandidate:
     def __init__(self):
         self.r0: int | None = None  # position in a CandidatePile
-        self.passive: bool = False
         self._tokens: list[Token] = list()
         self.added: bool = False
         self.root: Token  # index of root token
@@ -106,14 +108,60 @@ class ACandidateKind(Enum):
     TARGET = 4
 
 
+# WIP
+
+
 class Relation(ACandidate):
-    pass
+    @property
+    def passive(self):
+        return any([t.dep_ == "auxpass" for t in self._tokens])
+
+    def normalize(self):
+        if self.passive:
+            # find auxpass, inflect it to was
+            auxpasses = [
+                (j, t)
+                for j, t in enumerate(self._tokens)
+                if t.dep_ == "auxpass"
+            ]
+            for j, t in auxpasses:
+                lemmas = getLemma(t.text, upos="VERB")
+                if lemmas:
+                    inflected = getInflection(lemmas[0], tag="VBD")
+                    if inflected:
+                        copy = deepcopy(t)
+                        copy.text = inflected[0]
+                        self._tokens[j] = copy
+        else:
+            # drop all aux
+            self._tokens = [t for t in self._tokens if t.dep_ != "aux"]
+            # inflect remaining VBs
+            starts_vb = [
+                (j, t)
+                for j, t in enumerate(self._tokens)
+                if t.tag_.startswith("VB")
+            ]
+            for j, t in starts_vb:
+                lemmas = getLemma(t.text, upos="VERB")
+                if lemmas:
+                    inflected = getInflection(lemmas[0], tag="VBZ")
+                    if inflected:
+                        copy = deepcopy(t)
+                        copy.text = inflected[0]
+                        self._tokens[j] = copy
 
 
 class SourceOrTarget(ACandidate):
     def drop_articles(self):
         self._tokens = [t for t in self._tokens if t.dep_ != "det"]
         # self._tokens = [t for t in self._tokens if t.tag_ != "DT"]
+
+    def drop_amod_vbn(self):
+        self._tokens = [
+            t
+            for t in self._tokens
+            if not (t.dep_ == "amod" and t.tag_ == "VBN")
+        ]
 
 
 class Source(SourceOrTarget):
@@ -124,7 +172,7 @@ class Target(SourceOrTarget):
     pass
 
 
-@dataclass
+@dataclasses.dataclass
 class TripleCandidate:
     source: Source
     relation: Relation
@@ -137,9 +185,20 @@ class TripleCandidate:
             self.target.project_to_text_str(),
         )
 
+    def drop_amod_vbn(self):
+        new = dataclasses.replace(self)
+        new.source.drop_articles()
+        new.target.drop_articles()
+        return new
+
     def drop_articles(self):
-        self.source.drop_articles()
-        self.target.drop_articles()
+        new = dataclasses.replace(self)
+        new.source.drop_amod_vbn()
+        new.target.drop_amod_vbn()
+        return new
+
+    def normalize_relation(self):
+        self.relation.normalize()
         return self
 
 
@@ -213,7 +272,7 @@ class ACandidatePile:
         return self
 
 
-@dataclass
+@dataclasses.dataclass
 class CandidatePile:
     sources: ACandidatePile
     targets: ACandidatePile

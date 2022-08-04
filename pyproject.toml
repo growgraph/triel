@@ -26,6 +26,8 @@ pre-commit = "^2.20.0"
 pylint = "^2.14.5"
 autoflake = "^1.4"
 isort = "^5.10.1"
+pyinflect = "^0.5.1"
+lemminflect = "^0.2.2"
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"

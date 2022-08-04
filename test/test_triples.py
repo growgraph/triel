@@ -74,24 +74,34 @@ class TestR(unittest.TestCase):
             )
 
     def test_relation(self):
-        document = self.documents[0]
-        rdoc, graph = phrase_to_deptree(self.nlp, document)
+        documents = self.documents[:2]
+        acc_triples = []
+        triples_projected = []
+        for doc in documents:
+            rdoc, graph = phrase_to_deptree(self.nlp, doc)
 
-        triples = graph_to_relations(graph, self.rules)
-        triples = [tri.drop_articles() for tri in triples]
+            triples = graph_to_relations(graph, self.rules)
+            triples = [
+                tri.drop_articles().drop_amod_vbn().normalize_relation()
+                for tri in triples
+            ]
+            acc_triples += triples
 
-        [tri.project_to_text() for tri in triples]
+            triples_projected += [tri.project_to_text() for tri in triples]
 
-        print("")
-        # self.assertEqual(
-        #     triples_projected,
-        #     [
-        #         ("CHEOPS", "be", "telescope"),
-        #         ("telescope", "determine", "size"),
-        #         # here it should be rather (("telescope", "determine", "size"), "allow", "estimation")
-        #         ("telescope", "allow", "estimation"),
-        #     ],
-        # )
+        self.assertEqual(
+            triples_projected,
+            [
+                ("medium", "wasAffectedBy", "nearFieldRadiation"),
+                ("CHEOPS", "is", "europeanSpaceTelescope"),
+                (
+                    "europeanSpaceTelescope",
+                    "determines",
+                    "sizeOfExtrasolarPlanets",
+                ),
+                ("europeanSpaceTelescope", "allows", "estimationOfTheirMass"),
+            ],
+        )
 
     @unittest.skip("")
     def test_relation_advanced(self):

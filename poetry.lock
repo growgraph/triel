@@ -351,6 +351,17 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "lemminflect"
+version = "0.2.2"
+description = "A python module for English lemmatization and inflection."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "markupsafe"
 version = "2.1.1"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -573,6 +584,14 @@ description = "Python interface to Graphviz"
 category = "main"
 optional = false
 python-versions = ">=3.8"
+
+[[package]]
+name = "pyinflect"
+version = "0.5.1"
+description = "A python module for word inflections designed for use with Spacy."
+category = "main"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "pyjwt"
@@ -1086,7 +1105,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "5065eb6041edfbb8b414e2022815b1e57cc1b9d0d6f5ec130697ad32e981d37f"
+content-hash = "b53078254f697f8bc9b27f5ce97055bee3aadafa7d8ecf946dc85b782398d143"
 
 [metadata.files]
 aniso8601 = [
@@ -1234,6 +1253,7 @@ langcodes = [
     {file = "langcodes-3.3.0.tar.gz", hash = "sha256:794d07d5a28781231ac335a1561b8442f8648ca07cd518310aeb45d6f0807ef6"},
 ]
 lazy-object-proxy = []
+lemminflect = []
 markupsafe = [
     {file = "MarkupSafe-2.1.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:86b1f75c4e7c2ac2ccdaec2b9022845dbb81880ca318bb7a0a01fbf7813e3812"},
     {file = "MarkupSafe-2.1.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:f121a1420d4e173a5d96e47e9a0c0dcff965afdf1626d28de1460815f7c4ee7a"},
@@ -1421,6 +1441,7 @@ pyflakes = []
 pygraphviz = [
     {file = "pygraphviz-1.9.zip", hash = "sha256:fa18f7c6cea28341a4e466ed0cf05682b0a68288afe8dd7c9426782f7c1ae01c"},
 ]
+pyinflect = []
 pyjwt = [
     {file = "PyJWT-2.4.0-py3-none-any.whl", hash = "sha256:72d1d253f32dbd4f5c88eaf1fdc62f3a19f676ccbadb9dbc5d07e951b2b26daf"},
     {file = "PyJWT-2.4.0.tar.gz", hash = "sha256:d42908208c699b3b973cbeb01a969ba6a96c821eefb1c5bfe4c390c01d67abba"},

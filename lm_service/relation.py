@@ -161,18 +161,14 @@ def find_relation_subtree_dfs(
     if level == 0 and current_relation.empty:
         if vtoken.tag_.startswith("VB") and vtoken.dep_ != "amod":
             current_relation.append(vtoken)
-            if vtoken.dep_ == "acl":
-                current_relation.passive = True
     elif level > 0 and not current_relation.empty:
         # auxpass or aux
         if (vtoken.tag_.startswith("VB") or (vtoken.tag_ == "MD")) and (
             "aux" in vtoken.dep_
         ):
             current_relation.prepend(vtoken)
-            # current_relation.passive = True
         # elif vtoken.tag_.startswith("VB") and vtoken.dep_ == "advcl":
         #     current_relation.append(vtoken)
-        #     current_relation.passive = True
         elif (vtoken.tag_ == "IN" and vtoken.dep_ == "prep") or (
             vtoken.tag_ == "IN" and vtoken.dep_ == "agent"
         ):
@@ -266,8 +262,6 @@ def find_relation_candidates_obsolete(graph: nx.DiGraph) -> ACandidatePile:
         if graph.nodes[v]["tag_"].startswith("VB"):
             # TODO check graph.nodes[v]["dep_"] != "aux"
             vtoken = Token(**graph.nodes[v])
-            if vtoken.tag_ == "VBN" and vtoken.dep_ == "acl":
-                cand.passive = True
 
             if len(list(graph.successors(v))) > 0:
                 cand._tokens = [vtoken]
@@ -286,14 +280,12 @@ def find_relation_candidates_obsolete(graph: nx.DiGraph) -> ACandidatePile:
                         )
                     ):
                         cand._tokens = [wtoken] + cand._tokens
-                        cand.passive = True
                     elif (
                         vtoken.tag_ == "VBZ"
                         and wtoken.tag_ == "VBN"
                         and wtoken.dep_ == "advcl"
                     ):
                         cand._tokens = cand._tokens + [wtoken]
-                        cand.passive = True
                 if (wtoken.tag_ == "IN" and wtoken.dep_ == "prep") or (
                     wtoken.tag_ == "IN" and wtoken.dep_ == "agent"
                 ):
@@ -530,7 +522,7 @@ def derive_targets_per_relaton(
     return targets_per_relation
 
 
-def graph_to_relations(graph, rules):
+def graph_to_relations(graph, rules) -> list[TripleCandidate]:
     """
     find triplets in a dep graph:
         a. find relation candidates
@@ -694,7 +686,7 @@ def phrase_to_relations(
 
     # chunks = doc_to_chunks(rdoc)
 
-    triples = graph_to_relations(graph, rules)
+    graph_to_relations(graph, rules)
     # _, triples, triples_projected, metagraph = graph_to_relations2(graph, rules)
 
     coref_graph = render_mstar_graph(rdoc, graph)

@@ -21,6 +21,7 @@ isort:
 autoflake:
 	autoflake --remove-unused-variables --verbose --in-place  ./lm_service/**/*py
 
+all: autoflake black isort mypy
 
 #.PHONY: pylint
 #pylint:

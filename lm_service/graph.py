@@ -37,7 +37,7 @@ def phrase_to_deptree(nlp: Language, document: str) -> tuple[Doc, nx.DiGraph]:
         for token in rdoc
     ]
     # root = [v[0] for v in vs if v[1]["dep_"] == "ROOT"][0]
-    # FYI https://spacy.io/docs/api/token
+    # FYI https://www.spacy.io/docs/api/token
     # https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html
     es = []
     for token in rdoc:
