@@ -1,16 +1,16 @@
-import os
-from pathlib import Path
-import spacy
-import pkgutil
-import yaml
-import coreferee
 import hashlib
-from lm_service.relation import (
-    render_coref_graph,
-    render_mstar_graph,
-)
-from lm_service.graph import phrase_to_deptree
+import os
+import pkgutil
+from pathlib import Path
+
+import coreferee
+import spacy
+import yaml
+
+from lm_service.coref import render_coref_graph
 from lm_service.folding import fold_graph_top
+from lm_service.graph import phrase_to_deptree
+from lm_service.relation import render_mstar_graph
 from lm_service.util import plot_graph
 
 

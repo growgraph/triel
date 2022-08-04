@@ -1,5 +1,6 @@
-import networkx as nx
 from typing import Optional
+
+import networkx as nx
 
 
 class Leaf:

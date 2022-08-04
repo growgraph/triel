@@ -1,33 +1,22 @@
-import pkgutil
-import yaml
-import sys
-import os
-import unittest
-import spacy
 import logging
-from collections import deque
+import os
+import pkgutil
+import sys
+import unittest
 from pathlib import Path
-import coreferee
-from lm_service.relation import (
-    graph_to_relations,
-    phrase_to_relations,
-    add_hash,
-    sieve_sources_targets,
-)
+
+import spacy
+import yaml
+
+from lm_service.graph import phrase_to_deptree, transform_advcl
 from lm_service.preprocessing import normalize_input_text
-from lm_service.graph import transform_advcl
-from lm_service.graph import phrase_to_deptree
-from lm_service.onto import (
-    Relation,
-    ACandidatePile,
-    ACandidateKind,
-    SourceOrTarget,
-)
 from lm_service.relation import (
-    find_candidates_bfs,
-    graph_to_candidate_pile,
+    add_hash,
     compute_distances,
     generate_extra_graphs,
+    graph_to_candidate_pile,
+    graph_to_relations,
+    phrase_to_relations,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,13 +48,11 @@ class TestR(unittest.TestCase):
 
     def test_consecutive_candidates(self):
 
-        sizes = []
         for document in self.documents:
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             cp = graph_to_candidate_pile(graph, rules=self.rules)
 
     def test_distances(self):
-        sizes = []
         for document in self.documents:
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             pile = graph_to_candidate_pile(graph, self.rules)
@@ -88,7 +75,7 @@ class TestR(unittest.TestCase):
 
         # mg, r, triples_projected, _ = graph_to_relations(graph, self.rules)
         triples = graph_to_relations(graph, self.rules)
-        triples_projected = [tri.project_to_text() for tri in triples]
+        [tri.project_to_text() for tri in triples]
         print("")
         # self.assertEqual(
         #     triples_projected,

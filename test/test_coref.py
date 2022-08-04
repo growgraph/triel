@@ -1,8 +1,8 @@
-import coreferee
-import sys
-import spacy
-import unittest
 import logging
+import sys
+import unittest
+
+import spacy
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +15,8 @@ class TestCoref(unittest.TestCase):
         nlp.add_pipe("coreferee")
         doc = nlp(
             "Although he was very busy with his work, Peter had had enough of"
-            " it. He and his wife decided they needed a holiday. They travelled"
-            " to Spain because they loved the country very much."
+            " it. He and his wife decided they needed a holiday. They"
+            " travelled to Spain because they loved the country very much."
         )
 
         gt_chains = (

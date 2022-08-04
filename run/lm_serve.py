@@ -1,8 +1,8 @@
-from flask import Flask, request, jsonify
-from flask_restful import Api, reqparse
-from transformers import pipeline
-from transformers import AutoTokenizer, AutoModelForMaskedLM
 import logging
+
+from flask import Flask, jsonify, request
+from flask_restful import Api, reqparse
+from transformers import AutoModelForMaskedLM, AutoTokenizer, pipeline
 
 app = Flask(__name__)
 api = Api(app)

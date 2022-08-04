@@ -1,17 +1,19 @@
-import spacy
-import coreferee
-import pandas as pd
-import sys
-import networkx as nx
-import pkgutil
-import os
-import yaml
-import logging
 import argparse
+import logging
+import os
+import pkgutil
+import sys
+
+import coreferee
+import networkx as nx
+import pandas as pd
+import spacy
+import yaml
+
+from lm_service.graph import transform_advcl
+from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import phrase_to_relations
 from lm_service.util import plot_graph, plot_leaves
-from lm_service.preprocessing import normalize_input_text
-from lm_service.graph import transform_advcl
 
 
 def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
@@ -31,19 +33,20 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
         (
             graph,
             coref_graph,
-            metagraph,
             triples_expanded,
             triples_proj,
         ) = phrase_to_relations(fragment, nlp, rules)
         acc += [(i, fragment, triples_expanded, triples_proj)]
         if plot:
             plot_graph(graph, fig_path, f"fragment_{i}_full")
-            plot_graph(metagraph, fig_path, f"fragment_{i}_mg")
+            # plot_graph(metagraph, fig_path, f"fragment_{i}_mg")
             plot_graph(coref_graph, fig_path, f"fragment_{i}_coref")
-            plot_leaves(metagraph, fig_path, f"fragment_{i}")
+            # plot_leaves(metagraph, fig_path, f"fragment_{i}")
 
     sources = [s for _, _, _, triples_proj in acc for s, _, _ in triples_proj]
-    relations = [r for _, _, _, triples_proj in acc for _, r, _ in triples_proj]
+    relations = [
+        r for _, _, _, triples_proj in acc for _, r, _ in triples_proj
+    ]
     targets = [t for _, _, _, triples_proj in acc for _, _, t in triples_proj]
 
     tokens = sorted(set(sources) | set(targets) | set(relations))

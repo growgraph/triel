@@ -1,4 +1,5 @@
 from itertools import product
+
 import networkx as nx
 from spacy import Language
 from spacy.tokens import Doc

@@ -1,35 +1,33 @@
 from __future__ import annotations
-import logging
+
 import hashlib
-from copy import deepcopy
+import logging
 from collections import deque
-
-import pandas as pd
+from copy import deepcopy
 from itertools import product
-import networkx as nx
+from typing import List, Tuple
 
+import networkx as nx
+import pandas as pd
 from spacy.tokens import Doc
 
 from lm_service.coref import render_coref_graph
 from lm_service.folding import get_flag
 
 # import pygraphviz as pgv
-from lm_service.graph import phrase_to_deptree, excise_node
-
-from typing import List, Tuple
-
+from lm_service.graph import excise_node, phrase_to_deptree
 from lm_service.onto import (
     ACandidate,
-    ACandidateType,
-    Token,
-    Relation,
-    SourceOrTarget,
-    Source,
-    Target,
-    TripleCandidate,
-    ACandidatePile,
     ACandidateKind,
+    ACandidatePile,
+    ACandidateType,
     CandidatePile,
+    Relation,
+    Source,
+    SourceOrTarget,
+    Target,
+    Token,
+    TripleCandidate,
 )
 
 logger = logging.getLogger(__name__)
@@ -394,7 +392,10 @@ def generate_extra_graphs(
     # distance wrt to weights defined in this way will be 0 for the same level
     # +1 or -1 for level k to k+1 and vice versa
     g_weighted.add_weighted_edges_from(
-        [(u, v, g_reversed.edges[u, v]["weight"]) for u, v in g_reversed.edges],
+        [
+            (u, v, g_reversed.edges[u, v]["weight"])
+            for u, v in g_reversed.edges
+        ],
         weight="weight",
     )
 
@@ -549,7 +550,11 @@ def graph_to_relations(graph, rules):
     # create relevant graphs for distance calculations : undirected, reversed ...
     g_undirected, g_reversed, g_weighted = generate_extra_graphs(graph)
 
-    distance_undirected, distance_directed, distance_levels = compute_distances(
+    (
+        distance_undirected,
+        distance_directed,
+        distance_levels,
+    ) = compute_distances(
         graph=graph,
         g_undirected=g_undirected,
         g_weighted=g_weighted,

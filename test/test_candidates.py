@@ -2,24 +2,25 @@
 test candidate extraction
 """
 
-import pkgutil
 import logging
-from collections import deque
-import yaml
-import sys
 import os
+import pkgutil
+import sys
 import unittest
-import spacy
+from collections import deque
 from pathlib import Path
-from lm_service.preprocessing import normalize_input_text
-from lm_service.graph import transform_advcl
+
+import spacy
+import yaml
+
 from lm_service.graph import phrase_to_deptree
 from lm_service.onto import (
-    Relation,
-    ACandidatePile,
     ACandidateKind,
+    ACandidatePile,
+    Relation,
     SourceOrTarget,
 )
+from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
     find_candidates_bfs,
     find_relation_subtree_dfs,

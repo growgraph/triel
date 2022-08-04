@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import logging
 from copy import deepcopy
 from typing import Any
 
 import networkx as nx
 from spacy.tokens import Doc
-import logging
 
 logger = logging.getLogger(__name__)
 

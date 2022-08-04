@@ -1,18 +1,18 @@
 import argparse
 import logging
 import pkgutil
-import yaml
-import spacy
+
 import coreferee
-from flask import Flask, request, jsonify
+import spacy
+import yaml
+from flask import Flask, jsonify, request
 from flask_restful import Api, reqparse
-
-from graph_cast.util import ResourceHandler
 from graph_cast.db.factory import ConfigFactory
+from graph_cast.util import ResourceHandler
 
-from lm_service.relation import phrase_to_relations, add_hash
-from lm_service.preprocessing import normalize_input_text
 from lm_service.graph import transform_advcl
+from lm_service.preprocessing import normalize_input_text
+from lm_service.relation import add_hash, phrase_to_relations
 
 app = Flask(__name__)
 api = Api(app)

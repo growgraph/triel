@@ -1,11 +1,13 @@
-import pkgutil
-import yaml
-import sys
-import os
-import unittest
-import networkx as nx
 import logging
+import os
+import pkgutil
+import sys
+import unittest
 from pathlib import Path
+
+import networkx as nx
+import yaml
+
 from lm_service.folding import fold_graph
 from lm_service.util import plot_graph, plot_leaves
 

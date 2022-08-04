@@ -1,8 +1,8 @@
 from __future__ import annotations
-from enum import Enum
+
 from dataclasses import dataclass
-from typing import Optional, List, Set, Dict
-from typing import TypeVar
+from enum import Enum
+from typing import Dict, List, Optional, Set, TypeVar
 
 
 class RelationHasNoTargetCandidatesError(Exception):
