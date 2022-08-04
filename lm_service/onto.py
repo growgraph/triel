@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Set, TypeVar
+from typing import List, Set, TypeVar
 
 
 class RelationHasNoTargetCandidatesError(Exception):
@@ -42,7 +42,6 @@ class ACandidate:
         """
             see https://spacy.io/api/token#attributes
             if entity - return text, otherwise return lemma
-        :param graph:
         :return:
         """
         pp = []
@@ -112,14 +111,16 @@ class Relation(ACandidate):
 
 
 class SourceOrTarget(ACandidate):
+    def drop_articles(self):
+        self._tokens = [t for t in self._tokens if t.dep_ != "det"]
+        # self._tokens = [t for t in self._tokens if t.tag_ != "DT"]
+
+
+class Source(SourceOrTarget):
     pass
 
 
-class Source(ACandidate):
-    pass
-
-
-class Target(ACandidate):
+class Target(SourceOrTarget):
     pass
 
 
@@ -135,6 +136,11 @@ class TripleCandidate:
             self.relation.project_to_text_str(),
             self.target.project_to_text_str(),
         )
+
+    def drop_articles(self):
+        self.source.drop_articles()
+        self.target.drop_articles()
+        return self
 
 
 class ACandidatePile:

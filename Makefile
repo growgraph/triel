@@ -19,7 +19,7 @@ isort:
 
 .PHONY: autoflake
 autoflake:
-	autoflake --remove-unused-variables --remove-all-unused-imports --verbose --in-place  ./lm_service/**/*py
+	autoflake --remove-unused-variables --verbose --in-place  ./lm_service/**/*py
 
 
 #.PHONY: pylint

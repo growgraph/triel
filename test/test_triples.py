@@ -5,6 +5,7 @@ import sys
 import unittest
 from pathlib import Path
 
+import coreferee
 import spacy
 import yaml
 
@@ -42,6 +43,10 @@ class TestR(unittest.TestCase):
         "The medium was affected by the near-field radiation",
         "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
         " telescope to determine the size of known extrasolar planets,"
+        " which will allow the estimation of their mass",
+        "The medium was affected by the near-field radiation",
+        "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+        " telescope to determine the size of known extrasolar planets,"
         " which will allow the estimation of their mass, density,"
         " composition and their formation.",
     ]
@@ -69,11 +74,14 @@ class TestR(unittest.TestCase):
             )
 
     def test_relation(self):
-        document = self.phrases[0]
+        document = self.documents[0]
         rdoc, graph = phrase_to_deptree(self.nlp, document)
 
         triples = graph_to_relations(graph, self.rules)
+        triples = [tri.drop_articles() for tri in triples]
+
         [tri.project_to_text() for tri in triples]
+
         print("")
         # self.assertEqual(
         #     triples_projected,
