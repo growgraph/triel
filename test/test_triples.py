@@ -68,12 +68,10 @@ class TestR(unittest.TestCase):
                 pile=pile.relations,
             )
 
-    # @unittest.skip("")
     def test_relation(self):
         document = self.phrases[0]
         rdoc, graph = phrase_to_deptree(self.nlp, document)
 
-        # mg, r, triples_projected, _ = graph_to_relations(graph, self.rules)
         triples = graph_to_relations(graph, self.rules)
         [tri.project_to_text() for tri in triples]
         print("")
