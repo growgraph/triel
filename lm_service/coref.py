@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
+from collections import defaultdict
 from typing import Any
 
 import networkx as nx
@@ -10,28 +10,49 @@ from spacy.tokens import Doc
 logger = logging.getLogger(__name__)
 
 
-class CorefGraph:
-    def __init__(
-        self, graph: nx.DiGraph, root: int, map_specific: dict[int, int]
-    ):
-        self.graph: nx.DiGraph = graph
-        self.root: int = root
-        self.map_specific: dict[int, int] = map_specific
+# class CorefGraph:
+#     def __init__(
+#         self, graph: nx.DiGraph, root: int, map_specific: dict[int, int]
+#     ):
+#         self.graph: nx.DiGraph = graph
+#         self.root: int = root
+#         self.map_specific: dict[int, int] = map_specific
 
 
-def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
+def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
+    """
+    render super graph using coreferee package
+
+    :param rdoc:
+    :param graph:
+    :return: coref graph is a Tree of 4 levels:
+        root -> chain -> blank -> token
+        chain corresponds to one co-referenced entity, like [("they"), ("Mary", "Peter")]
+
+            - there can be only one root,
+            - 0 or many chains per root
+            - 1 or many blanks per chain
+            - 1 or many tokens per blank
+
+        NB: most specific mention is encodedin in blank attribute `most_specific`
+    """
 
     chains = rdoc._.coref_chains if rdoc._.coref_chains is not None else []
+    # nodes for coref graph
     vs_coref = []
+
+    # edges for coref graph
     es_coref = []
 
-    mention_nodes = []
-    chain_specific_mention = dict()
-    concept_specific_blank = dict()
+    # mention_nodes = []
 
-    coref_root = max([token.i for token in rdoc]) + 1
-    jc = coref_root + 1
+    # map : chain_id -> most_specific_mention_id
+    concept_specific_blank: dict[int, int] = dict()
 
+    vertex_counter = max([token.i for token in rdoc]) + 1
+    coref_root = vertex_counter
+
+    # add root
     vs_coref += [
         (
             coref_root,
@@ -42,36 +63,38 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
             },
         )
     ]
+    vertex_counter += 1
 
     for jchain, chain in enumerate(chains):
-        coref_chain = jc
-        chain_specific_mention[coref_chain] = chain[
-            chain.most_specific_mention_index
-        ]
-        dd: dict[str, Any] = {
-            "label": f"{coref_chain}-*-coref-chain",
+        coref_chain = vertex_counter
+        chain_state: dict[str, Any] = {
             "tag_": "coref",
             "dep_": "chain",
             "chain": jchain,
         }
-        vs_coref += [(coref_chain, dd)]
-        es_coref.append((coref_root, coref_chain))
-        jc += 1
-        for kth, x in enumerate(chain.mentions):
-            coref_blank = jc
-            if kth == chain.most_specific_mention_index:
-                concept_specific_blank[coref_chain] = coref_blank
+        chain_state[
+            "label"
+        ] = f"{coref_chain}-*-{chain_state['tag_']}-{chain_state['dep_']}"
 
-            ddd: dict[str, Any] = {
-                "label": f"{coref_blank}-*-coref-blank",
+        vs_coref += [(coref_chain, chain_state)]
+        es_coref.append((coref_root, coref_chain))
+        vertex_counter += 1
+        for kth, x in enumerate(chain.mentions):
+            coref_blank = vertex_counter
+            blank_state: dict[str, Any] = {
                 "tag_": "coref",
-                "dep_": "blank",
+                "dep_": "blank"
+                + ("*" if kth == chain.most_specific_mention_index else ""),
+                "most_specific": kth == chain.most_specific_mention_index,
                 "chain": jchain,
             }
-            vs_coref += [(coref_blank, ddd)]
+            blank_state[
+                "label"
+            ] = f"{coref_blank}-*-{blank_state['tag_']}-{blank_state['dep_']}"
+
+            vs_coref += [(coref_blank, blank_state)]
             es_coref.append((coref_chain, coref_blank))
-            jc += 1
-            mention_nodes.extend(x.token_indexes)
+            vertex_counter += 1
             for y in x.token_indexes:
                 vs_coref += [(y, graph.nodes[y])]
                 es_coref.append((coref_blank, y))
@@ -90,11 +113,110 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
     }
     logger.info(f"specifics {chs}")
 
-    if full:
-        coref_graph = deepcopy(graph)
-    else:
-        coref_graph = nx.DiGraph()
+    coref_graph = nx.DiGraph()
 
     coref_graph.add_nodes_from(vs_coref)
     coref_graph.add_edges_from(es_coref)
-    return coref_graph, mention_nodes, concept_specific_blank
+    return coref_graph
+
+
+def expand_candidate(candidate_token: int, metagraph, coref_graph):
+
+    # t = st.tree
+    # [(t.nodes[n]["lower"], t.nodes[n]["tag_"], t.nodes[n]["dep_"]) for n in t.nodes() if "lower" in t.nodes[n]]
+
+    candidates = [candidate_token]
+    if metagraph.nodes[candidate_token]["leaf"].is_compound():
+        candidates = metagraph.nodes[candidate_token]["leaf"].compute_conj()
+    candidates = expand_mstar(candidates, coref_graph)
+    return candidates
+
+
+def expand_mstar(candidates, coref_graph):
+    candidates_out = set()
+    for c in candidates:
+        if c in coref_graph.nodes():
+            candidates_out |= yield_star_nodes(
+                coref_graph, coref_graph.nodes[c]["m*"]
+            )
+        else:
+            candidates_out |= {c}
+    return list(candidates_out)
+
+
+def yield_star_nodes(graph, node_list):
+    """
+    yield most specific mentions for any mentions, given a coref graph
+    :param graph:
+    :param node_list:
+    :return:
+    """
+    nlist = set()
+    for n in node_list:
+        if "m*" in graph.nodes[n] and n in graph.nodes[n]["m*"]:
+            nlist |= {n}
+        else:
+            nlist |= yield_star_nodes(graph, graph.nodes[n]["m*"])
+    return nlist
+
+
+# @dataclasses.dataclass
+# def ChainStruct:
+
+
+def render_coref_candidate_map(
+    coref_graph: nx.DiGraph,
+) -> tuple[defaultdict[int, list[int]], defaultdict[int, list[int]]]:
+
+    # only one root - guaranteed if coref_graph is produced by render_coref_graph
+
+    root = next(n for n, d in coref_graph.in_degree if d == 0)
+
+    map_chain_to_most_specific = defaultdict(list)
+    map_subbable_to_chain = defaultdict(list)
+
+    # get starred blank nodes
+
+    for v_chain in coref_graph.successors(root):
+        for v_blank in coref_graph.successors(v_chain):
+            blank_props = coref_graph.nodes[v_blank]
+            for v in coref_graph.successors(v_blank):
+                # v_props = coref_graph.nodes[v]
+                map_subbable_to_chain[v].append(v_chain)
+                if blank_props["most_specific"]:
+                    map_chain_to_most_specific[v_chain].append(v)
+
+    return map_subbable_to_chain, map_chain_to_most_specific
+
+
+def sub_coreference(
+    map_subbable_to_chain, map_chain_to_most_specific, x
+) -> list[int]:
+    if x in map_subbable_to_chain:
+        chains = map_subbable_to_chain[x]
+        chains = [c for c in chains if c in map_chain_to_most_specific]
+        if chains:
+            chains = sorted(
+                chains, key=lambda y: len(map_chain_to_most_specific[y])
+            )
+            r = map_chain_to_most_specific[chains[0]]
+            if x in r:
+                return [x]
+            else:
+                return [
+                    z
+                    for r0 in r
+                    for z in sub_coreference(
+                        map_subbable_to_chain, map_chain_to_most_specific, r0
+                    )
+                ]
+        else:
+            return list()
+    else:
+        return list()
+
+
+def propotion_of_pronouns(graph, mentions):
+    return sum(
+        [graph.nodes[m]["tag_"].startswith("PRP") for m in mentions]
+    ) / len(mentions)

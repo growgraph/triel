@@ -10,7 +10,6 @@ import yaml
 from lm_service.coref import render_coref_graph
 from lm_service.folding import fold_graph_top
 from lm_service.graph import phrase_to_deptree
-from lm_service.relation import render_mstar_graph
 from lm_service.util import plot_graph
 
 
@@ -30,13 +29,9 @@ def main(phrase, nlp):
 
     plot_graph(gmetagraph, fig_path, f"{chash[:6]}_folded")
 
-    coref_graph, _, _ = render_coref_graph(rdoc, nx_graph, full=True)
+    coref_graph = render_coref_graph(rdoc, nx_graph)
 
     plot_graph(coref_graph, fig_path, f"{chash[:6]}_coref")
-
-    coref_graph = render_mstar_graph(rdoc, nx_graph)
-
-    plot_graph(coref_graph, fig_path, f"{chash[:6]}_mstar")
 
 
 if __name__ == "__main__":

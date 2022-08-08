@@ -9,15 +9,17 @@ from typing import List, Tuple
 
 import networkx as nx
 import pandas as pd
-from spacy.tokens import Doc
 
-from lm_service.coref import render_coref_graph
+from lm_service.coref import (
+    expand_candidate,
+    render_coref_candidate_map,
+    render_coref_graph,
+)
 from lm_service.folding import get_flag
 
 # import pygraphviz as pgv
 from lm_service.graph import excise_node, phrase_to_deptree
 from lm_service.onto import (
-    ACandidate,
     ACandidateKind,
     ACandidatePile,
     ACandidateType,
@@ -41,42 +43,6 @@ logger = logging.getLogger(__name__)
     4. choose closest / best sources/ target candidates for each relation to form (relation, source, target) triples    
 
 """
-
-
-def render_mstar_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
-    coref_graph, mention_nodes, concept_specific_blank = render_coref_graph(
-        rdoc, graph
-    )
-
-    for m in mention_nodes:
-        # find m_star
-        blanks = list(coref_graph.predecessors(m))
-        blank_metrics = []
-        for b in blanks:
-            # one concept per blank
-            c0 = [concept for concept in coref_graph.predecessors(b)][0]
-            best_blank_per_concept = concept_specific_blank[c0]
-            specific_mentions = list(
-                coref_graph.successors(best_blank_per_concept)
-            )
-            blank_metrics += [
-                (
-                    best_blank_per_concept,
-                    propotion_of_pronouns(coref_graph, specific_mentions),
-                )
-            ]
-        blank_metrics = sorted(blank_metrics, key=lambda item: item[1])
-        coref_graph.nodes[m]["m*"] = list(
-            coref_graph.successors(blank_metrics[0][0])
-        )
-
-    return coref_graph
-
-
-def propotion_of_pronouns(graph, mentions):
-    return sum(
-        [graph.nodes[m]["tag_"].startswith("PRP") for m in mentions]
-    ) / len(mentions)
 
 
 def find_candidates_bfs(
@@ -620,46 +586,6 @@ def sieve_sources_targets(
     return sources, targets
 
 
-def yield_star_nodes(graph, node_list):
-    """
-    yield most specific mentions for any mentions, given a coref graph
-    :param graph:
-    :param node_list:
-    :return:
-    """
-    nlist = set()
-    for n in node_list:
-        if "m*" in graph.nodes[n] and n in graph.nodes[n]["m*"]:
-            nlist |= {n}
-        else:
-            nlist |= yield_star_nodes(graph, graph.nodes[n]["m*"])
-    return nlist
-
-
-def expand_mstar(candidates, coref_graph):
-    candidates_out = set()
-    for c in candidates:
-        if c in coref_graph.nodes():
-            candidates_out |= yield_star_nodes(
-                coref_graph, coref_graph.nodes[c]["m*"]
-            )
-        else:
-            candidates_out |= {c}
-    return list(candidates_out)
-
-
-def expand_candidate(candidate_token: int, metagraph, coref_graph):
-
-    # t = st.tree
-    # [(t.nodes[n]["lower"], t.nodes[n]["tag_"], t.nodes[n]["dep_"]) for n in t.nodes() if "lower" in t.nodes[n]]
-
-    candidates = [candidate_token]
-    if metagraph.nodes[candidate_token]["leaf"].is_compound():
-        candidates = metagraph.nodes[candidate_token]["leaf"].compute_conj()
-    candidates = expand_mstar(candidates, coref_graph)
-    return candidates
-
-
 def doc_to_chunks(rdoc):
     """
 
@@ -672,6 +598,7 @@ def doc_to_chunks(rdoc):
     return acc
 
 
+# TODO WIP
 def phrase_to_relations(
     phrase, nlp, rules, filter_pronouns=True
 ) -> Tuple[
@@ -686,13 +613,19 @@ def phrase_to_relations(
 
     # chunks = doc_to_chunks(rdoc)
 
-    graph_to_relations(graph, rules)
+    triples = graph_to_relations(graph, rules)
     # _, triples, triples_projected, metagraph = graph_to_relations2(graph, rules)
 
-    coref_graph = render_mstar_graph(rdoc, graph)
+    # coref_graph = render_mstar_graph(rdoc, graph)
 
-    triples_expanded: list[TripleCandidate] = []
+    coref_graph = render_coref_graph(rdoc, graph)
 
+    map_subbable_to_blank, map_blank_to_starred = render_coref_candidate_map(
+        coref_graph
+    )
+
+    # triples_expanded: list[TripleCandidate] = []
+    #
     # for triple in triples:
     #     s_candidates = expand_candidate(
     #         triple.source, metagraph=metagraph, coref_graph=coref_graph
@@ -706,16 +639,16 @@ def phrase_to_relations(
     #         for sp, tp in product(s_candidates, t_candidates)
     #     ]
 
-    if filter_pronouns:
-        triples_expanded = [
-            tri
-            for tri in triples_expanded
-            if graph.nodes[tri.source]["tag_"] != "PRP"
-            and graph.nodes[tri.target]["tag_"] != "PRP"
-        ]
+    # if filter_pronouns:
+    #     triples_expanded = [
+    #         tri
+    #         for tri in triples_expanded
+    #         if graph.nodes[tri.source]["tag_"] != "PRP"
+    #         and graph.nodes[tri.target]["tag_"] != "PRP"
+    #     ]
 
-    triples_proj = [tri.project_to_text() for tri in triples_expanded]
-    return graph, coref_graph, triples_expanded, triples_proj
+    triples_proj = [tri.project_to_text() for tri in triples]
+    return graph, coref_graph, triples, triples_proj
 
 
 def add_hash(triples_expanded, graph):
