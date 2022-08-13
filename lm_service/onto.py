@@ -15,72 +15,6 @@ class RelationHasNoTargetCandidatesError(Exception):
 ACandidateType = TypeVar("ACandidateType", bound="ACandidate")
 
 
-class ACandidate:
-    def __init__(self):
-        self.r0: int | None = None  # position in a CandidatePile
-        self._tokens: list[Token] = list()
-        self.added: bool = False
-        self.root: Token  # index of root token
-
-    def __len__(self) -> int:
-        return len(self._tokens)
-
-    def max_level(self) -> int:
-        return 0 if self.empty else max(t._level for t in self._tokens)
-
-    @property
-    def tokens(self):
-        return [t.i for t in self._tokens]
-
-    @property
-    def empty(self):
-        return len(self._tokens) == 0
-
-    @property
-    def contains_vb(self):
-        return any(t.tag_.startswith("VB") for t in self._tokens)
-
-    def project_to_text(self):
-        """
-            see https://spacy.io/api/token#attributes
-            if entity - return text, otherwise return lemma
-        :return:
-        """
-        pp = []
-        for x in self._tokens:
-            if x.dep_ == "punct":
-                continue
-            if x.ent_iob in (0, 2):
-                pp += [x.text]
-            else:
-                pp += [x.lemma]
-        return pp
-
-    def project_to_text_str(self):
-        ll = self.project_to_text()
-        txt = "".join([ll[0]] + [x.capitalize() for x in ll[1:]])
-        return txt
-
-    def append(self, token: Token):
-        if self.empty:
-            self.root = token
-        self._tokens += [token]
-
-    def prepend(self, token: Token):
-        self._tokens = [token] + self._tokens
-
-    def __repr__(self):
-        content = [
-            f" {t.i} : {t.lower} : {t.tag_} : {t.dep_}" for t in self._tokens
-        ]
-        return (
-            f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
-        )
-
-    def sort(self):
-        self._tokens = sorted(self._tokens, key=lambda x: x.i)
-
-
 class Token:
     """
     represents a token in dep tree
@@ -101,6 +35,98 @@ class Token:
         return f"Token fields:" + " |".join(content)
 
 
+class ACandidate:
+    def __init__(self):
+        self.r0: int | None = None  # position in a CandidatePile
+        self._tokens: dict[int, Token] = dict()
+        self.added: bool = False
+        self._root: int
+
+    def __len__(self) -> int:
+        return len(self._tokens)
+
+    def max_level(self) -> int:
+        return (
+            0 if self.empty else max(t._level for t in self._tokens.values())
+        )
+
+    @property
+    def root(self):
+        return self._tokens[self._root]
+
+    @property
+    def tokens(self):
+        return sorted(i for i in self._tokens.keys())
+
+    @property
+    def empty(self):
+        return len(self._tokens) == 0
+
+    @property
+    def contains_vb(self):
+        return any(t.tag_.startswith("VB") for t in self._tokens.values())
+
+    def project_to_text(self):
+        """
+            see https://spacy.io/api/token#attributes
+            if entity - return text, otherwise return lemma
+        :return:
+        """
+        pp = []
+        for i in self.tokens:
+            x = self._tokens[i]
+            if x.dep_ == "punct":
+                continue
+            if x.ent_iob in (0, 2):
+                pp += [x.text]
+            else:
+                pp += [x.lemma]
+        return pp
+
+    def project_to_text_str(self):
+        ll = self.project_to_text()
+        txt = "".join([ll[0]] + [x.capitalize() for x in ll[1:]])
+        return txt
+
+    def append(self, token: Token):
+        if self.empty:
+            self._root = token.i
+        self._tokens[token.i] = token
+
+    def __repr__(self):
+        content = []
+        for i in self.tokens:
+            t = self._tokens[i]
+            content += [f" {t.i} : {t.lower} : {t.tag_} : {t.dep_}"]
+
+        return (
+            f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
+        )
+
+    # def drop_tokens(self, indices):
+    def drop_tokens(self, drop_aux_indices):
+        for i in drop_aux_indices:
+            self._tokens.pop(i)
+
+    def print(self):
+        content = []
+        for i in self.tokens:
+            t = self._tokens[i]
+            content += [f" {t.text}"]
+
+        return (
+            f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
+        )
+
+    @property
+    def lemmas(self):
+        return [self._tokens[k].lemma for k in self.tokens]
+
+    # def substitute(self, i, ac : ACandidate):
+    #     ix = [j for j in enumerate(self._tokens)]
+    #     pass
+
+
 class ACandidateKind(Enum):
     RELATION = 1
     SOURCE_TARGET = 2
@@ -108,60 +134,52 @@ class ACandidateKind(Enum):
     TARGET = 4
 
 
-# WIP
-
-
 class Relation(ACandidate):
     @property
     def passive(self):
-        return any([t.dep_ == "auxpass" for t in self._tokens])
+        return any([t.dep_ == "auxpass" for t in self._tokens.values()])
 
     def normalize(self):
         if self.passive:
             # find auxpass, inflect it to was
-            auxpasses = [
-                (j, t)
-                for j, t in enumerate(self._tokens)
-                if t.dep_ == "auxpass"
-            ]
-            for j, t in auxpasses:
-                lemmas = getLemma(t.text, upos="VERB")
-                if lemmas:
-                    inflected = getInflection(lemmas[0], tag="VBD")
-                    if inflected:
-                        copy = deepcopy(t)
-                        copy.text = inflected[0]
-                        self._tokens[j] = copy
+            for i, token in self._tokens.items():
+                if token.dep_ == "auxpass":
+                    lemmas = getLemma(token.text, upos="VERB")
+                    if lemmas:
+                        inflected = getInflection(lemmas[0], tag="VBD")
+                        if inflected:
+                            token.text = inflected[0]
         else:
             # drop all aux
-            self._tokens = [t for t in self._tokens if t.dep_ != "aux"]
-            # inflect remaining VBs
-            starts_vb = [
-                (j, t)
-                for j, t in enumerate(self._tokens)
-                if t.tag_.startswith("VB")
+            drop_aux_indices = [
+                j for j, t in self._tokens.items() if t.dep_ == "aux"
             ]
-            for j, t in starts_vb:
-                lemmas = getLemma(t.text, upos="VERB")
-                if lemmas:
-                    inflected = getInflection(lemmas[0], tag="VBZ")
-                    if inflected:
-                        copy = deepcopy(t)
-                        copy.text = inflected[0]
-                        self._tokens[j] = copy
+            self.drop_tokens(drop_aux_indices)
+            # inflect remaining VBs
+            for i, t in self._tokens.items():
+                if t.tag_.startswith("VB"):
+                    lemmas = getLemma(t.text, upos="VERB")
+                    if lemmas:
+                        inflected = getInflection(lemmas[0], tag="VBZ")
+                        if inflected:
+                            self._tokens[i].text = inflected[0]
 
 
 class SourceOrTarget(ACandidate):
     def drop_articles(self):
-        self._tokens = [t for t in self._tokens if t.dep_ != "det"]
-        # self._tokens = [t for t in self._tokens if t.tag_ != "DT"]
+        # t.dep_ == "det" or t.tag_ != "DT"
+        drop_aux_indices = [
+            j for j, t in self._tokens.items() if t.dep_ == "det"
+        ]
+        self.drop_tokens(drop_aux_indices)
 
     def drop_amod_vbn(self):
-        self._tokens = [
-            t
-            for t in self._tokens
-            if not (t.dep_ == "amod" and t.tag_ == "VBN")
+        drop_aux_indices = [
+            j
+            for j, t in self._tokens.items()
+            if (t.dep_ == "amod" and t.tag_ == "VBN")
         ]
+        self.drop_tokens(drop_aux_indices)
 
 
 class Source(SourceOrTarget):
@@ -186,20 +204,24 @@ class TripleCandidate:
         )
 
     def drop_amod_vbn(self):
-        new = dataclasses.replace(self)
-        new.source.drop_articles()
-        new.target.drop_articles()
+        new = deepcopy(self)
+        new.source.drop_amod_vbn()
+        new.target.drop_amod_vbn()
         return new
 
     def drop_articles(self):
-        new = dataclasses.replace(self)
-        new.source.drop_amod_vbn()
-        new.target.drop_amod_vbn()
+        new = deepcopy(self)
+        new.source.drop_articles()
+        new.target.drop_articles()
         return new
 
     def normalize_relation(self):
         self.relation.normalize()
         return self
+
+    def __repr__(self):
+        s = f"\t{self.source}\n\t{self.relation}\n\t{self.target}\n"
+        return s
 
 
 class ACandidatePile:

@@ -73,7 +73,7 @@ class TestR(unittest.TestCase):
 
         self.assertEqual(
             {
-                k: [[t.lemma for t in c._tokens] for c in p._candidates]
+                k: [c.lemmas for c in p._candidates]
                 for k, p in enumerate(piles)
             },
             {
@@ -107,7 +107,7 @@ class TestR(unittest.TestCase):
 
         self.assertEqual(
             {
-                k: [[t.lemma for t in c._tokens] for c in p._candidates]
+                k: [c.lemmas for c in p._candidates]
                 for k, p in enumerate(piles)
             },
             {
@@ -148,7 +148,6 @@ class TestR(unittest.TestCase):
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             cr = Relation()
             find_relation_subtree_dfs(graph, deq, cr)
-            cr.sort()
             piles += [cr]
 
         self.assertEqual(
@@ -169,7 +168,6 @@ class TestR(unittest.TestCase):
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             st = SourceOrTarget()
             find_st_subtree_dfs(graph, deq, st, rules=self.rules)
-            st.sort()
             piles += [st]
 
         self.assertEqual(

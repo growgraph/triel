@@ -55,6 +55,8 @@ if __name__ == "__main__":
         " darkness. ",
         "The medium was affected by the near-field radiation",
         "He treated her unfairly.",
+        "Although he was very busy with his work, Peter Brown had had enough of it. "
+        "He and his wife decided they needed a holiday in Spain.",
     ]
 
     for phrase in phrases:

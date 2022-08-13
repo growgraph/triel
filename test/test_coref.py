@@ -59,9 +59,6 @@ class TestCoref(unittest.TestCase):
         doc._.coref_chains.print()
 
     def test_coref_substitution(self):
-        # documents = [self.phrase]
-        # acc_triples = []
-        # triples_projected = []
         doc = self.phrase
         rdoc, graph = phrase_to_deptree(self.nlp, doc)
         coref_graph = render_coref_graph(rdoc, graph)
@@ -70,27 +67,15 @@ class TestCoref(unittest.TestCase):
             map_chain_to_most_specific,
         ) = render_coref_candidate_map(coref_graph)
 
-        rr = {
+        map_token_specific_token = {
             i: sub_coreference(
                 map_subbable_to_chain, map_chain_to_most_specific, i
             )
             for i in map_subbable_to_chain
         }
 
-        # triples = graph_to_relations(graph, self.rules)
-        #
-        #
-        #
-        # triples = [
-        #     tri.drop_articles().drop_amod_vbn().normalize_relation()
-        #     for tri in triples
-        # ]
-        # acc_triples += triples
-        #
-        # triples_projected += [tri.project_to_text() for tri in triples]
-
         self.assertEqual(
-            rr,
+            map_token_specific_token,
             {
                 1: [9],
                 6: [9],

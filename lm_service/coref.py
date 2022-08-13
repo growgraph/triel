@@ -120,68 +120,28 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
     return coref_graph
 
 
-def expand_candidate(candidate_token: int, metagraph, coref_graph):
-
-    # t = st.tree
-    # [(t.nodes[n]["lower"], t.nodes[n]["tag_"], t.nodes[n]["dep_"]) for n in t.nodes() if "lower" in t.nodes[n]]
-
-    candidates = [candidate_token]
-    if metagraph.nodes[candidate_token]["leaf"].is_compound():
-        candidates = metagraph.nodes[candidate_token]["leaf"].compute_conj()
-    candidates = expand_mstar(candidates, coref_graph)
-    return candidates
-
-
-def expand_mstar(candidates, coref_graph):
-    candidates_out = set()
-    for c in candidates:
-        if c in coref_graph.nodes():
-            candidates_out |= yield_star_nodes(
-                coref_graph, coref_graph.nodes[c]["m*"]
-            )
-        else:
-            candidates_out |= {c}
-    return list(candidates_out)
-
-
-def yield_star_nodes(graph, node_list):
-    """
-    yield most specific mentions for any mentions, given a coref graph
-    :param graph:
-    :param node_list:
-    :return:
-    """
-    nlist = set()
-    for n in node_list:
-        if "m*" in graph.nodes[n] and n in graph.nodes[n]["m*"]:
-            nlist |= {n}
-        else:
-            nlist |= yield_star_nodes(graph, graph.nodes[n]["m*"])
-    return nlist
-
-
-# @dataclasses.dataclass
-# def ChainStruct:
-
-
 def render_coref_candidate_map(
     coref_graph: nx.DiGraph,
 ) -> tuple[defaultdict[int, list[int]], defaultdict[int, list[int]]]:
+    """
+    from coref graph (root -> chain -> blank -> token)
+    render two maps
+        token -> [chain]
+        chain -> [token] # most specific tokens for the chain
+    :param coref_graph:
+    :return:
+    """
 
     # only one root - guaranteed if coref_graph is produced by render_coref_graph
-
     root = next(n for n, d in coref_graph.in_degree if d == 0)
 
     map_chain_to_most_specific = defaultdict(list)
     map_subbable_to_chain = defaultdict(list)
 
-    # get starred blank nodes
-
     for v_chain in coref_graph.successors(root):
         for v_blank in coref_graph.successors(v_chain):
             blank_props = coref_graph.nodes[v_blank]
             for v in coref_graph.successors(v_blank):
-                # v_props = coref_graph.nodes[v]
                 map_subbable_to_chain[v].append(v_chain)
                 if blank_props["most_specific"]:
                     map_chain_to_most_specific[v_chain].append(v)
@@ -192,6 +152,22 @@ def render_coref_candidate_map(
 def sub_coreference(
     map_subbable_to_chain, map_chain_to_most_specific, x
 ) -> list[int]:
+    """
+
+        from two maps
+
+            token -> [chain]
+            chain -> [token]
+
+        render a composition
+            token -> [token]
+                most specific
+
+    :param map_subbable_to_chain:
+    :param map_chain_to_most_specific:
+    :param x:
+    :return:
+    """
     if x in map_subbable_to_chain:
         chains = map_subbable_to_chain[x]
         chains = [c for c in chains if c in map_chain_to_most_specific]

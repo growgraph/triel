@@ -9,7 +9,13 @@ import coreferee
 import spacy
 import yaml
 
+from lm_service.coref import (
+    render_coref_candidate_map,
+    render_coref_graph,
+    sub_coreference,
+)
 from lm_service.graph import phrase_to_deptree, transform_advcl
+from lm_service.onto import ACandidate, Token
 from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
     add_hash,
@@ -39,26 +45,28 @@ class TestR(unittest.TestCase):
 
     phrases = normalize_input_text(text, terminal_full_stop=False)
 
-    documents = [
-        "The medium was affected by the near-field radiation",
-        "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+    documents = {
+        "near-field": "The medium was affected by the near-field radiation",
+        "cheops0_trunc": "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
         " telescope to determine the size of known extrasolar planets,"
         " which will allow the estimation of their mass",
-        "The medium was affected by the near-field radiation",
-        "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+        "cheops0": "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
         " telescope to determine the size of known extrasolar planets,"
         " which will allow the estimation of their mass, density,"
         " composition and their formation.",
-    ]
+        "coref": "Although he was very busy with his work, Peter had had enough of it. "
+        "He and his wife decided they needed a holiday. "
+        "They travelled to Spain because they loved the country very much.",
+    }
 
     def test_consecutive_candidates(self):
 
-        for document in self.documents:
+        for document in self.documents.values():
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             cp = graph_to_candidate_pile(graph, rules=self.rules)
 
     def test_distances(self):
-        for document in self.documents:
+        for document in self.documents.values():
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             pile = graph_to_candidate_pile(graph, self.rules)
             g_undirected, g_reversed, g_weighted = generate_extra_graphs(graph)
@@ -74,7 +82,9 @@ class TestR(unittest.TestCase):
             )
 
     def test_relation(self):
-        documents = self.documents[:2]
+        documents = [
+            self.documents[key] for key in ["near-field", "cheops0_trunc"]
+        ]
         acc_triples = []
         triples_projected = []
         for doc in documents:
@@ -103,26 +113,53 @@ class TestR(unittest.TestCase):
             ],
         )
 
-    @unittest.skip("")
     def test_relation_advanced(self):
-        nmax = 3
-        window_size = 2
+        rdoc, graph = phrase_to_deptree(self.nlp, self.documents["coref"])
+        token_dict = {i: Token(**graph.nodes[i]) for i in graph.nodes()}
 
-        phrases = [transform_advcl(self.nlp, p) for p in self.phrases[:nmax]]
-        agg = []
-        for i in range(nmax):
-            fragment = ". ".join(phrases[i : i + window_size])
-            (
-                graph,
-                coref_graph,
-                metagraph,
-                triples_expanded,
-                triples_proj,
-            ) = phrase_to_relations(fragment, self.nlp, self.rules)
-            r = add_hash(triples_expanded, graph)
-            agg.extend(r)
+        coref_graph = render_coref_graph(rdoc, graph)
+        (
+            map_subbable_to_chain,
+            map_chain_to_most_specific,
+        ) = render_coref_candidate_map(coref_graph)
 
-        # pprint(agg)
+        map_token_specific_token = {
+            i: sub_coreference(
+                map_subbable_to_chain, map_chain_to_most_specific, i
+            )
+            for i in map_subbable_to_chain
+        }
+
+        map_trunc = {
+            k: v for k, v in map_token_specific_token.items() if [k] != v
+        }
+
+        all_coref_i = set(map_trunc.keys()) | set(
+            [i for subl in map_trunc.values() for i in subl]
+        )
+        map_icoref_source_target = {}
+
+        triples = graph_to_relations(graph, self.rules)
+        triples = [tri.drop_articles().normalize_relation() for tri in triples]
+
+        for tri in triples:
+            s = tri.source
+            t = tri.target
+            for k in all_coref_i:
+                if k in s.tokens:
+                    map_icoref_source_target[k] = s
+                elif k in t.tokens:
+                    map_icoref_source_target[k] = t
+                else:
+                    ac = ACandidate()
+                    ac.append(token_dict[k])
+                    map_icoref_source_target[k] = ac
+
+        # for tri in triples:
+        #     subs_source = set(map_trunc) & set(tri.source.tokens)
+        #     subs_target = set(map_trunc) & set(tri.target.tokens)
+
+        print(map_token_specific_token)
         # self.assertEqual(
         #     triples_projected,
         #     [

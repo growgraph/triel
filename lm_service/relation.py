@@ -3,18 +3,13 @@ from __future__ import annotations
 import hashlib
 import logging
 from collections import deque
-from copy import deepcopy
 from itertools import product
 from typing import List, Tuple
 
 import networkx as nx
 import pandas as pd
 
-from lm_service.coref import (
-    expand_candidate,
-    render_coref_candidate_map,
-    render_coref_graph,
-)
+from lm_service.coref import render_coref_candidate_map, render_coref_graph
 from lm_service.folding import get_flag
 
 # import pygraphviz as pgv
@@ -86,7 +81,6 @@ def find_candidates_bfs(
         foo(graph, deque([(current_vertex, 0)]), current_relation, **kwargs)  # type: ignore
 
     if not current_relation.empty:
-        current_relation.sort()
         candidate_pile.append(current_relation)
 
     q.extend(successors & set(graph.nodes))
@@ -132,7 +126,7 @@ def find_relation_subtree_dfs(
         if (vtoken.tag_.startswith("VB") or (vtoken.tag_ == "MD")) and (
             "aux" in vtoken.dep_
         ):
-            current_relation.prepend(vtoken)
+            current_relation.append(vtoken)
         # elif vtoken.tag_.startswith("VB") and vtoken.dep_ == "advcl":
         #     current_relation.append(vtoken)
         elif (vtoken.tag_ == "IN" and vtoken.dep_ == "prep") or (
@@ -184,7 +178,7 @@ def find_st_subtree_dfs(
             not current_st.empty
             and (
                 (level - current_st.max_level() > 1)
-                or (current_st._tokens[0].dep_ == "ccomp")
+                or (current_st.root.dep_ == "ccomp")
             )
         )
     ):
@@ -220,55 +214,55 @@ def find_st_subtree_dfs(
     #     find_st_subtree_dfs(graph, q, current_st, rules)
 
 
-def find_relation_candidates_obsolete(graph: nx.DiGraph) -> ACandidatePile:
-    r_candidates = []
-    for v in graph.nodes():
-        cand = Relation()
-
-        if graph.nodes[v]["tag_"].startswith("VB"):
-            # TODO check graph.nodes[v]["dep_"] != "aux"
-            vtoken = Token(**graph.nodes[v])
-
-            if len(list(graph.successors(v))) > 0:
-                cand._tokens = [vtoken]
-            for w in graph.successors(v):
-                wtoken = Token(**graph.nodes[w])
-
-                if wtoken.tag_.startswith("VB"):
-                    if (
-                        vtoken.tag_ == "VBN"
-                        and
-                        # VBN or VBZ
-                        (
-                            "VB" in wtoken.tag_
-                            # auxpass or aux
-                            and "aux" in wtoken.dep_
-                        )
-                    ):
-                        cand._tokens = [wtoken] + cand._tokens
-                    elif (
-                        vtoken.tag_ == "VBZ"
-                        and wtoken.tag_ == "VBN"
-                        and wtoken.dep_ == "advcl"
-                    ):
-                        cand._tokens = cand._tokens + [wtoken]
-                if (wtoken.tag_ == "IN" and wtoken.dep_ == "prep") or (
-                    wtoken.tag_ == "IN" and wtoken.dep_ == "agent"
-                ):
-                    if any([t.tag_ == "IN" for t in cand._tokens]):
-                        cand2 = deepcopy(cand)
-                        for j, t in enumerate(cand2._tokens):
-                            if t.tag_ == "IN":
-                                cand2._tokens[j] = wtoken
-                        r_candidates += [cand2]
-                    else:
-                        cand._tokens = cand._tokens + [wtoken]
-        if cand.tokens:
-            r_candidates += [cand]
-    for j, r in enumerate(r_candidates):
-        r.r0 = j
-
-    return ACandidatePile(candidates=r_candidates)
+# def find_relation_candidates_obsolete(graph: nx.DiGraph) -> ACandidatePile:
+#     r_candidates = []
+#     for v in graph.nodes():
+#         cand = Relation()
+#
+#         if graph.nodes[v]["tag_"].startswith("VB"):
+#             # TODO check graph.nodes[v]["dep_"] != "aux"
+#             vtoken = Token(**graph.nodes[v])
+#
+#             if len(list(graph.successors(v))) > 0:
+#                 cand._tokens = [vtoken]
+#             for w in graph.successors(v):
+#                 wtoken = Token(**graph.nodes[w])
+#
+#                 if wtoken.tag_.startswith("VB"):
+#                     if (
+#                         vtoken.tag_ == "VBN"
+#                         and
+#                         # VBN or VBZ
+#                         (
+#                             "VB" in wtoken.tag_
+#                             # auxpass or aux
+#                             and "aux" in wtoken.dep_
+#                         )
+#                     ):
+#                         cand._tokens = [wtoken] + cand._tokens
+#                     elif (
+#                         vtoken.tag_ == "VBZ"
+#                         and wtoken.tag_ == "VBN"
+#                         and wtoken.dep_ == "advcl"
+#                     ):
+#                         cand._tokens = cand._tokens + [wtoken]
+#                 if (wtoken.tag_ == "IN" and wtoken.dep_ == "prep") or (
+#                     wtoken.tag_ == "IN" and wtoken.dep_ == "agent"
+#                 ):
+#                     if any([t.tag_ == "IN" for t in cand._tokens]):
+#                         cand2 = deepcopy(cand)
+#                         for j, t in enumerate(cand2._tokens):
+#                             if t.tag_ == "IN":
+#                                 cand2._tokens[j] = wtoken
+#                         r_candidates += [cand2]
+#                     else:
+#                         cand._tokens = cand._tokens + [wtoken]
+#         if cand.tokens:
+#             r_candidates += [cand]
+#     for j, r in enumerate(r_candidates):
+#         r.r0 = j
+#
+#     return ACandidatePile(candidates=r_candidates)
 
 
 def maybe_source(n) -> bool:
@@ -315,18 +309,6 @@ def graph_to_candidate_pile(graph: nx.DiGraph, rules) -> CandidatePile:
     )
 
     logger.info(f" relations: {relation_pile}")
-    # for r in relation_pile.candidates:
-    #     logger.info(
-    #         f" relations: {[graph.nodes[r0]['lower'] for r0 in r.tokens]}"
-    #     )
-    # logger.info(
-    #     " sources:"
-    #     f" {source_candidates} {[graph.nodes[r]['lower'] for r in source_candidates]}"
-    # )
-    # logger.info(
-    #     " targets:"
-    #     f" {target_candidates} {[graph.nodes[r]['lower'] for r in target_candidates]}"
-    # )
 
     return CandidatePile(
         relations=relation_pile,
