@@ -150,7 +150,9 @@ def render_coref_candidate_map(
 
 
 def sub_coreference(
-    map_subbable_to_chain, map_chain_to_most_specific, x
+    map_subbable_to_chain: defaultdict[int, list[int]],
+    map_chain_to_most_specific: defaultdict[int, list[int]],
+    x,
 ) -> list[int]:
     """
 

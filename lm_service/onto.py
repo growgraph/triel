@@ -8,7 +8,15 @@ from typing import List, Set, TypeVar
 from lemminflect import getAllInflections, getInflection, getLemma
 
 
+class MissingTokeninACandidate(Exception):
+    pass
+
+
 class RelationHasNoTargetCandidatesError(Exception):
+    pass
+
+
+class InsertingExistingTokens(Exception):
     pass
 
 
@@ -39,6 +47,7 @@ class ACandidate:
     def __init__(self):
         self.r0: int | None = None  # position in a CandidatePile
         self._tokens: dict[int, Token] = dict()
+        self._index_set: list[int] = list()
         self.added: bool = False
         self._root: int
 
@@ -55,8 +64,20 @@ class ACandidate:
         return self._tokens[self._root]
 
     @property
+    def itokens(self):
+        return self._index_set
+
+    def token(self, i):
+        if i in self._index_set:
+            return self._tokens[i]
+        else:
+            raise MissingTokeninACandidate(
+                f"token {i} not present in ACandidate containing {self.itokens}"
+            )
+
+    @property
     def tokens(self):
-        return sorted(i for i in self._tokens.keys())
+        return (self.token(i) for i in self.itokens)
 
     @property
     def empty(self):
@@ -73,8 +94,8 @@ class ACandidate:
         :return:
         """
         pp = []
-        for i in self.tokens:
-            x = self._tokens[i]
+        for i in self.itokens:
+            x = self.token(i)
             if x.dep_ == "punct":
                 continue
             if x.ent_iob in (0, 2):
@@ -85,17 +106,21 @@ class ACandidate:
 
     def project_to_text_str(self):
         ll = self.project_to_text()
-        txt = "".join([ll[0]] + [x.capitalize() for x in ll[1:]])
+        if ll:
+            txt = "".join([ll[0]] + [x.capitalize() for x in ll[1:]])
+        else:
+            txt = ""
         return txt
 
     def append(self, token: Token):
         if self.empty:
             self._root = token.i
         self._tokens[token.i] = token
+        self._index_set.append(token.i)
 
     def __repr__(self):
         content = []
-        for i in self.tokens:
+        for i in self.itokens:
             t = self._tokens[i]
             content += [f" {t.i} : {t.lower} : {t.tag_} : {t.dep_}"]
 
@@ -103,14 +128,66 @@ class ACandidate:
             f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
         )
 
-    # def drop_tokens(self, indices):
-    def drop_tokens(self, drop_aux_indices):
-        for i in drop_aux_indices:
-            self._tokens.pop(i)
+    def drop_tokens(self, drop_indices):
+        dropping = {}
+        for i in drop_indices:
+            dropping[i] = self._tokens.pop(i)
+        self._index_set = [i for i in self._index_set if i not in drop_indices]
+        return dropping
+
+    def sort_index(self):
+        self._index_set = sorted(self._index_set)
+
+    def insert_at(self, j: int, tokens: list[Token], token_index=False):
+        """
+
+        :param j:
+        :param tokens:
+        :param token_index: treat j as token index if true, token position in ACandidate if false
+        :return:
+        """
+        # if set(t.i for t in tokens) & set(self.itokens):
+        #     raise InsertingExistingTokens(f"{[t.i for t in tokens]} vs {self.itokens}")
+
+        if token_index:
+            if j in self._index_set:
+                j = self._index_set.index(j)
+            else:
+                raise MissingTokeninACandidate(
+                    f"token {j} not in ACandidate {self.itokens}"
+                )
+        self._index_set = (
+            self._index_set[:j] + [t.i for t in tokens] + self._index_set[j:]
+        )
+        for t in tokens:
+            self._tokens[t.i] = t
+
+    def replace_token_with_tokens(self, i: int, tokens: list[Token]):
+        if self.token(i).dep_ == "poss":
+            tokens = [
+                Token(
+                    **{
+                        "i": max(self.itokens) + 13,
+                        "text": "of",
+                        "lemma": "of",
+                        "dep_": "prep",
+                        "tag_": "IN",
+                    }
+                )
+            ] + tokens
+            self.insert_at(len(self) + 1, tokens, token_index=False)
+        else:
+            self.insert_at(i, tokens, token_index=True)
+        j = self._index_set.index(i)
+        self._index_set = self._index_set[:j] + self._index_set[j + 1 :]
+        del self._tokens[i]
+
+    def replace_token_with_acandidate(self, i: int, ac: ACandidate):
+        self.replace_token_with_tokens(i, list(ac.tokens))
 
     def print(self):
         content = []
-        for i in self.tokens:
+        for i in self.itokens:
             t = self._tokens[i]
             content += [f" {t.text}"]
 
@@ -120,11 +197,7 @@ class ACandidate:
 
     @property
     def lemmas(self):
-        return [self._tokens[k].lemma for k in self.tokens]
-
-    # def substitute(self, i, ac : ACandidate):
-    #     ix = [j for j in enumerate(self._tokens)]
-    #     pass
+        return [self._tokens[k].lemma for k in self.itokens]
 
 
 class ACandidateKind(Enum):
@@ -142,7 +215,8 @@ class Relation(ACandidate):
     def normalize(self):
         if self.passive:
             # find auxpass, inflect it to was
-            for i, token in self._tokens.items():
+            for i in self.itokens:
+                token = self.token(i)
                 if token.dep_ == "auxpass":
                     lemmas = getLemma(token.text, upos="VERB")
                     if lemmas:
@@ -257,7 +331,7 @@ class ACandidatePile:
 
         :return: relation index in pile : relation tokens
         """
-        return {r.r0: [x for x in r.tokens] for r in self.candidates}
+        return {r.r0: [x for x in r.itokens] for r in self.candidates}
 
     @property
     def roots(self) -> list[Token]:
@@ -269,7 +343,7 @@ class ACandidatePile:
 
     @property
     def tokens(self) -> Set[int]:
-        return set([x for r in self.candidates for x in r.tokens])
+        return set([x for r in self.candidates for x in r.itokens])
 
     def __repr__(self):
         return str(self.map)

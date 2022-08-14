@@ -81,6 +81,7 @@ def find_candidates_bfs(
         foo(graph, deque([(current_vertex, 0)]), current_relation, **kwargs)  # type: ignore
 
     if not current_relation.empty:
+        current_relation.sort_index()
         candidate_pile.append(current_relation)
 
     q.extend(successors & set(graph.nodes))

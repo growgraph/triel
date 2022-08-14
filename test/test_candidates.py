@@ -83,7 +83,6 @@ class TestR(unittest.TestCase):
             },
         )
 
-    # @unittest.skip("")
     def test_st_candidates(self):
 
         piles = []
@@ -148,6 +147,7 @@ class TestR(unittest.TestCase):
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             cr = Relation()
             find_relation_subtree_dfs(graph, deq, cr)
+            cr.sort_index()
             piles += [cr]
 
         self.assertEqual(
@@ -156,7 +156,7 @@ class TestR(unittest.TestCase):
         )
 
         self.assertEqual(
-            {k: p.tokens for k, p in enumerate(piles)},
+            {k: p.itokens for k, p in enumerate(piles)},
             {0: [2, 3, 4], 1: [21, 22], 2: [1]},
         )
 
@@ -168,6 +168,7 @@ class TestR(unittest.TestCase):
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             st = SourceOrTarget()
             find_st_subtree_dfs(graph, deq, st, rules=self.rules)
+            st.sort_index()
             piles += [st]
 
         self.assertEqual(
@@ -176,7 +177,7 @@ class TestR(unittest.TestCase):
         )
 
         self.assertEqual(
-            {k: p.tokens for k, p in enumerate(piles)},
+            {k: p.itokens for k, p in enumerate(piles)},
             {
                 0: [5, 6, 7, 8, 9],
                 1: [23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
@@ -186,8 +187,8 @@ class TestR(unittest.TestCase):
 
     def test_consecutive_candidates(self):
         """
-        the essense of this test is to demonstrate that when a relation or a source/target are identifed,
-        the subgraph correspondng to it is excised, leaving only the root node
+        the essence of this test is to demonstrate that when a relation or a source/target are identified,
+        the subgraph corresponding to it is excised, leaving only the root node
         :return:
         """
 

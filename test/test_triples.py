@@ -3,6 +3,7 @@ import os
 import pkgutil
 import sys
 import unittest
+from copy import deepcopy
 from pathlib import Path
 
 import coreferee
@@ -54,7 +55,7 @@ class TestR(unittest.TestCase):
         " telescope to determine the size of known extrasolar planets,"
         " which will allow the estimation of their mass, density,"
         " composition and their formation.",
-        "coref": "Although he was very busy with his work, Peter had had enough of it. "
+        "coref": "Although he was very busy with his work, Peter Brown had had enough of it. "
         "He and his wife decided they needed a holiday. "
         "They travelled to Spain because they loved the country very much.",
     }
@@ -145,27 +146,48 @@ class TestR(unittest.TestCase):
         for tri in triples:
             s = tri.source
             t = tri.target
+            print(s, t)
             for k in all_coref_i:
-                if k in s.tokens:
-                    map_icoref_source_target[k] = s
-                elif k in t.tokens:
-                    map_icoref_source_target[k] = t
-                else:
+                print(k, token_dict[k])
+                if k in s.itokens:
+                    map_icoref_source_target[k] = deepcopy(s)
+                elif k in t.itokens:
+                    map_icoref_source_target[k] = deepcopy(t)
+                elif k not in map_icoref_source_target:
                     ac = ACandidate()
                     ac.append(token_dict[k])
                     map_icoref_source_target[k] = ac
 
-        # for tri in triples:
-        #     subs_source = set(map_trunc) & set(tri.source.tokens)
-        #     subs_target = set(map_trunc) & set(tri.target.tokens)
+        triples_projected = []
 
-        print(map_token_specific_token)
+        for tri in triples:
+            subs_source = set(map_trunc) & set(tri.source.itokens)
+            subs_target = set(map_trunc) & set(tri.target.itokens)
+            for sub in subs_source:
+                subbers = map_trunc[sub]
+                if len(subbers) > 1:
+                    print("###")
+                print(f"before {tri.source} {id(tri.source)}")
+                tri.source.replace_token_with_acandidate(
+                    sub, map_icoref_source_target[subbers[0]]
+                )
+                print(f"after {tri.source} {id(tri.source)}")
+            for sub in subs_target:
+                subbers = map_trunc[sub]
+                print(f"before {tri.target}")
+                tri.target.replace_token_with_acandidate(
+                    sub, map_icoref_source_target[subbers[0]]
+                )
+                print(f"after {tri.target}")
+
+        triples_projected += [tri.project_to_text() for tri in triples]
+
+        print(triples_projected)
+
         # self.assertEqual(
         #     triples_projected,
         #     [
         #         ("CHEOPS", "be", "telescope"),
-        #         ("telescope", "determine", "size"),
-        #         ("size", "allow", "estimation"),
         #     ],
         # )
 
