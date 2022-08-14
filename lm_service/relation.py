@@ -15,6 +15,7 @@ from lm_service.folding import get_flag
 # import pygraphviz as pgv
 from lm_service.graph import excise_node, phrase_to_deptree
 from lm_service.onto import (
+    ACandidate,
     ACandidateKind,
     ACandidatePile,
     ACandidateType,
@@ -74,15 +75,15 @@ def find_candidates_bfs(
         return
 
     current_vertex = q.popleft()
-    current_relation = foo_map_class[how]()
+    current_relation = foo_map_class[how]()  # type: ignore
 
     successors = set(graph.successors(current_vertex))
     if current_vertex not in candidate_pile.tokens:
         foo(graph, deque([(current_vertex, 0)]), current_relation, **kwargs)  # type: ignore
 
-    if not current_relation.empty:
-        current_relation.sort_index()
-        candidate_pile.append(current_relation)
+    if not current_relation.empty:  # type: ignore
+        current_relation.sort_index()  # type: ignore
+        candidate_pile.append(current_relation)  # type: ignore
 
     q.extend(successors & set(graph.nodes))
     find_candidates_bfs(graph, q, candidate_pile, how, **kwargs)
@@ -115,7 +116,7 @@ def find_relation_subtree_dfs(
     ):
         return
 
-    vtoken = Token(**graph.nodes[current_vertex], **{"_level": level})
+    vtoken = Token(_level=level, **graph.nodes[current_vertex])
 
     len_current_relation = len(current_relation)
 
@@ -166,12 +167,6 @@ def find_st_subtree_dfs(
     current_vertex, level = q.pop()
     # print(current_vertex, end="->")
 
-    # print(
-    #     current_vertex,
-    #     graph.nodes[current_vertex],
-    #     level,
-    #     current_st.max_level(),
-    # )
     if (
         current_st.empty
         and level > 0
@@ -185,7 +180,7 @@ def find_st_subtree_dfs(
     ):
         return
 
-    vtoken = Token(**graph.nodes[current_vertex], **{"_level": level})
+    vtoken = Token(_level=level, **graph.nodes[current_vertex])
 
     len_current_relation = len(current_st)
 
@@ -471,7 +466,7 @@ def derive_targets_per_relaton(
     return targets_per_relation
 
 
-def graph_to_relations(graph, rules) -> list[TripleCandidate]:
+def graph_to_relations(graph, rules, relaxed=False) -> list[TripleCandidate]:
     """
     find triplets in a dep graph:
         a. find relation candidates
@@ -480,6 +475,7 @@ def graph_to_relations(graph, rules) -> list[TripleCandidate]:
 
     :param graph: nx.Digraph
     :param rules: nx.Digraph
+    :param relaxed: nx.Digraph
 
     :return:
     """
@@ -535,7 +531,7 @@ def graph_to_relations(graph, rules) -> list[TripleCandidate]:
                             target=pile.targets[t],
                         )
                     ]
-        elif not sources:
+        elif not sources and relaxed:
             triples += [
                 TripleCandidate(
                     source=Source(),
@@ -544,7 +540,7 @@ def graph_to_relations(graph, rules) -> list[TripleCandidate]:
                 )
                 for t in targets
             ]
-        elif not targets:
+        elif not targets and relaxed:
             triples += [
                 TripleCandidate(
                     source=pile.sources[s],

@@ -5,6 +5,7 @@ from copy import deepcopy
 from enum import Enum
 from typing import List, Set, TypeVar
 
+from dataclass_wizard import JSONWizard
 from lemminflect import getAllInflections, getInflection, getLemma
 
 
@@ -23,33 +24,39 @@ class InsertingExistingTokens(Exception):
 ACandidateType = TypeVar("ACandidateType", bound="ACandidate")
 
 
-class Token:
+@dataclasses.dataclass(repr=False)
+class Token(JSONWizard):
     """
     represents a token in dep tree
     """
 
-    def __init__(self, i, **kwargs):
-        self.i: int = i
-        self.dep_: str = kwargs.get("dep_", "")
-        self.tag_: str = kwargs.get("tag_", "")
-        self.lower: str = kwargs.get("lower", "")
-        self.lemma: str = kwargs.get("lemma", "")
-        self.text: str = kwargs.get("text", "")
-        self.ent_iob: str = kwargs.get("ent_iob", 0)
-        self._level: int = kwargs.get("_level", 0)
+    class _(JSONWizard.Meta):
+        key_transform_with_dump = "SNAKE"
+
+    i: int
+    text: str
+    dep_: str = ""
+    tag_: str = ""
+    lower: str = ""
+    lemma: str = ""
+    ent_iob: str = ""
+    _level: int = 0
+    label: str = ""
 
     def __repr__(self):
         content = [f" {k} : {v}" for k, v in self.__dict__.items()]
         return f"Token fields:" + " |".join(content)
 
 
-class ACandidate:
-    def __init__(self):
-        self.r0: int | None = None  # position in a CandidatePile
-        self._tokens: dict[int, Token] = dict()
-        self._index_set: list[int] = list()
-        self.added: bool = False
-        self._root: int
+@dataclasses.dataclass(repr=False)
+class ACandidate(JSONWizard):
+    class _(JSONWizard.Meta):
+        key_transform_with_dump = "SNAKE"
+
+    r0: int | None = None  # position in CandidatePile
+    _tokens: dict[int, Token] = dataclasses.field(default_factory=dict)
+    _index_set: list[int] = dataclasses.field(default_factory=list)
+    _root: int | None = None
 
     def __len__(self) -> int:
         return len(self._tokens)
@@ -207,6 +214,7 @@ class ACandidateKind(Enum):
     TARGET = 4
 
 
+@dataclasses.dataclass(repr=False)
 class Relation(ACandidate):
     @property
     def passive(self):
@@ -239,6 +247,7 @@ class Relation(ACandidate):
                             self._tokens[i].text = inflected[0]
 
 
+@dataclasses.dataclass(repr=False)
 class SourceOrTarget(ACandidate):
     def drop_articles(self):
         # t.dep_ == "det" or t.tag_ != "DT"
@@ -256,16 +265,18 @@ class SourceOrTarget(ACandidate):
         self.drop_tokens(drop_aux_indices)
 
 
+@dataclasses.dataclass(repr=False)
 class Source(SourceOrTarget):
     pass
 
 
+@dataclasses.dataclass(repr=False)
 class Target(SourceOrTarget):
     pass
 
 
-@dataclasses.dataclass
-class TripleCandidate:
+@dataclasses.dataclass(repr=False)
+class TripleCandidate(JSONWizard):
     source: Source
     relation: Relation
     target: Target
@@ -294,7 +305,7 @@ class TripleCandidate:
         return self
 
     def __repr__(self):
-        s = f"\t{self.source}\n\t{self.relation}\n\t{self.target}\n"
+        s = f"\t{self.source.__repr__()}\n\t{self.relation.__repr__()}\n\t{self.target.__repr__()}\n"
         return s
 
 

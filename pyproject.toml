@@ -28,6 +28,7 @@ autoflake = "^1.4"
 isort = "^5.10.1"
 pyinflect = "^0.5.1"
 lemminflect = "^0.2.2"
+dataclass-wizard = "^0.22.1"
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"

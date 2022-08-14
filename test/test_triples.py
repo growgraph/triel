@@ -168,6 +168,7 @@ class TestR(unittest.TestCase):
                 if len(subbers) > 1:
                     print("###")
                 print(f"before {tri.source} {id(tri.source)}")
+                # WIP
                 tri.source.replace_token_with_acandidate(
                     sub, map_icoref_source_target[subbers[0]]
                 )
