@@ -13,15 +13,6 @@ from lm_service.coref import (
     sub_coreference,
 )
 from lm_service.graph import phrase_to_deptree, transform_advcl
-from lm_service.preprocessing import normalize_input_text
-from lm_service.relation import (
-    add_hash,
-    compute_distances,
-    generate_extra_graphs,
-    graph_to_candidate_pile,
-    graph_to_relations,
-    phrase_to_relations,
-)
 
 logger = logging.getLogger(__name__)
 

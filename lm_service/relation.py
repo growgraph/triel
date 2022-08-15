@@ -17,7 +17,6 @@ from lm_service.folding import get_flag
 from lm_service.graph import excise_node, phrase_to_deptree
 from lm_service.onto import (
     ACandidateKind,
-    Candidate,
     CandidatePile,
     CandidateType,
     Relation,
@@ -27,6 +26,7 @@ from lm_service.onto import (
     Target,
     Token,
     TripleCandidate,
+    partition_conjunctive_wrapper,
 )
 
 logger = logging.getLogger(__name__)
@@ -238,10 +238,18 @@ def check_condition(graph, s, foo_condition) -> bool:
 
 def graph_to_candidate_pile(
     graph: nx.DiGraph, rules
-) -> tuple[SRTPile, nx.DiGraph]:
+) -> tuple[SRTPile, CandidatePile, nx.DiGraph]:
+    """
+
+    :param graph:
+    :param rules:
+    :return: tuple[SRTPile, nx.DiGraph]
+        a tuple of SourceRelationTarget Pile and a modified graph
+            (that does not contain vertices that became parts of Candidates,
+            so only one node (root note) per candidate is preserved)
+    """
     roots = [n for n, d in graph.in_degree() if d == 0]
     relation_pile = CandidatePile()
-    source_target_pile = CandidatePile()
 
     mgraph = deepcopy(graph)
 
@@ -251,6 +259,8 @@ def graph_to_candidate_pile(
         relation_pile,
         ACandidateKind.RELATION,
     )
+
+    source_target_pile = CandidatePile()
     find_candidates_bfs(
         mgraph,
         deque(roots),
@@ -258,6 +268,7 @@ def graph_to_candidate_pile(
         ACandidateKind.SOURCE_TARGET,
         rules=rules,
     )
+
     source_candidates, target_candidates = sieve_sources_targets(
         source_target_pile
     )
@@ -270,6 +281,7 @@ def graph_to_candidate_pile(
             sources=source_candidates,
             targets=target_candidates,
         ),
+        source_target_pile,
         mgraph,
     )
 
@@ -427,7 +439,9 @@ def derive_targets_per_relaton(
     return targets_per_relation
 
 
-def graph_to_relations(graph, rules) -> list[TripleCandidate]:
+def graph_to_triples(
+    graph, rules
+) -> tuple[list[TripleCandidate], CandidatePile]:
     """
     find triplets in a dep graph:
         a. find relation candidates
@@ -443,22 +457,41 @@ def graph_to_relations(graph, rules) -> list[TripleCandidate]:
         pile,
         sources_per_relation,
         targets_per_relation,
+        source_target_depot,
         g_undirected,
     ) = graph_to_maps(graph, rules)
 
     triples = form_triples(
         pile, sources_per_relation, targets_per_relation, g_undirected
     )
-    return triples
+
+    # unfold conjunction
+    triples_unfolded = []
+    for tri in triples:
+        sources = partition_conjunctive_wrapper(tri.source, graph)
+        targets = partition_conjunctive_wrapper(tri.target, graph)
+        triples_unfolded += [
+            TripleCandidate(source=s, target=t, relation=tri.relation)
+            for s, t in product(sources.candidates, targets.candidates)
+        ]
+
+    source_target_depot_unfolded = CandidatePile()
+    for c in source_target_depot:
+        c_unfolded = partition_conjunctive_wrapper(c, graph)
+        for c2 in c_unfolded:
+            source_target_depot_unfolded.append(c2)
+    return triples_unfolded, source_target_depot_unfolded
 
 
 def graph_to_maps(
     graph, rules
-) -> tuple[SRTPile, dict[int, set[int]], dict[int, set[int]], nx.Graph]:
+) -> tuple[
+    SRTPile, dict[int, set[int]], dict[int, set[int]], CandidatePile, nx.Graph
+]:
     """
     derive maps
-        a. find relation -> source
-        b. find relation -> target
+        a. relation -> source
+        b. relation -> target
 
     :param graph: nx.Digraph
     :param rules:
@@ -466,17 +499,17 @@ def graph_to_maps(
     :return:
     """
 
-    pile, mgraph = graph_to_candidate_pile(graph, rules)
+    pile, source_target_depot, mod_raph = graph_to_candidate_pile(graph, rules)
 
     # create relevant graphs for distance calculations : undirected, reversed ...
-    g_undirected, g_reversed, g_weighted = generate_extra_graphs(mgraph)
+    g_undirected, g_reversed, g_weighted = generate_extra_graphs(mod_raph)
 
     (
         distance_undirected,
         distance_directed,
         distance_levels,
     ) = compute_distances(
-        graph=mgraph,
+        graph=mod_raph,
         g_undirected=g_undirected,
         g_weighted=g_weighted,
         pile=pile.relations,
@@ -498,7 +531,13 @@ def graph_to_maps(
         distance_levels,
         pile.sources.roots,
     )
-    return pile, sources_per_relation, targets_per_relation, g_undirected
+    return (
+        pile,
+        sources_per_relation,
+        targets_per_relation,
+        source_target_depot,
+        g_undirected,
+    )
 
 
 def form_triples(
@@ -560,83 +599,6 @@ def sieve_sources_targets(
     return sources, targets
 
 
-def partition_conjunctive_dfs(
-    c: CandidateType,
-    graph: nx.DiGraph,
-    q: deque[tuple[int, int]],
-    current_cand,
-    accumulist: list[tuple[int, Candidate]],
-    iparent0: int = -1,
-):
-    """
-    :param c:
-    :param graph:
-    :param q: (!) the initial call should have only a single vertex in q
-    :param current_cand:
-    :param accumulist:
-
-    :return:
-    """
-
-    if not q:
-        return
-    itoken, iparent = q.pop()
-
-    if c.token(itoken).dep_ == "conj":
-        current_cand = Candidate()
-        iparent0 = iparent
-    current_cand.append(c.token(itoken))
-
-    if len(current_cand) == 1:
-        accumulist.append((iparent0, current_cand))
-
-    successors = sorted(
-        [i for i in graph.successors(itoken) if i in c.itokens]
-    )
-
-    for v in successors:
-        q.append((v, itoken))
-        partition_conjunctive_dfs(
-            c, graph, q, current_cand, accumulist, iparent0
-        )
-
-
-def partition_conjunctive_wrapper(
-    c: CandidateType, graph: nx.DiGraph
-) -> CandidatePile:
-    """
-
-    :param c:
-    :param graph:
-    :return:
-    """
-    q: deque = deque()
-    q.append((c.root.i, -1))
-    cand: SourceOrTarget = SourceOrTarget()
-    accumulist: list[tuple[int, Candidate]] = list()
-    partition_conjunctive_dfs(c, graph, q, cand, accumulist)
-
-    accumulist = sorted(accumulist, key=lambda x: x[0])
-    acc = CandidatePile()
-
-    root_candidate = accumulist[0][1]
-
-    prefix_candidate = Candidate()
-    if len(accumulist) > 1:
-        iparent = accumulist[1][0]
-        for t in root_candidate.tokens:
-            if t.i < iparent:
-                prefix_candidate.append(t)
-
-    for j, (k, c) in enumerate(accumulist):
-        if j > 0 and not prefix_candidate.empty:
-            c_prime = prefix_candidate + c
-            acc.append(c_prime)
-        else:
-            acc.append(c)
-    return acc
-
-
 # def doc_to_chunks(rdoc):
 #     """
 #
@@ -664,7 +626,7 @@ def phrase_to_relations(
 
     # chunks = doc_to_chunks(rdoc)
 
-    triples = graph_to_relations(graph, rules)
+    triples, source_target_depot = graph_to_triples(graph, rules)
 
     # coref_graph = render_mstar_graph(rdoc, graph)
 

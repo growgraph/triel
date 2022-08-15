@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import dataclasses
+from collections import deque
 from copy import deepcopy
 from enum import Enum
 from typing import TypeVar
 
+import networkx as nx
 from dataclass_wizard import JSONWizard
 from lemminflect import getAllInflections, getInflection, getLemma
 
@@ -309,12 +311,6 @@ class TripleCandidate(JSONWizard):
     target: Target
 
     def project_to_text(self):
-        # return {
-        #     "source": self.source.project_to_text_str(),
-        #     "relation": self.relation.project_to_text_str(),
-        #     "target": self.target.project_to_text_str(),
-        # }
-
         return (
             self.source.project_to_text_str(),
             self.relation.project_to_text_str(),
@@ -462,9 +458,95 @@ class CandidatePile:
         new._candidates = [c.sort_index() for c in new._candidates]
         return new
 
+    def unfold_conjunction(self, graph):
+        apile = CandidatePile()
+        for c in self._candidates:
+            accum = partition_conjunctive_wrapper(c, graph)
+            accum = accum.sort_index().drop_punct().drop_cc()
+            apile += accum
+        return apile
+
 
 @dataclasses.dataclass
 class SRTPile:
     sources: CandidatePile
     targets: CandidatePile
     relations: CandidatePile
+
+
+def partition_conjunctive_dfs(
+    c: CandidateType,
+    graph: nx.DiGraph,
+    q: deque[tuple[int, int]],
+    current_cand,
+    accumulist: list[tuple[int, Candidate]],
+    iparent0: int = -1,
+):
+    """
+    :param c:
+    :param graph:
+    :param q: (!) the initial call should have only a single vertex in q
+    :param current_cand:
+    :param accumulist: list that accumulates [(iparent0, transformed Candidate)]
+    :param iparent0: for each Candidate iparent0 is the index of parent graph vertex
+
+    :return:
+    """
+
+    if not q:
+        return
+    itoken, iparent = q.pop()
+
+    if c.token(itoken).dep_ == "conj":
+        current_cand = Candidate()
+        iparent0 = iparent
+    current_cand.append(c.token(itoken))
+
+    if len(current_cand) == 1:
+        accumulist.append((iparent0, current_cand))
+
+    successors = sorted(
+        [i for i in graph.successors(itoken) if i in c.itokens]
+    )
+
+    for v in successors:
+        q.append((v, itoken))
+        partition_conjunctive_dfs(
+            c, graph, q, current_cand, accumulist, iparent0
+        )
+
+
+def partition_conjunctive_wrapper(
+    c: CandidateType, graph: nx.DiGraph
+) -> CandidatePile:
+    """
+
+    :param c:
+    :param graph:
+    :return:
+    """
+    q: deque = deque()
+    q.append((c.root.i, -1))
+    cand: SourceOrTarget = SourceOrTarget()
+    accumulist: list[tuple[int, Candidate]] = list()
+    partition_conjunctive_dfs(c, graph, q, cand, accumulist)
+
+    accumulist = sorted(accumulist, key=lambda x: x[0])
+    acc = CandidatePile()
+
+    root_candidate = accumulist[0][1]
+
+    prefix_candidate = Candidate()
+    if len(accumulist) > 1:
+        iparent = accumulist[1][0]
+        for t in root_candidate.tokens:
+            if t.i < iparent:
+                prefix_candidate.append(t)
+
+    for j, (k, c) in enumerate(accumulist):
+        if j > 0 and not prefix_candidate.empty:
+            c_prime = prefix_candidate + c
+            acc.append(c_prime.sort_index())
+        else:
+            acc.append(c.sort_index())
+    return acc

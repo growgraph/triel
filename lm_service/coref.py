@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from copy import deepcopy
 from typing import Any
 
 import networkx as nx
 from spacy.tokens import Doc
+
+from lm_service.onto import Candidate
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +195,49 @@ def sub_coreference(
             return list()
     else:
         return list()
+
+
+def coref_pile(
+    source_target_depot,
+    map_subbable_to_chain,
+    map_chain_to_most_specific,
+    token_dict,
+):
+    map_token_specific_token = {
+        i: sub_coreference(
+            map_subbable_to_chain, map_chain_to_most_specific, i
+        )
+        for i in map_subbable_to_chain
+    }
+
+    map_trunc = {k: v for k, v in map_token_specific_token.items() if [k] != v}
+
+    all_coref_i = set(map_trunc.keys()) | set(
+        [i for subl in map_trunc.values() for i in subl]
+    )
+    map_icoref_source_target = {}
+    for s in source_target_depot:
+        for k in all_coref_i:
+            if k in s.itokens:
+                map_icoref_source_target[k] = deepcopy(s)
+            elif k not in map_icoref_source_target:
+                ac = Candidate()
+                ac.append(token_dict[k])
+                map_icoref_source_target[k] = ac
+
+    depot = []
+    for source in source_target_depot:
+        source_ix_subs = set(map_trunc) & set(source.itokens)
+        if not source_ix_subs:
+            depot.append(source)
+        for sub in source_ix_subs:
+            iy_subs = map_trunc[sub]
+            for y in iy_subs:
+                s = deepcopy(source)
+                s.replace_token_with_acandidate(
+                    sub, map_icoref_source_target[y]
+                )
+                depot.append(s)
 
 
 def propotion_of_pronouns(graph, mentions):

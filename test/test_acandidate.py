@@ -9,12 +9,15 @@ import spacy
 import yaml
 
 from lm_service.graph import phrase_to_deptree, transform_advcl
-from lm_service.onto import Candidate, CandidatePile, SourceOrTarget, Token
-from lm_service.relation import (
-    graph_to_candidate_pile,
+from lm_service.onto import (
+    Candidate,
+    CandidatePile,
+    SourceOrTarget,
+    Token,
     partition_conjunctive_dfs,
     partition_conjunctive_wrapper,
 )
+from lm_service.relation import graph_to_candidate_pile
 
 logger = logging.getLogger(__name__)
 
@@ -230,13 +233,13 @@ class TestR(unittest.TestCase):
         ac.replace_token_with_acandidate(4, ac2)
         self.assertEqual(ac._index_set, [3, 15, 17, 5])
 
-    def test_split_conj(self):
+    def test_unfold_conjunctive(self):
         lens = dict()
         for key in ["coref", "cheops0"]:
             lens[key] = {}
             apile = CandidatePile()
             rdoc, graph = phrase_to_deptree(self.nlp, self.documents[key])
-            pile, mgraph = graph_to_candidate_pile(graph, self.rules)
+            pile, _, mgraph = graph_to_candidate_pile(graph, self.rules)
             lens[key]["was"] = len(pile.sources)
 
             for c in pile.sources:
