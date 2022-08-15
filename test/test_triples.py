@@ -16,7 +16,7 @@ from lm_service.coref import (
     sub_coreference,
 )
 from lm_service.graph import phrase_to_deptree, transform_advcl
-from lm_service.onto import ACandidate, Token
+from lm_service.onto import Candidate, Token
 from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
     add_hash,
@@ -64,12 +64,12 @@ class TestR(unittest.TestCase):
 
         for document in self.documents.values():
             rdoc, graph = phrase_to_deptree(self.nlp, document)
-            cp = graph_to_candidate_pile(graph, rules=self.rules)
+            cp, mgraph = graph_to_candidate_pile(graph, rules=self.rules)
 
     def test_distances(self):
         for document in self.documents.values():
-            rdoc, graph = phrase_to_deptree(self.nlp, document)
-            pile = graph_to_candidate_pile(graph, self.rules)
+            rdoc, graph0 = phrase_to_deptree(self.nlp, document)
+            pile, graph = graph_to_candidate_pile(graph0, self.rules)
             g_undirected, g_reversed, g_weighted = generate_extra_graphs(graph)
             (
                 distance_undirected,
@@ -154,7 +154,7 @@ class TestR(unittest.TestCase):
                 elif k in t.itokens:
                     map_icoref_source_target[k] = deepcopy(t)
                 elif k not in map_icoref_source_target:
-                    ac = ACandidate()
+                    ac = Candidate()
                     ac.append(token_dict[k])
                     map_icoref_source_target[k] = ac
 

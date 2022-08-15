@@ -3,13 +3,13 @@ from __future__ import annotations
 import dataclasses
 from copy import deepcopy
 from enum import Enum
-from typing import List, Set, TypeVar
+from typing import TypeVar
 
 from dataclass_wizard import JSONWizard
 from lemminflect import getAllInflections, getInflection, getLemma
 
 
-class MissingTokeninACandidate(Exception):
+class MissingTokenInACandidate(Exception):
     pass
 
 
@@ -21,7 +21,7 @@ class InsertingExistingTokens(Exception):
     pass
 
 
-ACandidateType = TypeVar("ACandidateType", bound="ACandidate")
+CandidateType = TypeVar("CandidateType", bound="Candidate")
 
 
 @dataclasses.dataclass(repr=False)
@@ -49,7 +49,7 @@ class Token(JSONWizard):
 
 
 @dataclasses.dataclass(repr=False)
-class ACandidate(JSONWizard):
+class Candidate(JSONWizard):
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
 
@@ -58,8 +58,24 @@ class ACandidate(JSONWizard):
     _index_set: list[int] = dataclasses.field(default_factory=list)
     _root: int | None = None
 
+    def __add__(self, other: Candidate):
+        new = deepcopy(self)
+        for c in other.tokens:
+            new.append(c)
+        return new
+
     def __len__(self) -> int:
         return len(self._tokens)
+
+    def __repr__(self):
+        content = []
+        for i in self.itokens:
+            t = self._tokens[i]
+            content += [f" {t.i} : {t.lower} : {t.tag_} : {t.dep_}"]
+
+        return (
+            f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
+        )
 
     def max_level(self) -> int:
         return (
@@ -78,7 +94,7 @@ class ACandidate(JSONWizard):
         if i in self._index_set:
             return self._tokens[i]
         else:
-            raise MissingTokeninACandidate(
+            raise MissingTokenInACandidate(
                 f"token {i} not present in ACandidate containing {self.itokens}"
             )
 
@@ -125,16 +141,6 @@ class ACandidate(JSONWizard):
         self._tokens[token.i] = token
         self._index_set.append(token.i)
 
-    def __repr__(self):
-        content = []
-        for i in self.itokens:
-            t = self._tokens[i]
-            content += [f" {t.i} : {t.lower} : {t.tag_} : {t.dep_}"]
-
-        return (
-            f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
-        )
-
     def drop_tokens(self, drop_indices):
         dropping = {}
         for i in drop_indices:
@@ -144,6 +150,7 @@ class ACandidate(JSONWizard):
 
     def sort_index(self):
         self._index_set = sorted(self._index_set)
+        return self
 
     def insert_at(self, j: int, tokens: list[Token], token_index=False):
         """
@@ -160,7 +167,7 @@ class ACandidate(JSONWizard):
             if j in self._index_set:
                 j = self._index_set.index(j)
             else:
-                raise MissingTokeninACandidate(
+                raise MissingTokenInACandidate(
                     f"token {j} not in ACandidate {self.itokens}"
                 )
         self._index_set = (
@@ -189,7 +196,7 @@ class ACandidate(JSONWizard):
         self._index_set = self._index_set[:j] + self._index_set[j + 1 :]
         del self._tokens[i]
 
-    def replace_token_with_acandidate(self, i: int, ac: ACandidate):
+    def replace_token_with_acandidate(self, i: int, ac: Candidate):
         self.replace_token_with_tokens(i, list(ac.tokens))
 
     def print(self):
@@ -206,6 +213,39 @@ class ACandidate(JSONWizard):
     def lemmas(self):
         return [self._tokens[k].lemma for k in self.itokens]
 
+    def drop_articles(self):
+        # t.dep_ == "det" or t.tag_ != "DT"
+        drop_aux_indices = [
+            j for j, t in self._tokens.items() if t.dep_ == "det"
+        ]
+        self.drop_tokens(drop_aux_indices)
+        return self
+
+    def drop_amod_vbn(self):
+        drop_aux_indices = [
+            j
+            for j, t in self._tokens.items()
+            if (t.dep_ == "amod" and t.tag_ == "VBN")
+        ]
+        self.drop_tokens(drop_aux_indices)
+        return self
+
+    def drop_cc(self):
+        drop_aux_indices = [
+            j
+            for j, t in self._tokens.items()
+            if (t.dep_ == "cc" and t.tag_ == "CC")
+        ]
+        self.drop_tokens(drop_aux_indices)
+        return self
+
+    def drop_punct(self):
+        drop_aux_indices = [
+            j for j, t in self._tokens.items() if t.dep_ == "punct"
+        ]
+        self.drop_tokens(drop_aux_indices)
+        return self
+
 
 class ACandidateKind(Enum):
     RELATION = 1
@@ -215,7 +255,7 @@ class ACandidateKind(Enum):
 
 
 @dataclasses.dataclass(repr=False)
-class Relation(ACandidate):
+class Relation(Candidate):
     @property
     def passive(self):
         return any([t.dep_ == "auxpass" for t in self._tokens.values()])
@@ -248,21 +288,8 @@ class Relation(ACandidate):
 
 
 @dataclasses.dataclass(repr=False)
-class SourceOrTarget(ACandidate):
-    def drop_articles(self):
-        # t.dep_ == "det" or t.tag_ != "DT"
-        drop_aux_indices = [
-            j for j, t in self._tokens.items() if t.dep_ == "det"
-        ]
-        self.drop_tokens(drop_aux_indices)
-
-    def drop_amod_vbn(self):
-        drop_aux_indices = [
-            j
-            for j, t in self._tokens.items()
-            if (t.dep_ == "amod" and t.tag_ == "VBN")
-        ]
-        self.drop_tokens(drop_aux_indices)
+class SourceOrTarget(Candidate):
+    pass
 
 
 @dataclasses.dataclass(repr=False)
@@ -282,6 +309,12 @@ class TripleCandidate(JSONWizard):
     target: Target
 
     def project_to_text(self):
+        # return {
+        #     "source": self.source.project_to_text_str(),
+        #     "relation": self.relation.project_to_text_str(),
+        #     "target": self.target.project_to_text_str(),
+        # }
+
         return (
             self.source.project_to_text_str(),
             self.relation.project_to_text_str(),
@@ -292,6 +325,18 @@ class TripleCandidate(JSONWizard):
         new = deepcopy(self)
         new.source.drop_amod_vbn()
         new.target.drop_amod_vbn()
+        return new
+
+    def drop_cc(self):
+        new = deepcopy(self)
+        new.source.drop_cc()
+        new.target.drop_cc()
+        return new
+
+    def drop_punct(self):
+        new = deepcopy(self)
+        new.source.drop_punct()
+        new.target.drop_punct()
         return new
 
     def drop_articles(self):
@@ -309,24 +354,47 @@ class TripleCandidate(JSONWizard):
         return s
 
 
-class ACandidatePile:
-    def __init__(self, candidates: List[ACandidateType] | None = None):
-        self.iroot_to_candidate: dict[int, ACandidateType] = {}
-        self._candidates: list[ACandidateType] = []
-        if candidates is not None:
-            for c in candidates:
-                self.append(c)
+@dataclasses.dataclass(repr=False)
+class CandidatePile:
+    """
+    pile of candidates of one type
+    """
+
+    iroot_to_candidate: dict[int, CandidateType] = dataclasses.field(default_factory=dict)  # type: ignore
+    _candidates: list[CandidateType] = dataclasses.field(default_factory=list)  # type: ignore
+
+    def __post_init__(self):
+        for j, r in enumerate(self._candidates):
+            r.r0 = j
+            self.iroot_to_candidate[r.root.i] = r
 
     def __len__(self) -> int:
         return len(self.candidates)
 
-    def __getitem__(self, key) -> ACandidateType:
+    def __getitem__(self, key) -> CandidateType:
         """
 
         :return: relation index in pile : relation tokens
         """
 
         return self.iroot_to_candidate[key]
+
+    def __repr__(self):
+        return str(self.map)
+
+    def __iter__(self):
+        for r in self.candidates:
+            yield r
+
+    def __iadd__(self, rp: CandidatePile):
+        """
+        usage: pile_a += pile_b
+        :param rp:
+        :return:
+        """
+        for c in rp:
+            self.append(c)
+        return self
 
     @property
     def candidates(self):
@@ -353,34 +421,50 @@ class ACandidatePile:
         return [r.root.i for r in self.candidates]
 
     @property
-    def tokens(self) -> Set[int]:
+    def tokens(self) -> set[int]:
         return set([x for r in self.candidates for x in r.itokens])
 
-    def __repr__(self):
-        return str(self.map)
-
-    def __iter__(self):
-        for r in self.candidates:
-            yield r
-
-    def append(self, r: ACandidateType):
+    def append(self, r: CandidateType):
         r.r0 = len(self.candidates)
         self.iroot_to_candidate[r.root.i] = r
         self._candidates += [r]
 
-    def __iadd__(self, rp: ACandidatePile):
-        """
-        usage: pile_a += pile_b
-        :param rp:
-        :return:
-        """
-        for c in rp:
-            self.append(c)
-        return self
+    def project_to_text(self):
+        return [c.project_to_text_str() for c in self._candidates]
+
+    def drop_amod_vbn(self):
+        new = deepcopy(self)
+        new._candidates = [c.drop_amod_vbn() for c in new._candidates]
+        return new
+
+    def drop_cc(self):
+        new = deepcopy(self)
+        new._candidates = [c.drop_cc() for c in new._candidates]
+        return new
+
+    def drop_punct(self):
+        new = deepcopy(self)
+        new._candidates = [c.drop_punct() for c in new._candidates]
+        return new
+
+    def drop_articles(self):
+        new = deepcopy(self)
+        new._candidates = [c.drop_articles() for c in new._candidates]
+        return new
+
+    def normalize(self):
+        new = deepcopy(self)
+        new._candidates = [c.normalize() for c in new._candidates]
+        return new
+
+    def sort_index(self):
+        new = deepcopy(self)
+        new._candidates = [c.sort_index() for c in new._candidates]
+        return new
 
 
 @dataclasses.dataclass
-class CandidatePile:
-    sources: ACandidatePile
-    targets: ACandidatePile
-    relations: ACandidatePile
+class SRTPile:
+    sources: CandidatePile
+    targets: CandidatePile
+    relations: CandidatePile

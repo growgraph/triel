@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from collections import deque
+from copy import deepcopy
 from itertools import product
 from typing import List, Tuple
 
@@ -15,14 +16,14 @@ from lm_service.folding import get_flag
 # import pygraphviz as pgv
 from lm_service.graph import excise_node, phrase_to_deptree
 from lm_service.onto import (
-    ACandidate,
     ACandidateKind,
-    ACandidatePile,
-    ACandidateType,
+    Candidate,
     CandidatePile,
+    CandidateType,
     Relation,
     Source,
     SourceOrTarget,
+    SRTPile,
     Target,
     Token,
     TripleCandidate,
@@ -41,10 +42,14 @@ logger = logging.getLogger(__name__)
 """
 
 
+class SimplifiedConjunctionHypothesisFailure(Exception):
+    pass
+
+
 def find_candidates_bfs(
     graph: nx.DiGraph,
     q: deque[int],
-    candidate_pile: ACandidatePile,
+    candidate_pile: CandidatePile,
     how: ACandidateKind,
     **kwargs,
 ):
@@ -62,7 +67,7 @@ def find_candidates_bfs(
 
     foo_map = {
         ACandidateKind.RELATION: find_relation_subtree_dfs,
-        ACandidateKind.SOURCE_TARGET: find_st_subtree_dfs,
+        ACandidateKind.SOURCE_TARGET: find_sourcetarget_subtree_dfs,
     }
 
     foo_map_class = {
@@ -92,7 +97,7 @@ def find_candidates_bfs(
 def find_relation_subtree_dfs(
     graph: nx.DiGraph,
     q: deque[tuple[int, int]],
-    current_relation: ACandidateType,
+    current_relation: CandidateType,
 ):
     """
 
@@ -146,17 +151,17 @@ def find_relation_subtree_dfs(
             find_relation_subtree_dfs(graph, q, current_relation)
 
 
-def find_st_subtree_dfs(
+def find_sourcetarget_subtree_dfs(
     graph: nx.DiGraph,
     q: deque[tuple[int, int]],
-    current_st: ACandidateType,
+    source_target_cand: CandidateType,
     rules=None,
 ):
     """
 
     :param graph:
     :param q: (!) the initial call should have only a single vertex in q
-    :param current_st: source or target
+    :param source_target_cand: source or target
     :param rules:
     :return:
     """
@@ -168,13 +173,13 @@ def find_st_subtree_dfs(
     # print(current_vertex, end="->")
 
     if (
-        current_st.empty
+        source_target_cand.empty
         and level > 0
         or (
-            not current_st.empty
+            not source_target_cand.empty
             and (
-                (level - current_st.max_level() > 1)
-                or (current_st.root.dep_ == "ccomp")
+                (level - source_target_cand.max_level() > 1)
+                or (source_target_cand.root.dep_ == "ccomp")
             )
         )
     ):
@@ -182,83 +187,32 @@ def find_st_subtree_dfs(
 
     vtoken = Token(_level=level, **graph.nodes[current_vertex])
 
-    len_current_relation = len(current_st)
+    len_current_relation = len(source_target_cand)
 
-    if level == 0 and current_st.empty:
+    if level == 0 and source_target_cand.empty:
         if (("NN" in vtoken.tag_) or (vtoken.tag_ == "PRP")) or (
             vtoken.dep_ == "ccomp"
         ):
-            current_st.append(vtoken)
-    elif level > 0 and not current_st.empty:
+            source_target_cand.append(vtoken)
+    elif level > 0 and not source_target_cand.empty:
         vflag = get_flag(vtoken.__dict__, rules)
         if vflag:
-            current_st.append(vtoken)
+            source_target_cand.append(vtoken)
 
     # q.extend((v, level + 1) for v in graph.successors(current_vertex))
 
     successors = list(graph.successors(current_vertex))
 
-    if len(current_st) > len_current_relation:
+    if len(source_target_cand) > len_current_relation:
         if level > 0:
             excise_node(graph, current_vertex)
         for v in successors:
             q.append((v, level + 1))
-            find_st_subtree_dfs(graph, q, current_st, rules)
+            find_sourcetarget_subtree_dfs(graph, q, source_target_cand, rules)
 
     # if len(current_st) > len_current_relation:
     #     excise_node(graph, current_vertex)
     #     find_st_subtree_dfs(graph, q, current_st, rules)
-
-
-# def find_relation_candidates_obsolete(graph: nx.DiGraph) -> ACandidatePile:
-#     r_candidates = []
-#     for v in graph.nodes():
-#         cand = Relation()
-#
-#         if graph.nodes[v]["tag_"].startswith("VB"):
-#             # TODO check graph.nodes[v]["dep_"] != "aux"
-#             vtoken = Token(**graph.nodes[v])
-#
-#             if len(list(graph.successors(v))) > 0:
-#                 cand._tokens = [vtoken]
-#             for w in graph.successors(v):
-#                 wtoken = Token(**graph.nodes[w])
-#
-#                 if wtoken.tag_.startswith("VB"):
-#                     if (
-#                         vtoken.tag_ == "VBN"
-#                         and
-#                         # VBN or VBZ
-#                         (
-#                             "VB" in wtoken.tag_
-#                             # auxpass or aux
-#                             and "aux" in wtoken.dep_
-#                         )
-#                     ):
-#                         cand._tokens = [wtoken] + cand._tokens
-#                     elif (
-#                         vtoken.tag_ == "VBZ"
-#                         and wtoken.tag_ == "VBN"
-#                         and wtoken.dep_ == "advcl"
-#                     ):
-#                         cand._tokens = cand._tokens + [wtoken]
-#                 if (wtoken.tag_ == "IN" and wtoken.dep_ == "prep") or (
-#                     wtoken.tag_ == "IN" and wtoken.dep_ == "agent"
-#                 ):
-#                     if any([t.tag_ == "IN" for t in cand._tokens]):
-#                         cand2 = deepcopy(cand)
-#                         for j, t in enumerate(cand2._tokens):
-#                             if t.tag_ == "IN":
-#                                 cand2._tokens[j] = wtoken
-#                         r_candidates += [cand2]
-#                     else:
-#                         cand._tokens = cand._tokens + [wtoken]
-#         if cand.tokens:
-#             r_candidates += [cand]
-#     for j, r in enumerate(r_candidates):
-#         r.r0 = j
-#
-#     return ACandidatePile(candidates=r_candidates)
 
 
 def maybe_source(n) -> bool:
@@ -282,19 +236,23 @@ def check_condition(graph, s, foo_condition) -> bool:
     return any(flag)
 
 
-def graph_to_candidate_pile(graph: nx.DiGraph, rules) -> CandidatePile:
+def graph_to_candidate_pile(
+    graph: nx.DiGraph, rules
+) -> tuple[SRTPile, nx.DiGraph]:
     roots = [n for n, d in graph.in_degree() if d == 0]
-    relation_pile = ACandidatePile()
-    source_target_pile = ACandidatePile()
+    relation_pile = CandidatePile()
+    source_target_pile = CandidatePile()
+
+    mgraph = deepcopy(graph)
 
     find_candidates_bfs(
-        graph,
+        mgraph,
         deque(roots),
         relation_pile,
         ACandidateKind.RELATION,
     )
     find_candidates_bfs(
-        graph,
+        mgraph,
         deque(roots),
         source_target_pile,
         ACandidateKind.SOURCE_TARGET,
@@ -306,10 +264,13 @@ def graph_to_candidate_pile(graph: nx.DiGraph, rules) -> CandidatePile:
 
     logger.info(f" relations: {relation_pile}")
 
-    return CandidatePile(
-        relations=relation_pile,
-        sources=source_candidates,
-        targets=target_candidates,
+    return (
+        SRTPile(
+            relations=relation_pile,
+            sources=source_candidates,
+            targets=target_candidates,
+        ),
+        mgraph,
     )
 
 
@@ -342,7 +303,7 @@ def compute_distances(
     graph: nx.DiGraph,
     g_undirected: nx.Graph,
     g_weighted: nx.Graph,
-    pile: ACandidatePile,
+    pile: CandidatePile,
 ) -> tuple[
     dict[tuple[int, int], int],
     dict[tuple[int, int], int],
@@ -466,7 +427,7 @@ def derive_targets_per_relaton(
     return targets_per_relation
 
 
-def graph_to_relations(graph, rules, relaxed=False) -> list[TripleCandidate]:
+def graph_to_relations(graph, rules) -> list[TripleCandidate]:
     """
     find triplets in a dep graph:
         a. find relation candidates
@@ -474,25 +435,48 @@ def graph_to_relations(graph, rules, relaxed=False) -> list[TripleCandidate]:
         c. find target candidates
 
     :param graph: nx.Digraph
-    :param rules: nx.Digraph
-    :param relaxed: nx.Digraph
+    :param rules:
+
+    :return:
+    """
+    (
+        pile,
+        sources_per_relation,
+        targets_per_relation,
+        g_undirected,
+    ) = graph_to_maps(graph, rules)
+
+    triples = form_triples(
+        pile, sources_per_relation, targets_per_relation, g_undirected
+    )
+    return triples
+
+
+def graph_to_maps(
+    graph, rules
+) -> tuple[SRTPile, dict[int, set[int]], dict[int, set[int]], nx.Graph]:
+    """
+    derive maps
+        a. find relation -> source
+        b. find relation -> target
+
+    :param graph: nx.Digraph
+    :param rules:
 
     :return:
     """
 
-    triples = []
-
-    pile = graph_to_candidate_pile(graph, rules)
+    pile, mgraph = graph_to_candidate_pile(graph, rules)
 
     # create relevant graphs for distance calculations : undirected, reversed ...
-    g_undirected, g_reversed, g_weighted = generate_extra_graphs(graph)
+    g_undirected, g_reversed, g_weighted = generate_extra_graphs(mgraph)
 
     (
         distance_undirected,
         distance_directed,
         distance_levels,
     ) = compute_distances(
-        graph=graph,
+        graph=mgraph,
         g_undirected=g_undirected,
         g_weighted=g_weighted,
         pile=pile.relations,
@@ -514,6 +498,17 @@ def graph_to_relations(graph, rules, relaxed=False) -> list[TripleCandidate]:
         distance_levels,
         pile.sources.roots,
     )
+    return pile, sources_per_relation, targets_per_relation, g_undirected
+
+
+def form_triples(
+    pile: SRTPile,
+    sources_per_relation: dict[int, set[int]],
+    targets_per_relation: dict[int, set[int]],
+    g_undirected: nx.Graph,
+    relaxed=False,
+) -> list[TripleCandidate]:
+    triples = []
 
     for iroot in pile.relations.iroots:
         sources = sources_per_relation[iroot]
@@ -554,9 +549,9 @@ def graph_to_relations(graph, rules, relaxed=False) -> list[TripleCandidate]:
 
 
 def sieve_sources_targets(
-    pile: ACandidatePile,
-) -> tuple[ACandidatePile, ACandidatePile]:
-    sources, targets = ACandidatePile(), ACandidatePile()
+    pile: CandidatePile,
+) -> tuple[CandidatePile, CandidatePile]:
+    sources, targets = CandidatePile(), CandidatePile()
     for c in pile:
         if not c.root.dep_ == "pobj":
             sources.append(c)
@@ -565,16 +560,93 @@ def sieve_sources_targets(
     return sources, targets
 
 
-def doc_to_chunks(rdoc):
+def partition_conjunctive_dfs(
+    c: CandidateType,
+    graph: nx.DiGraph,
+    q: deque[tuple[int, int]],
+    current_cand,
+    accumulist: list[tuple[int, Candidate]],
+    iparent0: int = -1,
+):
+    """
+    :param c:
+    :param graph:
+    :param q: (!) the initial call should have only a single vertex in q
+    :param current_cand:
+    :param accumulist:
+
+    :return:
     """
 
-    :param rdoc:
-    :return: (root, start, end) NB: last token is at end-1
+    if not q:
+        return
+    itoken, iparent = q.pop()
+
+    if c.token(itoken).dep_ == "conj":
+        current_cand = Candidate()
+        iparent0 = iparent
+    current_cand.append(c.token(itoken))
+
+    if len(current_cand) == 1:
+        accumulist.append((iparent0, current_cand))
+
+    successors = sorted(
+        [i for i in graph.successors(itoken) if i in c.itokens]
+    )
+
+    for v in successors:
+        q.append((v, itoken))
+        partition_conjunctive_dfs(
+            c, graph, q, current_cand, accumulist, iparent0
+        )
+
+
+def partition_conjunctive_wrapper(
+    c: CandidateType, graph: nx.DiGraph
+) -> CandidatePile:
     """
-    acc = []
-    for chunk in rdoc.noun_chunks:
-        acc += [(chunk.root.i, chunk.start, chunk.end)]
+
+    :param c:
+    :param graph:
+    :return:
+    """
+    q: deque = deque()
+    q.append((c.root.i, -1))
+    cand: SourceOrTarget = SourceOrTarget()
+    accumulist: list[tuple[int, Candidate]] = list()
+    partition_conjunctive_dfs(c, graph, q, cand, accumulist)
+
+    accumulist = sorted(accumulist, key=lambda x: x[0])
+    acc = CandidatePile()
+
+    root_candidate = accumulist[0][1]
+
+    prefix_candidate = Candidate()
+    if len(accumulist) > 1:
+        iparent = accumulist[1][0]
+        for t in root_candidate.tokens:
+            if t.i < iparent:
+                prefix_candidate.append(t)
+
+    for j, (k, c) in enumerate(accumulist):
+        if j > 0 and not prefix_candidate.empty:
+            c_prime = prefix_candidate + c
+            acc.append(c_prime)
+        else:
+            acc.append(c)
     return acc
+
+
+# def doc_to_chunks(rdoc):
+#     """
+#
+#     :param rdoc:
+#     :return: (root, start, end) NB: last token is at end-1
+#     """
+#     acc = []
+#     for chunk in rdoc.noun_chunks:
+#         acc += [(chunk.root.i, chunk.start, chunk.end)]
+#     return acc
 
 
 # TODO WIP
@@ -593,7 +665,6 @@ def phrase_to_relations(
     # chunks = doc_to_chunks(rdoc)
 
     triples = graph_to_relations(graph, rules)
-    # _, triples, triples_projected, metagraph = graph_to_relations2(graph, rules)
 
     # coref_graph = render_mstar_graph(rdoc, graph)
 

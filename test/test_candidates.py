@@ -16,7 +16,7 @@ import yaml
 from lm_service.graph import phrase_to_deptree
 from lm_service.onto import (
     ACandidateKind,
-    ACandidatePile,
+    CandidatePile,
     Relation,
     SourceOrTarget,
 )
@@ -24,7 +24,7 @@ from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
     find_candidates_bfs,
     find_relation_subtree_dfs,
-    find_st_subtree_dfs,
+    find_sourcetarget_subtree_dfs,
 )
 
 logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ class TestR(unittest.TestCase):
         for document in self.documents:
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             roots = [n for n, d in graph.in_degree() if d == 0]
-            rp = ACandidatePile()
+            rp = CandidatePile()
             find_candidates_bfs(
                 graph, deque(roots), rp, ACandidateKind.RELATION
             )
@@ -89,7 +89,7 @@ class TestR(unittest.TestCase):
         for document in self.documents:
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             roots = [n for n, d in graph.in_degree() if d == 0]
-            rp = ACandidatePile()
+            rp = CandidatePile()
             find_candidates_bfs(
                 graph,
                 deque(roots),
@@ -167,7 +167,7 @@ class TestR(unittest.TestCase):
         for deq, document in zip(vertices_of_interest, self.documents):
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             st = SourceOrTarget()
-            find_st_subtree_dfs(graph, deq, st, rules=self.rules)
+            find_sourcetarget_subtree_dfs(graph, deq, st, rules=self.rules)
             st.sort_index()
             piles += [st]
 
@@ -196,8 +196,8 @@ class TestR(unittest.TestCase):
         for document in self.documents:
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             roots = [n for n, d in graph.in_degree() if d == 0]
-            relation_pile = ACandidatePile()
-            source_target_pile = ACandidatePile()
+            relation_pile = CandidatePile()
+            source_target_pile = CandidatePile()
             sa = len(graph.nodes)
             find_candidates_bfs(
                 graph,

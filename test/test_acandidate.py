@@ -8,21 +8,12 @@ from pathlib import Path
 import spacy
 import yaml
 
-from lm_service.coref import (
-    render_coref_candidate_map,
-    render_coref_graph,
-    sub_coreference,
-)
 from lm_service.graph import phrase_to_deptree, transform_advcl
-from lm_service.onto import ACandidate, SourceOrTarget, Token
-from lm_service.preprocessing import normalize_input_text
+from lm_service.onto import Candidate, CandidatePile, SourceOrTarget, Token
 from lm_service.relation import (
-    add_hash,
-    compute_distances,
-    generate_extra_graphs,
     graph_to_candidate_pile,
-    graph_to_relations,
-    phrase_to_relations,
+    partition_conjunctive_dfs,
+    partition_conjunctive_wrapper,
 )
 
 logger = logging.getLogger(__name__)
@@ -170,9 +161,19 @@ class TestR(unittest.TestCase):
         "_root": 24,
     }
 
+    documents = {
+        "cheops0": "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+        " telescope to determine the size of known extrasolar planets,"
+        " which will allow the estimation of their mass, density,"
+        " composition and their formation.",
+        "coref": "Although he was very busy with his work, Peter Brown had had enough of it. "
+        "He and his wife decided they needed a holiday. "
+        "They travelled to Spain because they loved the country very much.",
+    }
+
     def test_acandidate_insert_end(self):
         tokens = [Token(**{"i": x + 3, "text": f"a{x+3}"}) for x in range(3)]
-        ac = ACandidate()
+        ac = Candidate()
         for t in tokens:
             ac.append(t)
 
@@ -183,7 +184,7 @@ class TestR(unittest.TestCase):
 
     def test_acandidate_insert(self):
         tokens = [Token(**{"i": x + 3, "text": f"a{x+3}"}) for x in range(3)]
-        ac = ACandidate()
+        ac = Candidate()
         for t in tokens:
             ac.append(t)
 
@@ -194,7 +195,7 @@ class TestR(unittest.TestCase):
 
     def test_acandidate_insert_with_token_index(self):
         tokens = [Token(**{"i": x + 3, "text": f"a{x + 3}"}) for x in range(3)]
-        ac = ACandidate()
+        ac = Candidate()
         for t in tokens:
             ac.append(t)
 
@@ -205,7 +206,7 @@ class TestR(unittest.TestCase):
 
     def test_acandidate_replace(self):
         tokens = [Token(**{"i": x + 3, "text": f"a{x + 3}"}) for x in range(3)]
-        ac = ACandidate()
+        ac = Candidate()
         for t in tokens:
             ac.append(t)
 
@@ -216,13 +217,13 @@ class TestR(unittest.TestCase):
 
     def test_acandidate_replace_acandidate(self):
         tokens = [Token(**{"i": x + 3, "text": f"a{x + 3}"}) for x in range(3)]
-        ac = ACandidate()
+        ac = Candidate()
         for t in tokens:
             ac.append(t)
 
         tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
 
-        ac2 = ACandidate()
+        ac2 = Candidate()
         for t in tokens_to_add:
             ac2.append(t)
 
@@ -230,7 +231,30 @@ class TestR(unittest.TestCase):
         self.assertEqual(ac._index_set, [3, 15, 17, 5])
 
     def test_split_conj(self):
-        SourceOrTarget.from_dict(self.conjunctive_target)
+        lens = dict()
+        for key in ["coref", "cheops0"]:
+            lens[key] = {}
+            apile = CandidatePile()
+            rdoc, graph = phrase_to_deptree(self.nlp, self.documents[key])
+            pile, mgraph = graph_to_candidate_pile(graph, self.rules)
+            lens[key]["was"] = len(pile.sources)
+
+            for c in pile.sources:
+                accum = partition_conjunctive_wrapper(c, graph)
+                accum = (
+                    accum.sort_index().drop_punct().drop_cc().drop_articles()
+                )
+                apile += accum
+            text = apile.project_to_text()
+            lens[key]["became"] = len(apile)
+            print(text)
+        self.assertEqual(
+            lens,
+            {
+                "coref": {"was": 9, "became": 10},
+                "cheops0": {"was": 5, "became": 8},
+            },
+        )
 
 
 if __name__ == "__main__":
