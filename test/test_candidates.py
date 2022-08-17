@@ -14,12 +14,8 @@ import spacy
 import yaml
 
 from lm_service.graph import phrase_to_deptree
-from lm_service.onto import (
-    ACandidateKind,
-    CandidatePile,
-    Relation,
-    SourceOrTarget,
-)
+from lm_service.onto import ACandidateKind, Relation, SourceOrTarget
+from lm_service.piles import CandidatePile
 from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
     find_candidates_bfs,
