@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from collections import defaultdict
+from collections import defaultdict, deque
 from copy import deepcopy
 from typing import Any
 
@@ -9,17 +9,9 @@ import networkx as nx
 from spacy.tokens import Doc
 
 from lm_service.onto import Candidate
+from lm_service.piles import partition_conjunctive_wrapper
 
 logger = logging.getLogger(__name__)
-
-
-# class CorefGraph:
-#     def __init__(
-#         self, graph: nx.DiGraph, root: int, map_specific: dict[int, int]
-#     ):
-#         self.graph: nx.DiGraph = graph
-#         self.root: int = root
-#         self.map_specific: dict[int, int] = map_specific
 
 
 def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
@@ -152,6 +144,18 @@ def render_coref_candidate_map(
     return map_subbable_to_chain, map_chain_to_most_specific
 
 
+def render_coref_maps_wrapper(
+    rdoc, graph
+) -> tuple[defaultdict[int, list[int]], defaultdict[int, list[int]]]:
+
+    coref_graph = render_coref_graph(rdoc, graph)
+    (
+        map_subbable_to_chain,
+        map_chain_to_most_specific,
+    ) = render_coref_candidate_map(coref_graph)
+    return map_subbable_to_chain, map_chain_to_most_specific
+
+
 def sub_coreference(
     map_subbable_to_chain: defaultdict[int, list[int]],
     map_chain_to_most_specific: defaultdict[int, list[int]],
@@ -197,12 +201,14 @@ def sub_coreference(
         return list()
 
 
-def coref_pile(
-    source_target_depot,
+def coref_candidates(
+    dep_tree: nx.DiGraph,
+    candidate_depot,
     map_subbable_to_chain,
     map_chain_to_most_specific,
     token_dict,
-):
+    unfold_conjunction=True,
+) -> dict[int, list[Candidate]]:
     map_token_specific_token = {
         i: sub_coreference(
             map_subbable_to_chain, map_chain_to_most_specific, i
@@ -212,32 +218,55 @@ def coref_pile(
 
     map_trunc = {k: v for k, v in map_token_specific_token.items() if [k] != v}
 
-    all_coref_i = set(map_trunc.keys()) | set(
-        [i for subl in map_trunc.values() for i in subl]
-    )
-    map_icoref_source_target = {}
-    for s in source_target_depot:
-        for k in all_coref_i:
-            if k in s.itokens:
-                map_icoref_source_target[k] = deepcopy(s)
-            elif k not in map_icoref_source_target:
-                ac = Candidate()
-                ac.append(token_dict[k])
-                map_icoref_source_target[k] = ac
+    all_coref_i = set(map_trunc.keys()) | {
+        i for subl in map_trunc.values() for i in subl
+    }
 
-    depot = []
-    for source in source_target_depot:
-        source_ix_subs = set(map_trunc) & set(source.itokens)
-        if not source_ix_subs:
-            depot.append(source)
-        for sub in source_ix_subs:
-            iy_subs = map_trunc[sub]
-            for y in iy_subs:
-                s = deepcopy(source)
-                s.replace_token_with_acandidate(
-                    sub, map_icoref_source_target[y]
-                )
-                depot.append(s)
+    map_icoref_source_target = {}
+
+    ncp: defaultdict[int, list] = defaultdict(list)
+    # unfold conjunction
+    for c in candidate_depot:
+        if unfold_conjunction:
+            ncp[c.root.i].extend(partition_conjunctive_wrapper(c, dep_tree))
+        else:
+            ncp[c.root.i] = [c]
+
+    # itoken -> atomic candidate
+    for iroot, sigmas in ncp.items():
+        for sigma in sigmas:
+            for k in all_coref_i:
+                if k in sigma.itokens:
+                    map_icoref_source_target[k] = iroot, deepcopy(sigma)
+                elif k not in map_icoref_source_target:
+                    ac = Candidate()
+                    ac.append(token_dict[k])
+                    map_icoref_source_target[k] = k, ac
+
+    # map (iroot, coref_index) -> clean atomic candidate
+    deq: deque = deque()
+    for iroot, sigmas in ncp.items():
+        for sigma in sigmas:
+            deq.append((iroot, sigma))
+
+    ncp2: defaultdict[int, list] = defaultdict(list)
+    cnt = 0
+    max_cnt = max([len(map_icoref_source_target) ** 2, len(deq) ** 2])
+    while deq and cnt < max_cnt:
+        cnt += 1
+        iroot, sigma = deq.popleft()
+        candidate_ix_subs = set(map_trunc) & set(sigma.itokens)
+        if candidate_ix_subs:
+            for sub in candidate_ix_subs:
+                iy_subs = map_trunc[sub]
+                for y in iy_subs:
+                    s2 = deepcopy(sigma)
+                    iroot_new, sigma_sub = map_icoref_source_target[y]
+                    s2.replace_token_with_acandidate(sub, sigma_sub)
+                    deq.append((iroot, s2))
+        else:
+            ncp2[iroot] += [sigma]
+    return ncp2
 
 
 def propotion_of_pronouns(graph, mentions):

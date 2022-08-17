@@ -9,14 +9,8 @@ import spacy
 import yaml
 
 from lm_service.graph import phrase_to_deptree, transform_advcl
-from lm_service.onto import (
-    Candidate,
-    CandidatePile,
-    SourceOrTarget,
-    Token,
-    partition_conjunctive_dfs,
-    partition_conjunctive_wrapper,
-)
+from lm_service.onto import Candidate, Token
+from lm_service.piles import CandidatePile, partition_conjunctive_wrapper
 from lm_service.relation import graph_to_candidate_pile
 
 logger = logging.getLogger(__name__)
