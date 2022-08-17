@@ -8,8 +8,8 @@ import spacy
 import yaml
 
 from lm_service.coref import render_coref_graph
-from lm_service.folding import fold_graph_top
 from lm_service.graph import phrase_to_deptree
+from lm_service.obsolete.folding import fold_graph_top
 from lm_service.util import plot_graph
 
 

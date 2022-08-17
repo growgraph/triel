@@ -267,9 +267,3 @@ def coref_candidates(
         else:
             ncp2[iroot] += [sigma]
     return ncp2
-
-
-def propotion_of_pronouns(graph, mentions):
-    return sum(
-        [graph.nodes[m]["tag_"].startswith("PRP") for m in mentions]
-    ) / len(mentions)
