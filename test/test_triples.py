@@ -3,7 +3,6 @@ import os
 import pkgutil
 import sys
 import unittest
-from copy import deepcopy
 from itertools import product
 from pathlib import Path
 
@@ -119,89 +118,6 @@ class TestR(unittest.TestCase):
                 ),
             ],
         )
-
-    @unittest.skip("")
-    def test_relation_advanced(self):
-        rdoc, graph = phrase_to_deptree(self.nlp, self.documents["coref"])
-        token_dict = {i: Token(**graph.nodes[i]) for i in graph.nodes()}
-
-        coref_graph = render_coref_graph(rdoc, graph)
-        (
-            map_subbable_to_chain,
-            map_chain_to_most_specific,
-        ) = render_coref_candidate_map(coref_graph)
-
-        map_token_specific_token = {
-            i: sub_coreference(
-                map_subbable_to_chain, map_chain_to_most_specific, i
-            )
-            for i in map_subbable_to_chain
-        }
-
-        map_trunc = {
-            k: v for k, v in map_token_specific_token.items() if [k] != v
-        }
-
-        all_coref_i = set(map_trunc.keys()) | set(
-            [i for subl in map_trunc.values() for i in subl]
-        )
-        map_icoref_source_target = {}
-
-        triples, source_target_depot = graph_to_triples(
-            rdoc, graph, self.rules
-        )
-        triples = [tri.drop_articles().normalize_relation() for tri in triples]
-
-        for s in source_target_depot:
-            for k in all_coref_i:
-                if k in s.itokens:
-                    map_icoref_source_target[k] = deepcopy(s)
-                elif k not in map_icoref_source_target:
-                    ac = Candidate()
-                    ac.append(token_dict[k])
-                    map_icoref_source_target[k] = ac
-
-        triples_expanded = []
-
-        for tri in triples:
-            source_ix_subs = set(map_trunc) & set(tri.source.itokens)
-            new_sources = []
-            for sub in source_ix_subs:
-                iy_subs = map_trunc[sub]
-                for y in iy_subs:
-                    s = deepcopy(tri.source)
-                    s.replace_token_with_acandidate(
-                        sub, map_icoref_source_target[y]
-                    )
-                    new_sources.append(s)
-            target_ix_subs = set(map_trunc) & set(tri.target.itokens)
-            new_targets = []
-            for sub in target_ix_subs:
-                iy_subs = map_trunc[sub]
-                for y in iy_subs:
-                    t = deepcopy(tri.target)
-                    t.replace_token_with_acandidate(
-                        sub, map_icoref_source_target[y]
-                    )
-                    new_targets.append(t)
-            triples_expanded += [
-                TripleCandidate(source=s, target=t, relation=tri.relation)
-                for s, t in product(
-                    new_sources if new_sources else [tri.source],
-                    new_targets if new_targets else [tri.target],
-                )
-            ]
-
-        triples_projected = [tri.project_to_text() for tri in triples_expanded]
-
-        print(triples_projected)
-
-        # self.assertEqual(
-        #     triples_projected,
-        #     [
-        #         ("CHEOPS", "be", "telescope"),
-        #     ],
-        # )
 
 
 if __name__ == "__main__":

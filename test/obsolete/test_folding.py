@@ -8,7 +8,7 @@ from pathlib import Path
 import networkx as nx
 import yaml
 
-from lm_service.folding import fold_graph
+from lm_service.obsolete.folding import fold_graph
 from lm_service.util import plot_graph, plot_leaves
 
 nl_data = {
@@ -361,15 +361,15 @@ class TestMetagraph(unittest.TestCase):
             metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}"
         )
 
-        # self.assertEqual(len(metagraph.nodes), 13)
-        # size_ggs = [1, 1, 1, 1, 1, 1, 1, 4, 2, 7, 1, 2, 12]
-        # self.assertEqual(
-        #     [
-        #         len(metagraph.nodes[n]["leaf"])
-        #         for n in sorted(metagraph.nodes())
-        #     ],
-        #     size_ggs,
-        # )
+        self.assertEqual(len(metagraph.nodes), 10)
+        size_ggs = [3, 1, 2, 1, 4, 2, 7, 1, 2, 12]
+        self.assertEqual(
+            [
+                len(metagraph.nodes[n]["leaf"])
+                for n in sorted(metagraph.nodes())
+            ],
+            size_ggs,
+        )
 
 
 if __name__ == "__main__":
