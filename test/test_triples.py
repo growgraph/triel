@@ -115,6 +115,7 @@ class TestR(unittest.TestCase):
             ],
         )
 
+    # @unittest.skip("")
     def test_relation_advanced(self):
         rdoc, graph = phrase_to_deptree(self.nlp, self.documents["coref"])
         token_dict = {i: Token(**graph.nodes[i]) for i in graph.nodes()}

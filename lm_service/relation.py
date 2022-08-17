@@ -499,7 +499,7 @@ def graph_to_maps(
     :return:
     """
 
-    pile, source_target_depot, mod_raph = graph_to_candidate_pile(graph, rules)
+    pile, candidate_depot, mod_raph = graph_to_candidate_pile(graph, rules)
 
     # create relevant graphs for distance calculations : undirected, reversed ...
     g_undirected, g_reversed, g_weighted = generate_extra_graphs(mod_raph)
@@ -535,7 +535,7 @@ def graph_to_maps(
         pile,
         sources_per_relation,
         targets_per_relation,
-        source_target_depot,
+        candidate_depot,
         g_undirected,
     )
 

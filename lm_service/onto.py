@@ -184,6 +184,7 @@ class Candidate(JSONWizard):
                 Token(
                     **{
                         "i": max(self.itokens) + 13,
+                        "lower": "of",
                         "text": "of",
                         "lemma": "of",
                         "dep_": "prep",
@@ -420,9 +421,9 @@ class CandidatePile:
     def tokens(self) -> set[int]:
         return set([x for r in self.candidates for x in r.itokens])
 
-    def append(self, r: CandidateType):
+    def append(self, r: CandidateType, index=None):
         r.r0 = len(self.candidates)
-        self.iroot_to_candidate[r.root.i] = r
+        self.iroot_to_candidate[r.root.i if index is None else index] = r
         self._candidates += [r]
 
     def project_to_text(self):
@@ -546,7 +547,7 @@ def partition_conjunctive_wrapper(
     for j, (k, c) in enumerate(accumulist):
         if j > 0 and not prefix_candidate.empty:
             c_prime = prefix_candidate + c
-            acc.append(c_prime.sort_index())
+            acc.append(c_prime.sort_index().drop_cc().drop_punct())
         else:
-            acc.append(c.sort_index())
+            acc.append(c.sort_index().drop_cc().drop_punct())
     return acc
