@@ -262,7 +262,8 @@ def coref_candidates(
                 for y in iy_subs:
                     s2 = deepcopy(sigma)
                     iroot_new, sigma_sub = map_icoref_source_target[y]
-                    s2.replace_token_with_acandidate(sub, sigma_sub)
+                    if not (set(s2.itokens) & set(sigma_sub.itokens)):
+                        s2.replace_token_with_acandidate(sub, sigma_sub)
                     deq.append((iroot, s2))
         else:
             ncp2[iroot] += [sigma]
