@@ -116,7 +116,12 @@ def find_relation_subtree_dfs(
     ):
         return
 
-    vtoken = Token(_level=level, **graph.nodes[current_vertex])
+    vtoken = Token(
+        _level=level,
+        **graph.nodes[current_vertex],
+        predecessors=graph.predecessors(current_vertex),
+        successors=graph.successors(current_vertex),
+    )
 
     len_current_relation = len(current_relation)
 
@@ -180,7 +185,12 @@ def find_sourcetarget_subtree_dfs(
     ):
         return
 
-    vtoken = Token(_level=level, **graph.nodes[current_vertex])
+    vtoken = Token(
+        _level=level,
+        **graph.nodes[current_vertex],
+        predecessors=graph.predecessors(current_vertex),
+        successors=graph.successors(current_vertex),
+    )
 
     len_current_relation = len(source_target_cand)
 
@@ -485,7 +495,14 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
     # iii) modified graph to use for distance computation
     pile, candidate_depot, mod_graph = graph_to_candidate_pile(graph, rules)
 
-    token_dict = {i: Token(**graph.nodes[i]) for i in graph.nodes()}
+    token_dict = {
+        i: Token(
+            **graph.nodes[i],
+            predecessors=graph.predecessors(i),
+            successors=graph.successors(i),
+        )
+        for i in graph.nodes()
+    }
 
     (
         pile,

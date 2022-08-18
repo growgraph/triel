@@ -88,12 +88,16 @@ class TestR(unittest.TestCase):
     def test_relation(self):
         documents = [
             self.documents[key]
-            for key in [
-                "near-field",
-                "cheops0_trunc",
+            for key in
+            # [
+            #     "near-field",
+            #     "cheops0_trunc",
+            #     "cheops_ext",
+            #     "photometric",
+            # ]
+            [
                 "cheops_ext",
-                "photometric",
-            ][3:]
+            ]
         ]
         acc_triples = []
         triples_projected = []

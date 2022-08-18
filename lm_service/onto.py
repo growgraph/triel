@@ -35,6 +35,8 @@ class Token(JSONWizard):
 
     i: int
     text: str
+    predecessors: set[int] = dataclasses.field(default_factory=set)
+    successors: set[int] = dataclasses.field(default_factory=set)
     dep_: str = ""
     tag_: str = ""
     lower: str = ""
@@ -63,6 +65,11 @@ class Candidate(JSONWizard):
         for c in other.tokens:
             new.append(c)
         return new
+
+    def __iadd__(self, other: Candidate):
+        for c in other.tokens:
+            self.append(c)
+        return self
 
     def __len__(self) -> int:
         return len(self._tokens)
@@ -176,29 +183,36 @@ class Candidate(JSONWizard):
         for t in tokens:
             self._tokens[t.i] = t
 
-    def replace_token_with_tokens(self, i: int, tokens: list[Token]):
+    def replace_token_with_acandidate(self, i: int, ac: Candidate):
         if self.token(i).dep_ == "poss":
-            tokens = [
-                Token(
-                    **{
-                        "i": max(self.itokens) + 13,
-                        "lower": "of",
-                        "text": "of",
-                        "lemma": "of",
-                        "dep_": "prep",
-                        "tag_": "IN",
-                    }
-                )
-            ] + tokens
-            self.insert_at(len(self) + 1, tokens, token_index=False)
+            predecessor_i = next(iter(self.token(i).predecessors))
+            of_token = Token(
+                **{
+                    "i": max(self.itokens) + 99,
+                    "lower": "of",
+                    "text": "of",
+                    "lemma": "of",
+                    "dep_": "prep",
+                    "tag_": "IN",
+                    "successors": {ac.root.i},
+                    "predecessors": {predecessor_i},
+                }
+            )
+            # operate on pred i
+            self.token(predecessor_i).successors.remove(i)
+            self.token(predecessor_i).successors.add(of_token.i)
+
+            position = len(self) + 1
+            token_index = False
         else:
-            self.insert_at(i, tokens, token_index=True)
+            position = i
+            token_index = True
+        # TODO
+        # ac.root.predecessor = of_token.i or position ??
+        self.insert_at(position, ac.tokens, token_index=token_index)
         j = self._index_set.index(i)
         self._index_set = self._index_set[:j] + self._index_set[j + 1 :]
         del self._tokens[i]
-
-    def replace_token_with_acandidate(self, i: int, ac: Candidate):
-        self.replace_token_with_tokens(i, list(ac.tokens))
 
     def print(self):
         content = []
