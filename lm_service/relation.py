@@ -5,7 +5,6 @@ import logging
 from collections import deque
 from copy import deepcopy
 from itertools import product
-from typing import List, Tuple
 
 import networkx as nx
 import pandas as pd
@@ -580,25 +579,23 @@ def sieve_sources_targets(
     return sources, targets
 
 
-def phrase_to_relations(
-    phrase,
-    nlp,
-    rules,
-) -> Tuple[List[TripleCandidate], List[Tuple[str, str, str]],]:
+def phrase_to_relations(phrase: str, nlp, rules, debug=False):
     logger.info(f"{phrase}")
 
     rdoc, graph = phrase_to_deptree(nlp, phrase)
 
     triples = graph_to_triples(rdoc, graph, rules)
     triples_proj = [tri.project_to_text() for tri in triples]
-    return triples, triples_proj
+    if debug:
+        return triples, triples_proj, graph
+    else:
+        return triples, triples_proj
 
 
-def add_hash(triples_expanded, graph):
+def add_hash(triples_expanded):
     agg = []
 
     for tri in triples_expanded:
-        # TODO
         source_txt = tri.relation.project_to_text_str()
         target_txt = tri.relation.project_to_text_str()
         relation_txt = tri.relation.project_to_text_str()

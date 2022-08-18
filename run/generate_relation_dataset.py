@@ -13,7 +13,7 @@ import yaml
 from lm_service.graph import transform_advcl
 from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import phrase_to_relations
-from lm_service.util import plot_graph, plot_leaves
+from lm_service.util import plot_graph
 
 
 def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
@@ -30,18 +30,12 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
         nmax = min([nmax, head])
     for i in range(nmax):
         fragment = ". ".join(phrases[i : i + window_size])
-        (
-            graph,
-            coref_graph,
-            triples_expanded,
-            triples_proj,
-        ) = phrase_to_relations(fragment, nlp, rules)
+        (triples_expanded, triples_proj, graph) = phrase_to_relations(
+            fragment, nlp, rules, debug=True
+        )
         acc += [(i, fragment, triples_expanded, triples_proj)]
         if plot:
             plot_graph(graph, fig_path, f"fragment_{i}_full")
-            # plot_graph(metagraph, fig_path, f"fragment_{i}_mg")
-            plot_graph(coref_graph, fig_path, f"fragment_{i}_coref")
-            # plot_leaves(metagraph, fig_path, f"fragment_{i}")
 
     sources = [s for _, _, _, triples_proj in acc for s, _, _ in triples_proj]
     relations = [
@@ -49,7 +43,7 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
     ]
     targets = [t for _, _, _, triples_proj in acc for _, _, t in triples_proj]
 
-    tokens = sorted(set(sources) | set(targets) | set(relations))
+    tokens = sorted(set(set(sources) | set(targets) | set(relations)))
     token_map = {t: ii for ii, t in enumerate(tokens)}
     g = nx.DiGraph()
 

@@ -3,23 +3,15 @@ import os
 import pkgutil
 import sys
 import unittest
-from itertools import product
 from pathlib import Path
 
 import coreferee
 import spacy
 import yaml
 
-from lm_service.coref import (
-    render_coref_candidate_map,
-    render_coref_graph,
-    sub_coreference,
-)
 from lm_service.graph import phrase_to_deptree, transform_advcl
-from lm_service.onto import Candidate, Token, TripleCandidate
 from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
-    add_hash,
     compute_distances,
     generate_extra_graphs,
     graph_to_candidate_pile,
@@ -57,6 +49,16 @@ class TestR(unittest.TestCase):
         "coref": "Although he was very busy with his work, Peter Brown had had enough of it. "
         "He and his wife decided they needed a holiday. "
         "They travelled to Spain because they loved the country very much.",
+        "cheops_ext": "Cheops ( CHaracterising ExOPlanets Satellite ) is a European space "
+        "telescope to determine the size of known extrasolar planets , "
+        "which will allow the estimation of their mass , density , composition and their formation. "
+        "It is the first Small class mission in ESA 's Cosmic Vision "
+        "science programme Launched on 18 December 2019",
+        "photometric": "Cheops measures photometric signals with a precision limited by stellar photon "
+        "noise of 150 ppm min for a 9th magnitude star. "
+        "This corresponds to the transit of an Earth sized planet "
+        "orbiting a star of 0 . 9 R in 60 days "
+        " detected with a S Ntransit > 10 ( 100 ppm transit depth )",
     }
 
     def test_consecutive_candidates(self):
@@ -85,7 +87,13 @@ class TestR(unittest.TestCase):
     # @unittest.skip("")
     def test_relation(self):
         documents = [
-            self.documents[key] for key in ["near-field", "cheops0_trunc"]
+            self.documents[key]
+            for key in [
+                "near-field",
+                "cheops0_trunc",
+                "cheops_ext",
+                "photometric",
+            ][3:]
         ]
         acc_triples = []
         triples_projected = []
@@ -115,6 +123,32 @@ class TestR(unittest.TestCase):
                     "europeanSpaceTelescope",
                     "allows",
                     "estimationOfMassOfSizeOfExtrasolarPlanets",
+                ),
+                ("Cheops", "is", "europeanSpaceTelescope"),
+                (
+                    "europeanSpaceTelescope",
+                    "is",
+                    "firstSmallClassMissionInEsaCosmicVisionScienceProgramme",
+                ),
+                (
+                    "europeanSpaceTelescope",
+                    "determines",
+                    "sizeOfExtrasolarPlanets",
+                ),
+                (
+                    "europeanSpaceTelescope",
+                    "allows",
+                    "estimationOfMassOfSizeOfExtrasolarPlanets",
+                ),
+                (
+                    "europeanSpaceTelescope",
+                    "allows",
+                    "estimationOfDensityOfSizeOfExtrasolarPlanets",
+                ),
+                (
+                    "europeanSpaceTelescope",
+                    "allows",
+                    "estimationOfCompositionOfSizeOfExtrasolarPlanets",
                 ),
             ],
         )
