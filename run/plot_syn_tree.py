@@ -43,10 +43,10 @@ if __name__ == "__main__":
         " telescope to determine the size of known extrasolar planets,"
         " which will allow the estimation of their mass, density,"
         " composition and their formation.",
-        "They travelled to Spain because they loved the country very much.",
-        "The medium was affected by the near-field radiation",
-        "Although he was very busy with his work, Peter Brown had had enough of it. "
-        "He and his wife decided they needed a holiday in Spain.",
+        # "They travelled to Spain because they loved the country very much.",
+        # "The medium was affected by the near-field radiation",
+        # "Although he was very busy with his work, Peter Brown had had enough of it. "
+        # "He and his wife decided they needed a holiday in Spain.",
         # "Although he was very busy with his work, Peter had had enough of it. "
         # "He and his wife decided they needed a holiday. "
         # "Peter would have caught the fish with a fishing rod, if not the"

@@ -201,17 +201,6 @@ class TestR(unittest.TestCase):
         ac.insert_at(5, tokens_to_add, token_index=True)
         self.assertEqual(ac._index_set, [3, 4, 15, 17, 5])
 
-    def test_acandidate_replace(self):
-        tokens = [Token(**{"i": x + 3, "text": f"a{x + 3}"}) for x in range(3)]
-        ac = Candidate()
-        for t in tokens:
-            ac.append(t)
-
-        tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
-
-        ac.replace_token_with_tokens(4, tokens_to_add)
-        self.assertEqual(ac._index_set, [3, 15, 17, 5])
-
     def test_acandidate_replace_acandidate(self):
         tokens = [Token(**{"i": x + 3, "text": f"a{x + 3}"}) for x in range(3)]
         ac = Candidate()
