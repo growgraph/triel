@@ -222,7 +222,7 @@ def coref_candidates(
         i for subl in map_trunc.values() for i in subl
     }
 
-    map_icoref_source_target = {}
+    map_icoref_source_target: dict[int, tuple[int, Candidate]] = {}
 
     ncp: defaultdict[int, list] = defaultdict(list)
     # unfold conjunction
@@ -233,38 +233,50 @@ def coref_candidates(
             ncp[c.root.i] = [c]
 
     # itoken -> atomic candidate
-    for iroot, sigmas in ncp.items():
-        for sigma in sigmas:
+    for iroot, candidates in ncp.items():
+        for sigma_candidate in candidates:
             for k in all_coref_i:
-                if k in sigma.itokens:
-                    map_icoref_source_target[k] = iroot, deepcopy(sigma)
+                if k in sigma_candidate.itokens:
+                    map_icoref_source_target[k] = iroot, deepcopy(
+                        sigma_candidate
+                    )
                 elif k not in map_icoref_source_target:
                     ac = Candidate()
                     ac.append(token_dict[k])
                     map_icoref_source_target[k] = k, ac
 
     # map (iroot, coref_index) -> clean atomic candidate
-    deq: deque = deque()
-    for iroot, sigmas in ncp.items():
-        for sigma in sigmas:
-            deq.append((iroot, sigma))
+    deq: deque[tuple[int, Candidate]] = deque()
+    for iroot, candidates in ncp.items():
+        for sigma_candidate in candidates:
+            deq.append((iroot, sigma_candidate))
 
     ncp2: defaultdict[int, list] = defaultdict(list)
     cnt = 0
     max_cnt = max([len(map_icoref_source_target) ** 2, len(deq) ** 2])
     while deq and cnt < max_cnt:
         cnt += 1
-        iroot, sigma = deq.popleft()
-        candidate_ix_subs = set(map_trunc) & set(sigma.itokens)
+        iroot, sigma_candidate = deq.popleft()
+        candidate_ix_subs = set(map_trunc) & set(sigma_candidate.itokens)
         if candidate_ix_subs:
             for sub in candidate_ix_subs:
                 iy_subs = map_trunc[sub]
                 for y in iy_subs:
-                    s2 = deepcopy(sigma)
-                    iroot_new, sigma_sub = map_icoref_source_target[y]
-                    if not (set(s2.itokens) & set(sigma_sub.itokens)):
-                        s2.replace_token_with_acandidate(sub, sigma_sub)
-                    deq.append((iroot, s2))
+                    sigma_copy = deepcopy(sigma_candidate)
+                    (
+                        iroot_new,
+                        sigma_candidate_substitution,
+                    ) = map_icoref_source_target[y]
+                    if not (
+                        set(sigma_copy.itokens)
+                        & set(sigma_candidate_substitution.itokens)
+                    ):
+                        # replace sub with sigma_candidate_substitution but only starting from token y and onwards
+                        # token y is a precise position given by
+                        sigma_copy.replace_token_with_tokens(
+                            sub, sigma_candidate_substitution.view_tokens(y)
+                        )
+                    deq.append((iroot, sigma_copy))
         else:
-            ncp2[iroot] += [sigma]
+            ncp2[iroot] += [sigma_candidate]
     return ncp2

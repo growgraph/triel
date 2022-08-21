@@ -42,8 +42,8 @@ class Token(JSONWizard):
     ent_iob: str = ""
     _level: int = 0
     label: str = ""
-    # predecessors: set[int] = dataclasses.field(default_factory=set)
-    # successors: set[int] = dataclasses.field(default_factory=set)
+    predecessors: set[int] = dataclasses.field(default_factory=set)
+    successors: set[int] = dataclasses.field(default_factory=set)
 
     def __repr__(self):
         content = [f" {k} : {v}" for k, v in self.__dict__.items()]
@@ -57,7 +57,7 @@ class Candidate(JSONWizard):
 
     r0: int | None = None  # position in CandidatePile
     _tokens: dict[int, Token] = dataclasses.field(default_factory=dict)
-    _index_set: list[int] = dataclasses.field(default_factory=list)
+    _index_vec: list[int] = dataclasses.field(default_factory=list)
     _root: int | None = None
 
     def __add__(self, other: Candidate):
@@ -90,15 +90,26 @@ class Candidate(JSONWizard):
 
     @property
     def itokens(self):
-        return self._index_set
+        return self._index_vec
 
     def token(self, i):
-        if i in self._index_set:
+        if i in self._index_vec:
             return self._tokens[i]
         else:
             raise MissingTokenInACandidate(
                 f"token {i} not present in ACandidate containing {self.itokens}"
             )
+
+    def view_tokens(self, ifrom=None, ito=None):
+        if ifrom in self._index_vec:
+            iifrom = self._index_vec.index(ifrom)
+        else:
+            iifrom = None
+        if ito in self._index_vec:
+            iito = self._index_vec.index(ito) + 1
+        else:
+            iito = None
+        return [self.token(i) for i in self.itokens[iifrom:iito]]
 
     @property
     def tokens(self):
@@ -141,17 +152,17 @@ class Candidate(JSONWizard):
         if self.empty:
             self._root = token.i
         self._tokens[token.i] = token
-        self._index_set.append(token.i)
+        self._index_vec.append(token.i)
 
     def drop_tokens(self, drop_indices):
         dropping = {}
         for i in drop_indices:
             dropping[i] = self._tokens.pop(i)
-        self._index_set = [i for i in self._index_set if i not in drop_indices]
+        self._index_vec = [i for i in self._index_vec if i not in drop_indices]
         return dropping
 
     def sort_index(self):
-        self._index_set = sorted(self._index_set)
+        self._index_vec = sorted(self._index_vec)
         return self
 
     def insert_at(self, j: int, tokens: list[Token], token_index=False):
@@ -166,21 +177,29 @@ class Candidate(JSONWizard):
         #     raise InsertingExistingTokens(f"{[t.i for t in tokens]} vs {self.itokens}")
 
         if token_index:
-            if j in self._index_set:
-                j = self._index_set.index(j)
+            if j in self._index_vec:
+                j = self._index_vec.index(j)
             else:
                 raise MissingTokenInACandidate(
                     f"token {j} not in ACandidate {self.itokens}"
                 )
-        self._index_set = (
-            self._index_set[:j] + [t.i for t in tokens] + self._index_set[j:]
+        self._index_vec = (
+            self._index_vec[:j] + [t.i for t in tokens] + self._index_vec[j:]
         )
         for t in tokens:
             self._tokens[t.i] = t
 
     def replace_token_with_tokens(self, i: int, tokens: list[Token]):
+        # def replace_token_with_acandidate(self, i: int, ac: Candidate):
+        """
+        replace is a combination of remove and insert
+        :param i:
+        :param tokens:
+        :return:
+        """
+
         if self.token(i).dep_ == "poss":
-            tokens = [
+            of_token = [
                 Token(
                     **{
                         "i": max(self.itokens) + 13,
@@ -189,14 +208,19 @@ class Candidate(JSONWizard):
                         "lemma": "of",
                         "dep_": "prep",
                         "tag_": "IN",
+                        "predecessors": self.token(i).predecessors,
+                        # "successors": {ac.root},
                     }
                 )
-            ] + tokens
-            self.insert_at(len(self) + 1, tokens, token_index=False)
+            ]
+            insert_position = len(self) + 1
+            token_index = False
         else:
-            self.insert_at(i, tokens, token_index=True)
-        j = self._index_set.index(i)
-        self._index_set = self._index_set[:j] + self._index_set[j + 1 :]
+            insert_position = i
+            token_index = True
+        self.insert_at(insert_position, tokens, token_index=token_index)
+        j = self._index_vec.index(i)
+        self._index_vec = self._index_vec[:j] + self._index_vec[j + 1 :]
         del self._tokens[i]
 
     def replace_token_with_acandidate(self, i: int, ac: Candidate):
