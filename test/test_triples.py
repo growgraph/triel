@@ -86,22 +86,18 @@ class TestR(unittest.TestCase):
 
     # @unittest.skip("")
     def test_relation(self):
-        documents = [
-            self.documents[key]
-            for key in
-            # [
-            #     "near-field",
-            #     "cheops0_trunc",
-            #     "cheops_ext",
-            #     "photometric",
-            # ]
-            [
+        documents = {
+            key: self.documents[key]
+            for key in [
+                "near-field",
+                "cheops0_trunc",
                 "cheops_ext",
+                "photometric",
             ]
-        ]
+        }
         acc_triples = []
-        triples_projected = []
-        for doc in documents:
+        triples_projected = {}
+        for key, doc in documents.items():
             rdoc, graph = phrase_to_deptree(self.nlp, doc)
 
             triples = graph_to_triples(rdoc, graph, self.rules)
@@ -111,12 +107,11 @@ class TestR(unittest.TestCase):
             ]
             acc_triples += triples
 
-            triples_projected += [tri.project_to_text() for tri in triples]
+            triples_projected[key] = [tri.project_to_text() for tri in triples]
 
-        self.assertEqual(
-            triples_projected,
-            [
-                ("medium", "wasAffectedBy", "nearFieldRadiation"),
+        reference = {
+            "near-field": [("medium", "wasAffectedBy", "nearFieldRadiation")],
+            "cheops0_trunc": [
                 ("CHEOPS", "is", "europeanSpaceTelescope"),
                 (
                     "europeanSpaceTelescope",
@@ -126,8 +121,10 @@ class TestR(unittest.TestCase):
                 (
                     "europeanSpaceTelescope",
                     "allows",
-                    "estimationOfMassOfSizeOfExtrasolarPlanets",
+                    "estimationOfMassOfPlanets",
                 ),
+            ],
+            "cheops_ext": [
                 ("Cheops", "is", "europeanSpaceTelescope"),
                 (
                     "europeanSpaceTelescope",
@@ -142,20 +139,35 @@ class TestR(unittest.TestCase):
                 (
                     "europeanSpaceTelescope",
                     "allows",
-                    "estimationOfMassOfSizeOfExtrasolarPlanets",
+                    "estimationOfMassOfPlanets",
                 ),
                 (
                     "europeanSpaceTelescope",
                     "allows",
-                    "estimationOfDensityOfSizeOfExtrasolarPlanets",
+                    "estimationOfDensityOfPlanets",
                 ),
                 (
                     "europeanSpaceTelescope",
                     "allows",
-                    "estimationOfCompositionOfSizeOfExtrasolarPlanets",
+                    "estimationOfCompositionOfPlanets",
                 ),
             ],
-        )
+            "photometric": [
+                ("Cheops", "measuresWith", "photometricSignals"),
+                (
+                    "Cheops",
+                    "measuresWith",
+                    "precisionOf150PpmMinFor9thMagnitudeStar",
+                ),
+                (
+                    "100PpmTransitDepth",
+                    "correspondsTo",
+                    "transitOfSizedPlanet",
+                ),
+            ],
+        }
+        for k in triples_projected:
+            self.assertEqual(triples_projected[k], reference[k])
 
 
 if __name__ == "__main__":

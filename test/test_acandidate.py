@@ -177,7 +177,7 @@ class TestR(unittest.TestCase):
         tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
 
         ac.insert_at(4, tokens_to_add)
-        self.assertEqual(ac._index_set, [3, 4, 5, 15, 17])
+        self.assertEqual(ac._index_vec, [3, 4, 5, 15, 17])
 
     def test_acandidate_insert(self):
         tokens = [Token(**{"i": x + 3, "text": f"a{x+3}"}) for x in range(3)]
@@ -188,7 +188,7 @@ class TestR(unittest.TestCase):
         tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
 
         ac.insert_at(1, tokens_to_add)
-        self.assertEqual(ac._index_set, [3, 15, 17, 4, 5])
+        self.assertEqual(ac._index_vec, [3, 15, 17, 4, 5])
 
     def test_acandidate_insert_with_token_index(self):
         tokens = [Token(**{"i": x + 3, "text": f"a{x + 3}"}) for x in range(3)]
@@ -199,7 +199,7 @@ class TestR(unittest.TestCase):
         tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
 
         ac.insert_at(5, tokens_to_add, token_index=True)
-        self.assertEqual(ac._index_set, [3, 4, 15, 17, 5])
+        self.assertEqual(ac._index_vec, [3, 4, 15, 17, 5])
 
     def test_acandidate_replace_acandidate(self):
         tokens = [Token(**{"i": x + 3, "text": f"a{x + 3}"}) for x in range(3)]
@@ -214,7 +214,7 @@ class TestR(unittest.TestCase):
             ac2.append(t)
 
         ac.replace_token_with_acandidate(4, ac2)
-        self.assertEqual(ac._index_set, [3, 15, 17, 5])
+        self.assertEqual(ac._index_vec, [3, 15, 17, 5])
 
     def test_unfold_conjunctive(self):
         lens = dict()
