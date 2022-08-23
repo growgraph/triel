@@ -112,6 +112,11 @@ class CandidatePile:
         new._candidates = [c.normalize() for c in new._candidates]
         return new
 
+    def clean_dangling_edges(self):
+        new = deepcopy(self)
+        new._candidates = [c.clean_dangling_edges() for c in new._candidates]
+        return new
+
     def sort_index(self):
         new = deepcopy(self)
         new._candidates = [c.sort_index() for c in new._candidates]
@@ -176,36 +181,39 @@ def partition_conjunctive_dfs(
 
 
 def partition_conjunctive_wrapper(
-    c: CandidateType, graph: nx.DiGraph
+    candidate: CandidateType, graph: nx.DiGraph
 ) -> CandidatePile:
     """
 
-    :param c:
+    :param candidate:
     :param graph:
     :return:
     """
     deq: deque = deque()
-    deq.append((c.root.i, -1))
+    deq.append((candidate.root.i, -1))
     cand: SourceOrTarget = SourceOrTarget()
-    accumulist: list[tuple[int, Candidate]] = list()
-    partition_conjunctive_dfs(c, graph, deq, cand, accumulist)
+    accumulist: list[tuple[int, Candidate]] = []
+    partition_conjunctive_dfs(candidate, graph, deq, cand, accumulist)
+
+    # dangling edges appear during partition
+    accumulist = [(x, y.clean_dangling_edges()) for x, y in accumulist]
 
     accumulist = sorted(accumulist, key=lambda x: x[0])
     acc = CandidatePile()
 
-    root_candidate = accumulist[0][1]
+    (_, root_candidate), clauses = accumulist[0], accumulist[1:]
 
-    prefix_candidate = Candidate()
-    if len(accumulist) > 1:
-        iparent = accumulist[1][0]
-        for t in root_candidate.tokens:
-            if t.i < iparent:
-                prefix_candidate.append(t)
+    acc.append(root_candidate)
 
-    for j, (k, c) in enumerate(accumulist):
-        if j > 0 and not prefix_candidate.empty:
-            c_prime = prefix_candidate + c
-            acc.append(c_prime.sort_index().drop_cc().drop_punct())
-        else:
-            acc.append(c.sort_index().drop_cc().drop_punct())
+    for _, candidate in clauses:
+        iparent, _ = clauses[0]
+        c_prime = deepcopy(root_candidate)
+        c_prime.replace_token_with_acandidate(i=iparent, ac=candidate)
+        acc.append(
+            c_prime.drop_cc()
+            .drop_punct()
+            .drop_articles()
+            .clean_dangling_edges()
+            .sort_index_tree()
+        )
     return acc

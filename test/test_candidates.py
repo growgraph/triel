@@ -55,10 +55,11 @@ class TestR(unittest.TestCase):
         piles = []
         for document in self.documents:
             rdoc, graph = phrase_to_deptree(self.nlp, document)
+            ograph = graph.copy()
             roots = [n for n, d in graph.in_degree() if d == 0]
             rp = CandidatePile()
             find_candidates_bfs(
-                graph, deque(roots), rp, ACandidateKind.RELATION
+                graph, ograph, deque(roots), rp, ACandidateKind.RELATION
             )
             piles += [rp]
 
@@ -84,10 +85,12 @@ class TestR(unittest.TestCase):
         piles = []
         for document in self.documents:
             rdoc, graph = phrase_to_deptree(self.nlp, document)
+            ograph = graph.copy()
             roots = [n for n, d in graph.in_degree() if d == 0]
             rp = CandidatePile()
             find_candidates_bfs(
                 graph,
+                ograph,
                 deque(roots),
                 rp,
                 ACandidateKind.SOURCE_TARGET,
@@ -141,8 +144,9 @@ class TestR(unittest.TestCase):
         vertices_of_interest = [deque([(x, 0)]) for x in vertices_of_interest]
         for deq, document in zip(vertices_of_interest, self.documents):
             rdoc, graph = phrase_to_deptree(self.nlp, document)
+            ograph = graph.copy()
             cr = Relation()
-            find_relation_subtree_dfs(graph, deq, cr)
+            find_relation_subtree_dfs(graph, ograph, deq, cr)
             cr.sort_index()
             piles += [cr]
 
@@ -162,8 +166,11 @@ class TestR(unittest.TestCase):
         vertices_of_interest = [deque([(x, 0)]) for x in vertices_of_interest]
         for deq, document in zip(vertices_of_interest, self.documents):
             rdoc, graph = phrase_to_deptree(self.nlp, document)
+            original_graph = graph.copy()
             st = SourceOrTarget()
-            find_sourcetarget_subtree_dfs(graph, deq, st, rules=self.rules)
+            find_sourcetarget_subtree_dfs(
+                graph, original_graph, deq, st, rules=self.rules
+            )
             st.sort_index()
             piles += [st]
 
@@ -191,12 +198,14 @@ class TestR(unittest.TestCase):
         sizes = []
         for document in self.documents:
             rdoc, graph = phrase_to_deptree(self.nlp, document)
+            ograph = graph.copy()
             roots = [n for n, d in graph.in_degree() if d == 0]
             relation_pile = CandidatePile()
             source_target_pile = CandidatePile()
             sa = len(graph.nodes)
             find_candidates_bfs(
                 graph,
+                ograph,
                 deque(roots),
                 relation_pile,
                 ACandidateKind.RELATION,
@@ -204,6 +213,7 @@ class TestR(unittest.TestCase):
             sb = len(graph.nodes)
             find_candidates_bfs(
                 graph,
+                ograph,
                 deque(roots),
                 source_target_pile,
                 ACandidateKind.SOURCE_TARGET,

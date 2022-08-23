@@ -52,7 +52,8 @@ class SimplifiedConjunctionHypothesisFailure(Exception):
 
 def find_candidates_bfs(
     graph: nx.DiGraph,
-    q: deque[int],
+    original_graph: nx.DiGraph,
+    deq: deque[int],
     candidate_pile: CandidatePile,
     how: ACandidateKind,
     **kwargs,
@@ -60,7 +61,8 @@ def find_candidates_bfs(
     """
 
     :param graph: please provide a copy graph, find_candidates_bfs potentially modifies graph structure
-    :param q: deque to keep track of vertices while traversing
+    :param original_graph: to assign edges for candi ates correctly
+    :param deq: deque to keep track of vertices while traversing
     :param candidate_pile: pile to accumulate candidates
     :param how:
     :return:
@@ -80,40 +82,44 @@ def find_candidates_bfs(
     }
 
     foo = foo_map[how]
-    if not q:
+    if not deq:
         return
 
-    current_vertex = q.popleft()
-    current_relation = foo_map_class[how]()  # type: ignore
+    current_vertex = deq.popleft()
+    current_candidate = foo_map_class[how]()  # type: ignore
 
     successors = set(graph.successors(current_vertex))
     if current_vertex not in candidate_pile.tokens:
-        foo(graph, deque([(current_vertex, 0)]), current_relation, **kwargs)  # type: ignore
+        foo(graph, original_graph, deque([(current_vertex, 0)]), current_candidate, **kwargs)  # type: ignore
 
-    if not current_relation.empty:  # type: ignore
-        current_relation.sort_index()  # type: ignore
-        candidate_pile.append(current_relation)  # type: ignore
+    if not current_candidate.empty:  # type: ignore
+        current_candidate.sort_index()  # type: ignore
+        candidate_pile.append(current_candidate.clean_dangling_edges())  # type: ignore
 
-    q.extend(successors & set(graph.nodes))
-    find_candidates_bfs(graph, q, candidate_pile, how, **kwargs)
+    deq.extend(successors & set(graph.nodes))
+    find_candidates_bfs(
+        graph, original_graph, deq, candidate_pile, how, **kwargs
+    )
 
 
 def find_relation_subtree_dfs(
     graph: nx.DiGraph,
-    q: deque[tuple[int, int]],
+    original_graph: nx.DiGraph,
+    deq: deque[tuple[int, int]],
     current_relation: CandidateType,
 ):
     """
 
     :param graph:
-    :param q: (!) the initial call should have only a single vertex in q
+    :param original_graph:
+    :param deq: (!) the initial call should have only a single vertex in q
     :param current_relation:
     :return:
     """
 
-    if not q:
+    if not deq:
         return
-    current_vertex, level = q.pop()
+    current_vertex, level = deq.pop()
     # print(current_vertex, end="->")
     if (
         current_relation.empty
@@ -125,7 +131,12 @@ def find_relation_subtree_dfs(
     ):
         return
 
-    vtoken = Token(_level=level, **graph.nodes[current_vertex])
+    vtoken = Token(
+        **graph.nodes[current_vertex],
+        _level=level,
+        successors=set(original_graph.successors(current_vertex)),
+        predecessors=set(original_graph.predecessors(current_vertex)),
+    )
 
     len_current_relation = len(current_relation)
 
@@ -151,29 +162,33 @@ def find_relation_subtree_dfs(
         if level > 0:
             excise_node(graph, current_vertex)
         for v in successors:
-            q.append((v, level + 1))
-            find_relation_subtree_dfs(graph, q, current_relation)
+            deq.append((v, level + 1))
+            find_relation_subtree_dfs(
+                graph, original_graph, deq, current_relation
+            )
 
 
 def find_sourcetarget_subtree_dfs(
     graph: nx.DiGraph,
-    q: deque[tuple[int, int]],
+    original_graph: nx.DiGraph,
+    deq: deque[tuple[int, int]],
     source_target_cand: CandidateType,
     rules=None,
 ):
     """
 
     :param graph:
-    :param q: (!) the initial call should have only a single vertex in q
+    :param original_graph:
+    :param deq: (!) the initial call should have only a single vertex in q
     :param source_target_cand: source or target
     :param rules:
     :return:
     """
 
-    if not q:
+    if not deq:
         return
     # current_vertex, level = q.popleft()
-    current_vertex, level = q.pop()
+    current_vertex, level = deq.pop()
     # print(current_vertex, end="->")
 
     if (
@@ -188,8 +203,15 @@ def find_sourcetarget_subtree_dfs(
         )
     ):
         return
+    if current_vertex == 19:
+        print("h")
 
-    vtoken = Token(_level=level, **graph.nodes[current_vertex])
+    vtoken = Token(
+        **graph.nodes[current_vertex],
+        _level=level,
+        successors=set(original_graph.successors(current_vertex)),
+        predecessors=set(original_graph.predecessors(current_vertex)),
+    )
 
     len_current_relation = len(source_target_cand)
 
@@ -211,8 +233,10 @@ def find_sourcetarget_subtree_dfs(
         if level > 0:
             excise_node(graph, current_vertex)
         for v in successors:
-            q.append((v, level + 1))
-            find_sourcetarget_subtree_dfs(graph, q, source_target_cand, rules)
+            deq.append((v, level + 1))
+            find_sourcetarget_subtree_dfs(
+                graph, original_graph, deq, source_target_cand, rules
+            )
 
     # if len(current_st) > len_current_relation:
     #     excise_node(graph, current_vertex)
@@ -259,6 +283,7 @@ def graph_to_candidate_pile(
 
     find_candidates_bfs(
         mgraph,
+        graph,
         deque(roots),
         relation_pile,
         ACandidateKind.RELATION,
@@ -267,6 +292,7 @@ def graph_to_candidate_pile(
     candidate_pile = CandidatePile()
     find_candidates_bfs(
         mgraph,
+        graph,
         deque(roots),
         candidate_pile,
         ACandidateKind.SOURCE_TARGET,
@@ -462,7 +488,14 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
     # iii) modified graph to use for distance computation
     pile, candidate_depot, mod_graph = graph_to_candidate_pile(graph, rules)
 
-    token_dict = {i: Token(**graph.nodes[i]) for i in graph.nodes()}
+    token_dict = {
+        i: Token(
+            **graph.nodes[i],
+            successors=set(graph.successors(i)),
+            predecessors=set(graph.predecessors(i)),
+        )
+        for i in graph.nodes()
+    }
 
     (
         pile,
