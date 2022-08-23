@@ -88,6 +88,7 @@ class TestCoref(unittest.TestCase):
             },
         )
 
+    # @unittest.skip("")
     def test_substitution_in_depot(self):
         rdoc, graph = phrase_to_deptree(self.nlp, self.phrase)
 
@@ -95,7 +96,14 @@ class TestCoref(unittest.TestCase):
             graph, self.rules
         )
 
-        token_dict = {i: Token(**graph.nodes[i]) for i in graph.nodes()}
+        token_dict = {
+            i: Token(
+                **graph.nodes[i],
+                successors=set(graph.successors(i)),
+                predecessors=set(graph.predecessors(i)),
+            )
+            for i in graph.nodes()
+        }
         (
             map_subbable_to_chain,
             map_chain_to_most_specific,
@@ -117,15 +125,15 @@ class TestCoref(unittest.TestCase):
                 10: [[9, 10]],
                 23: [[23]],
                 30: [[30]],
-                25: [[24, 25]],
-                17: [[9, 10], [20, 33, 9, 10]],
-                27: [[9, 10], [20, 33, 9, 10]],
+                25: [[25]],
+                17: [[9, 10], [20, 1020, 9, 10]],
+                27: [[9, 10], [20, 1020, 9, 10]],
                 1: [[9, 10]],
-                22: [[9, 10], [20, 33, 9, 10]],
-                32: [[9, 10], [20, 33, 9, 10]],
-                35: [[34, 30]],
-                7: [[7, 20, 9, 10]],
-                15: [[7, 20, 9, 10]],
+                22: [[9, 10], [20, 1020, 9, 10]],
+                32: [[9, 10], [20, 1020, 9, 10]],
+                35: [[30]],
+                7: [[7, 1010, 9, 10]],
+                15: [[7, 1010, 9, 10]],
             },
         )
 

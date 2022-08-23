@@ -168,53 +168,126 @@ class TestR(unittest.TestCase):
         "They travelled to Spain because they loved the country very much.",
     }
 
-    def test_acandidate_insert_end(self):
-        tokens = [Token(**{"i": x + 3, "text": f"a{x+3}"}) for x in range(3)]
-        ac = Candidate()
-        for t in tokens:
-            ac.append(t)
+    # def test_acandidate_insert_end(self):
+    #     tokens = [Token(**{"i": x + 3, "text": f"a{x+3}"}) for x in range(3)]
+    #     ac = Candidate().from_tokens(tokens)
+    #
+    #     tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
+    #
+    #     ac.insert_at(4, tokens_to_add)
+    #     self.assertEqual(ac._index_vec, [3, 4, 5, 15, 17])
+    #
+    # def test_acandidate_insert(self):
+    #     tokens = [Token(**{"i": x + 3, "text": f"a{x+3}"}) for x in range(3)]
+    #     ac = Candidate().from_tokens(tokens)
+    #
+    #     tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
+    #
+    #     ac.insert_at(1, tokens_to_add)
+    #     self.assertEqual(ac._index_vec, [3, 15, 17, 4, 5])
+    #
+    # def test_acandidate_insert_with_token_index(self):
+    #     tokens = [Token(**{"i": x + 3, "text": f"a{x + 3}"}) for x in range(3)]
+    #     ac = Candidate().from_tokens(tokens)
+    #
+    #     tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
+    #
+    #     ac.insert_at(5, tokens_to_add, token_index=True)
+    #     self.assertEqual(ac._index_vec, [3, 4, 15, 17, 5])
 
-        tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
+    # def test_extend_with_candidate(self):
+    #     tokens = [
+    #         Token(**{"i": 0, "text": "a0", "successors": {1, 2}}),
+    #         Token(**{"i": 1, "text": "a1", "predecessors": {0}}),
+    #         Token(**{"i": 2, "text": "a2", "predecessors": {0}}),
+    #     ]
+    #     ac = Candidate().from_tokens(tokens)
+    #
+    #     tokens_b = [
+    #         Token(**{"i": 15, "text": "b0", "successors": {17}}),
+    #         Token(**{"i": 17, "text": "b1", "predecessors": {15}}),
+    #     ]
+    #     bc = Candidate().from_tokens(tokens_b)
+    #
+    #     ac.extend_with_candidate(bc, 1, succ=1)
+    #     self.assertEqual(ac._index_vec, [0, 15, 17, 1, 2])
+    #     self.assertEqual(ac.token(1).successors, {15})
 
-        ac.insert_at(4, tokens_to_add)
-        self.assertEqual(ac._index_vec, [3, 4, 5, 15, 17])
+    def test_extend_with_candidate(self):
+        tokens = [
+            Token(
+                **{
+                    "i": 7,
+                    "lower": "his",
+                    "text": "his",
+                    "dep_": "poss",
+                    "predecessors": {8},
+                }
+            ),
+            Token(
+                **{"i": 8, "lower": "dog", "text": "dog", "successors": {7}}
+            ),
+        ]
+        ac = Candidate().from_tokens(tokens)
 
-    def test_acandidate_insert(self):
-        tokens = [Token(**{"i": x + 3, "text": f"a{x+3}"}) for x in range(3)]
-        ac = Candidate()
-        for t in tokens:
-            ac.append(t)
+        tokens_b = [
+            Token(**{"i": 15, "lower": "john", "text": "John"}),
+        ]
+        bc = Candidate().from_tokens(tokens_b)
 
-        tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
+        ac.replace_token_with_acandidate(7, bc)
+        ac.sort_index_tree()
+        self.assertEqual(ac.itokens, [8, 1015, 15])
+        self.assertEqual(ac.token(8).successors, {1015})
 
-        ac.insert_at(1, tokens_to_add)
-        self.assertEqual(ac._index_vec, [3, 15, 17, 4, 5])
+    def test_replace_top(self):
+        tokens = [
+            Token(
+                **{
+                    "i": 7,
+                    "lower": "he",
+                    "text": "he",
+                }
+            ),
+        ]
+        ac = Candidate().from_tokens(tokens)
 
-    def test_acandidate_insert_with_token_index(self):
-        tokens = [Token(**{"i": x + 3, "text": f"a{x + 3}"}) for x in range(3)]
-        ac = Candidate()
-        for t in tokens:
-            ac.append(t)
+        tokens_b = [
+            Token(**{"i": 15, "lower": "john", "text": "John"}),
+        ]
+        bc = Candidate().from_tokens(tokens_b)
 
-        tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
+        ac.replace_token_with_acandidate(7, bc)
+        self.assertEqual(ac._index_vec, [15])
 
-        ac.insert_at(5, tokens_to_add, token_index=True)
-        self.assertEqual(ac._index_vec, [3, 4, 15, 17, 5])
+    def test_from_subtree(self):
+        tokens = [
+            Token(**{"i": 0, "text": "a0", "successors": {1, 2}}),
+            Token(**{"i": 1, "text": "a1", "predecessors": {0}}),
+            Token(
+                **{
+                    "i": 2,
+                    "text": "a2",
+                    "predecessors": {0},
+                    "successors": {15},
+                }
+            ),
+            Token(
+                **{
+                    "i": 15,
+                    "text": "b0",
+                    "predecessors": {2},
+                    "successors": {16, 17},
+                }
+            ),
+            Token(**{"i": 16, "text": "b1", "predecessors": {15}}),
+            Token(**{"i": 17, "text": "b2", "predecessors": {15}}),
+        ]
+        ac = Candidate().from_tokens(tokens)
 
-    def test_acandidate_replace_acandidate(self):
-        tokens = [Token(**{"i": x + 3, "text": f"a{x + 3}"}) for x in range(3)]
-        ac = Candidate()
-        for t in tokens:
-            ac.append(t)
+        bc = ac.from_subtree(2)
 
-        tokens_to_add = [Token(**{"i": x, "text": f"b{x}"}) for x in [15, 17]]
-
-        ac2 = Candidate()
-        for t in tokens_to_add:
-            ac2.append(t)
-
-        ac.replace_token_with_acandidate(4, ac2)
-        self.assertEqual(ac._index_vec, [3, 15, 17, 5])
+        self.assertEqual(bc.itokens, [2, 15, 16, 17])
 
     def test_unfold_conjunctive(self):
         lens = dict()
@@ -241,6 +314,35 @@ class TestR(unittest.TestCase):
                 "cheops0": {"was": 5, "became": 8},
             },
         )
+
+    def test_sort_index_tree(self):
+        tokens = [
+            Token(**{"i": 2, "text": "a0", "successors": {1, 0}}),
+            Token(**{"i": 1, "text": "a1", "predecessors": {2}}),
+            Token(
+                **{
+                    "i": 0,
+                    "text": "a2",
+                    "predecessors": {2},
+                    "successors": {15},
+                }
+            ),
+            Token(
+                **{
+                    "i": 15,
+                    "text": "b0",
+                    "predecessors": {2},
+                    "successors": {16, 17},
+                }
+            ),
+            Token(**{"i": 16, "text": "b1", "predecessors": {15}}),
+            Token(**{"i": 17, "text": "b2", "predecessors": {15}}),
+        ]
+        ac = Candidate().from_tokens(tokens)
+
+        ac.sort_index_tree()
+
+        self.assertEqual(ac.itokens, [0, 15, 16, 17, 1, 2])
 
 
 if __name__ == "__main__":

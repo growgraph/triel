@@ -8,7 +8,7 @@ from typing import Any
 import networkx as nx
 from spacy.tokens import Doc
 
-from lm_service.onto import Candidate
+from lm_service.onto import Candidate, Token
 from lm_service.piles import partition_conjunctive_wrapper
 
 logger = logging.getLogger(__name__)
@@ -206,7 +206,7 @@ def coref_candidates(
     candidate_depot,
     map_subbable_to_chain,
     map_chain_to_most_specific,
-    token_dict,
+    token_dict: dict[int, Token],
     unfold_conjunction=True,
 ) -> dict[int, list[Candidate]]:
     map_token_specific_token = {
@@ -241,8 +241,7 @@ def coref_candidates(
                         sigma_candidate
                     )
                 elif k not in map_icoref_source_target:
-                    ac = Candidate()
-                    ac.append(token_dict[k])
+                    ac = Candidate().from_tokens([token_dict[k]])
                     map_icoref_source_target[k] = k, ac
 
     # map (iroot, coref_index) -> clean atomic candidate
@@ -273,10 +272,13 @@ def coref_candidates(
                     ):
                         # replace sub with sigma_candidate_substitution but only starting from token y and onwards
                         # token y is a precise position given by
-                        sigma_copy.replace_token_with_tokens(
-                            sub, sigma_candidate_substitution.view_tokens(y)
+                        sub_tree_cand = (
+                            sigma_candidate_substitution.from_subtree(y)
+                        )
+                        sigma_copy.replace_token_with_acandidate(
+                            sub, sub_tree_cand
                         )
                     deq.append((iroot, sigma_copy))
         else:
-            ncp2[iroot] += [sigma_candidate]
+            ncp2[iroot] += [sigma_candidate.normalize()]
     return ncp2

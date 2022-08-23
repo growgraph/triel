@@ -21,6 +21,12 @@ class InsertingExistingTokens(Exception):
     pass
 
 
+class RequestedIndexDoesNotExist(Exception):
+    pass
+
+
+n_extra_token = 1000
+
 CandidateType = TypeVar("CandidateType", bound="Candidate")
 
 
@@ -73,16 +79,50 @@ class Candidate(JSONWizard):
         content = []
         for i in self.itokens:
             t = self._tokens[i]
-            content += [f" {t.i} : {t.lower} : {t.tag_} : {t.dep_}"]
+            str_succ = ", ".join([f"{s}" for s in t.successors])
+            str_pred = ", ".join([f"{s}" for s in t.predecessors])
+            content += [
+                f" {t.i} : {t.lower} : {t.tag_} : {t.dep_} : pred < {str_pred} : succ > {str_succ}"
+            ]
 
         return (
             f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
         )
 
+    def from_tokens(self, tokens: list[Token]):
+        for t in tokens:
+            self.append(t)
+        self.clean_dangling_edges()
+        return self
+
+    def clean_dangling_edges(self):
+        present = set(self.itokens)
+        for k, t in self._tokens.items():
+            t.successors &= present
+            t.predecessors &= present
+        self._recompute_root()
+        return self
+
     def max_level(self) -> int:
         return (
             0 if self.empty else max(t._level for t in self._tokens.values())
         )
+
+    def _recompute_root(self):
+        roots = [
+            k for k, v in self._tokens.items() if len(v.predecessors) == 0
+        ]
+        if len(roots) != 1:
+            print(self)
+            raise ValueError(
+                f" candidate has {len(roots)} roots, should be one"
+            )
+        else:
+            self._root = next(iter(roots))
+
+    @property
+    def iroot(self):
+        return self._root
 
     @property
     def root(self):
@@ -92,13 +132,21 @@ class Candidate(JSONWizard):
     def itokens(self):
         return self._index_vec
 
-    def token(self, i):
-        if i in self._index_vec:
-            return self._tokens[i]
+    def token(self, i, index=False):
+        if index:
+            if i < len(self):
+                return self._tokens[self._index_vec[i]]
+            else:
+                raise RequestedIndexDoesNotExist(
+                    f" size of Candidate {len(self)}, requesting index {i}"
+                )
         else:
-            raise MissingTokenInACandidate(
-                f"token {i} not present in ACandidate containing {self.itokens}"
-            )
+            if i in self._index_vec:
+                return self._tokens[i]
+            else:
+                raise MissingTokenInACandidate(
+                    f"token {i} not present in ACandidate containing {self.itokens}"
+                )
 
     def view_tokens(self, ifrom=None, ito=None):
         if ifrom in self._index_vec:
@@ -110,6 +158,20 @@ class Candidate(JSONWizard):
         else:
             iito = None
         return [self.token(i) for i in self.itokens[iifrom:iito]]
+
+    def from_subtree(self, i: int):
+        acc: list[int] = []
+        self._pick_successors(i, acc)
+        return (
+            Candidate()
+            .from_tokens([self.token(j) for j in self._index_vec if j in acc])
+            .clean_dangling_edges()
+        )
+
+    def _pick_successors(self, i, acc):
+        acc += [i]
+        for j in self.token(i).successors:
+            self._pick_successors(j, acc)
 
     @property
     def tokens(self):
@@ -132,8 +194,6 @@ class Candidate(JSONWizard):
         pp = []
         for i in self.itokens:
             x = self.token(i)
-            if x.dep_ == "punct":
-                continue
             if x.ent_iob in (0, 2):
                 pp += [x.text]
             else:
@@ -155,14 +215,56 @@ class Candidate(JSONWizard):
         self._index_vec.append(token.i)
 
     def drop_tokens(self, drop_indices):
-        dropping = {}
+        """
+        NB: make it consistent wrt to graph operations
+        """
         for i in drop_indices:
-            dropping[i] = self._tokens.pop(i)
-        self._index_vec = [i for i in self._index_vec if i not in drop_indices]
-        return dropping
+            self.remove(i)
 
     def sort_index(self):
         self._index_vec = sorted(self._index_vec)
+        return self
+
+    def _sort_wrt_tree(
+        self,
+        j: int,
+        sorter: dict[int | None, tuple[float, int | None, int | None]],
+    ):
+        succs = self.token(j).successors
+
+        # "of" exception => if j is "of" then force order
+        if self.token(j).lower == "of" and self.token(j).tag_ == "IN":
+            sorted_succs = [j] + sorted(succs)
+        else:
+            sorted_succs = sorted(list(succs) + [j])
+
+        value, left, right = sorter[j]
+        if left in sorter:
+            value_left, _, _ = sorter[left]
+        else:
+            value_left = value - (len(sorted_succs) + 1)
+        if right in sorter:
+            value_right, _, _ = sorter[right]
+        else:
+            value_right = value + (len(sorted_succs) + 1)
+
+        delta = (value_right - value_left) / (len(sorted_succs) + 1)
+
+        values = [
+            value_left + (k + 1) * delta for k in range(len(sorted_succs))
+        ]
+        working_sorted = [left] + sorted_succs + [right]  # type: ignore
+        for a, b, c, value in zip(
+            working_sorted, working_sorted[1:], working_sorted[2:], values
+        ):
+            sorter[b] = value, a, c
+        for s in succs:
+            self._sort_wrt_tree(s, sorter)
+
+    def sort_index_tree(self):
+        proposed_sorter = {self.iroot: (self.iroot, None, None)}
+        self._sort_wrt_tree(self.iroot, sorter=proposed_sorter)
+        self._index_vec = sorted(proposed_sorter, key=proposed_sorter.get)
         return self
 
     def insert_at(self, j: int, tokens: list[Token], token_index=False):
@@ -189,42 +291,156 @@ class Candidate(JSONWizard):
         for t in tokens:
             self._tokens[t.i] = t
 
-    def replace_token_with_tokens(self, i: int, tokens: list[Token]):
-        # def replace_token_with_acandidate(self, i: int, ac: Candidate):
+    def insert_before(self, ac: Candidate, j: int):
         """
-        replace is a combination of remove and insert
-        :param i:
-        :param tokens:
+            extend self with ac candidate
+            such that jpred -> j becomes jpred -> ac.root -> j
+            NB: likely should be followed by _recompute_root()
+
+            first token of ac will be placed at position j in self
+
+
+        :param ac:
+        :param j:
+
         :return:
         """
 
-        if self.token(i).dep_ == "poss":
-            of_token = [
-                Token(
-                    **{
-                        "i": max(self.itokens) + 13,
-                        "lower": "of",
-                        "text": "of",
-                        "lemma": "of",
-                        "dep_": "prep",
-                        "tag_": "IN",
-                        "predecessors": self.token(i).predecessors,
-                        # "successors": {ac.root},
-                    }
+        if j not in self._index_vec:
+            raise MissingTokenInACandidate(
+                f"token {j} not in ACandidate {self.itokens}"
+            )
+
+        jindex = self._index_vec.index(j)
+
+        # update _index_vec
+        self._index_vec = (
+            self._index_vec[:jindex] + ac.itokens + self._index_vec[jindex:]
+        )
+
+        # update _tokens
+        for t in ac.tokens:
+            self._tokens[t.i] = t
+
+        # update upward edges (NB: should be 1-step iteration)
+        for pred in self.token(j).predecessors:
+            self.token(pred).successors |= {ac.root.i}
+            ac.root.predecessors |= {pred}
+
+        ac.root.successors |= {j}
+        self.token(j).predecessors |= {ac.root.i}
+        # ac._recompute_root()
+
+    def extend_with_candidate(
+        self,
+        ac: Candidate,
+        j: int,
+        token_index=False,
+        succ=None,
+        pred=None,
+    ):
+        """
+            extend self with ac candidate
+            NB: likely should be followed by _recompute_root()
+
+            first token of ac will be placed at position j in self
+
+            if succ is given ac becomes a successor of j from self
+            if pred is given ac becomes a predecessor of j from self
+
+        :param ac:
+        :param j:
+        :param token_index: interpret j as token id if true, rather than a position in self._index_set
+        :param succ: index from self, ac becomes successor of succ
+        :param pred: index from self, ac becomes predecessor of pred
+                    (currently only becoming a pred of root of self makes sense)
+
+        :return:
+        """
+        if succ and pred:
+            raise ValueError(" both succ and pred were provided")
+
+        # attach ac either as a successor of succ or pred
+        if pred:
+            if pred not in self.itokens:
+                raise ValueError("pred not in self.itokens")
+            if self.token(pred).predecessors:
+                raise ValueError(
+                    "Candidate token can have only one predecessor"
                 )
-            ]
-            insert_position = len(self) + 1
-            token_index = False
-        else:
-            insert_position = i
-            token_index = True
-        self.insert_at(insert_position, tokens, token_index=token_index)
-        j = self._index_vec.index(i)
-        self._index_vec = self._index_vec[:j] + self._index_vec[j + 1 :]
-        del self._tokens[i]
+        if succ and succ not in self.itokens:
+            raise ValueError("succ not in self.itokens")
+
+        if token_index:
+            if j in self._index_vec:
+                j = self._index_vec.index(j)
+            else:
+                raise MissingTokenInACandidate(
+                    f"token {j} not in ACandidate {self.itokens}"
+                )
+
+        self._index_vec = (
+            self._index_vec[:j] + ac.itokens + self._index_vec[j:]
+        )
+        for t in ac.tokens:
+            self._tokens[t.i] = t
+
+        if succ is not None:
+            self.token(succ).successors |= {ac.root.i}
+            ac.root.predecessors = {succ}
+
+        # in that case ac replaces at the root (the only possible case)
+        if pred is not None:
+            self.token(pred).predecessors |= {ac.root.i}
+            ac.root.successors = {pred}
 
     def replace_token_with_acandidate(self, i: int, ac: Candidate):
-        self.replace_token_with_tokens(i, list(ac.tokens))
+        """
+        replace is a combination of remove and insert
+        :param i:
+        :param ac:
+        :return:
+        """
+
+        ac = deepcopy(ac)
+        if self.token(i).dep_ == "poss":
+            of_token = Token(
+                **{
+                    "i": max(self.itokens + ac.itokens) + n_extra_token,
+                    "lower": "of",
+                    "text": "of",
+                    "lemma": "of",
+                    "dep_": "prep",
+                    "tag_": "IN",
+                }
+            )
+            nc = Candidate().from_tokens([of_token])
+            ac = deepcopy(ac)
+            ac.insert_before(nc, j=ac.root.i)
+            ac._recompute_root()
+        self.insert_before(ac, j=i)
+
+        self.remove(i)
+        self.clean_dangling_edges().sort_index_tree()
+
+    def remove(self, i: int):
+        # edges
+        for pred in self.token(i).predecessors:
+            self.token(pred).successors |= self.token(i).successors
+
+        for succ in self.token(i).successors:
+            self.token(succ).predecessors |= self.token(i).predecessors
+
+        for pred in self.token(i).predecessors:
+            self.token(pred).successors -= {i}
+
+        for succ in self.token(i).successors:
+            self.token(succ).predecessors -= {i}
+
+        del self._tokens[i]
+
+        j = self._index_vec.index(i)
+        self._index_vec = self._index_vec[:j] + self._index_vec[j + 1 :]
 
     def print(self):
         content = []
@@ -316,7 +532,14 @@ class Relation(Candidate):
 
 @dataclasses.dataclass(repr=False)
 class SourceOrTarget(Candidate):
-    pass
+    def normalize(self):
+        return (
+            self.drop_cc()
+            .drop_punct()
+            .drop_articles()
+            .clean_dangling_edges()
+            .sort_index_tree()
+        )
 
 
 @dataclasses.dataclass(repr=False)

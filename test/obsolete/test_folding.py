@@ -1,5 +1,6 @@
 import logging
 import os
+import pathlib
 import pkgutil
 import sys
 import unittest
@@ -341,6 +342,12 @@ graph = nx.node_link_graph(nl_data)
 class TestMetagraph(unittest.TestCase):
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     path = Path(__file__).parent
+
+    figs_folder = "./figs"
+    current_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), figs_folder
+    )
+    pathlib.Path(current_path).mkdir(parents=True, exist_ok=True)
 
     def test_fold_graph(self):
         fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")

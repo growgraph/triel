@@ -101,14 +101,12 @@ class TestR(unittest.TestCase):
             rdoc, graph = phrase_to_deptree(self.nlp, doc)
 
             triples = graph_to_triples(rdoc, graph, self.rules)
-            triples = [
-                tri.drop_articles().drop_amod_vbn().normalize_relation()
-                for tri in triples
-            ]
+            triples = [tri.normalize_relation() for tri in triples]
             acc_triples += triples
 
             triples_projected[key] = [tri.project_to_text() for tri in triples]
 
+        # NB known problems in cheops_ext
         reference = {
             "near-field": [("medium", "wasAffectedBy", "nearFieldRadiation")],
             "cheops0_trunc": [
@@ -116,12 +114,12 @@ class TestR(unittest.TestCase):
                 (
                     "europeanSpaceTelescope",
                     "determines",
-                    "sizeOfExtrasolarPlanets",
+                    "sizeOfKnownExtrasolarPlanets",
                 ),
                 (
                     "europeanSpaceTelescope",
                     "allows",
-                    "estimationOfMassOfPlanets",
+                    "estimationOfMassOfKnownExtrasolarPlanets",
                 ),
             ],
             "cheops_ext": [
@@ -134,22 +132,22 @@ class TestR(unittest.TestCase):
                 (
                     "europeanSpaceTelescope",
                     "determines",
-                    "sizeOfExtrasolarPlanets",
+                    "sizeOfKnownExtrasolarPlanets",
                 ),
                 (
                     "europeanSpaceTelescope",
                     "allows",
-                    "estimationOfMassOfPlanets",
+                    "estimationOfMassOfKnownExtrasolarPlanets",
                 ),
                 (
                     "europeanSpaceTelescope",
                     "allows",
-                    "estimationOfDensityOfPlanets",
+                    "estimationOfDensityExtrasolarPlanetsOfKnown",
                 ),
                 (
                     "europeanSpaceTelescope",
                     "allows",
-                    "estimationOfCompositionOfPlanets",
+                    "estimationOfCompositionExtrasolarPlanetsOfKnown",
                 ),
             ],
             "photometric": [
