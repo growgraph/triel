@@ -115,7 +115,7 @@ class TestR(unittest.TestCase):
                 ],
                 1: [
                     ["CHEOPS", "(", ")"],
-                    ["a", "european", "space", "telescope"],
+                    ["telescope", "a", "european", "space"],
                     ["CHaracterising", "ExOPlanets", "Satellite"],
                     ["the", "size", "of", "know", "extrasolar", "planet"],
                     [
@@ -157,7 +157,7 @@ class TestR(unittest.TestCase):
 
         self.assertEqual(
             {k: p.itokens for k, p in enumerate(piles)},
-            {0: [2, 3, 4], 1: [21, 22], 2: [1]},
+            {0: ["2", "3", "4"], 1: ["21", "22"], 2: ["1"]},
         )
 
     def test_st_subtree_dfs(self):
@@ -182,9 +182,22 @@ class TestR(unittest.TestCase):
         self.assertEqual(
             {k: p.itokens for k, p in enumerate(piles)},
             {
-                0: [5, 6, 7, 8, 9],
-                1: [23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
-                2: [2],
+                0: ["5", "6", "7", "8", "9"],
+                1: [
+                    "23",
+                    "24",
+                    "25",
+                    "26",
+                    "27",
+                    "28",
+                    "29",
+                    "30",
+                    "31",
+                    "32",
+                    "33",
+                    "34",
+                ],
+                2: ["2"],
             },
         )
 

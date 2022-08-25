@@ -235,10 +235,10 @@ class TestR(unittest.TestCase):
         ]
         bc = Candidate().from_tokens(tokens_b)
 
-        ac.replace_token_with_acandidate(7, bc)
+        ac.replace_token_with_acandidate("7", bc)
         ac.sort_index_tree()
-        self.assertEqual(ac.itokens, [8, 1015, 15])
-        self.assertEqual(ac.token(8).successors, {1015})
+        self.assertEqual(ac.itokens, ["8", "8a", "15"])
+        self.assertEqual(ac.token("8").successors, {"8a"})
 
     def test_replace_top(self):
         tokens = [
@@ -257,8 +257,8 @@ class TestR(unittest.TestCase):
         ]
         bc = Candidate().from_tokens(tokens_b)
 
-        ac.replace_token_with_acandidate(7, bc)
-        self.assertEqual(ac._index_vec, [15])
+        ac.replace_token_with_acandidate("7", bc)
+        self.assertEqual(ac._index_vec, ["15"])
 
     def test_from_subtree(self):
         tokens = [
@@ -285,9 +285,9 @@ class TestR(unittest.TestCase):
         ]
         ac = Candidate().from_tokens(tokens)
 
-        bc = ac.from_subtree(2)
+        bc = ac.from_subtree("2")
 
-        self.assertEqual(bc.itokens, [2, 15, 16, 17])
+        self.assertEqual(bc.itokens, ["2", "15", "16", "17"])
 
     def test_unfold_conjunctive(self):
         lens = dict()
@@ -342,7 +342,7 @@ class TestR(unittest.TestCase):
 
         ac.sort_index_tree()
 
-        self.assertEqual(ac.itokens, [0, 15, 16, 17, 1, 2])
+        self.assertEqual(ac.itokens, ["0", "15", "16", "17", "1", "2"])
 
 
 if __name__ == "__main__":
