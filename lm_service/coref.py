@@ -9,7 +9,7 @@ import networkx as nx
 from spacy.tokens import Doc
 
 from lm_service.onto import Candidate, Token
-from lm_service.piles import partition_conjunctive_wrapper
+from lm_service.piles import CandidatePile, partition_conjunctive_wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -157,10 +157,10 @@ def render_coref_maps_wrapper(
 
 
 def sub_coreference(
-    map_subbable_to_chain: defaultdict[int, list[int]],
-    map_chain_to_most_specific: defaultdict[int, list[int]],
+    map_subbable_to_chain: defaultdict[str, list[str]],
+    map_chain_to_most_specific: defaultdict[str, list[str]],
     x,
-) -> list[int]:
+) -> list[str]:
     """
 
         from two maps
@@ -203,12 +203,12 @@ def sub_coreference(
 
 def coref_candidates(
     dep_tree: nx.DiGraph,
-    candidate_depot,
-    map_subbable_to_chain,
-    map_chain_to_most_specific,
-    token_dict: dict[int, Token],
+    candidate_depot: CandidatePile,
+    map_subbable_to_chain: defaultdict[str, list[str]],
+    map_chain_to_most_specific: defaultdict[str, list[str]],
+    token_dict: dict[str, Token],
     unfold_conjunction=True,
-) -> dict[int, list[Candidate]]:
+) -> dict[str, list[Candidate]]:
     map_token_specific_token = {
         i: sub_coreference(
             map_subbable_to_chain, map_chain_to_most_specific, i
@@ -222,9 +222,9 @@ def coref_candidates(
         i for subl in map_trunc.values() for i in subl
     }
 
-    map_icoref_source_target: dict[int, tuple[int, Candidate]] = {}
+    map_icoref_source_target: dict[str, tuple[str, Candidate]] = {}
 
-    ncp: defaultdict[int, list] = defaultdict(list)
+    ncp: defaultdict[str, list] = defaultdict(list)
     # unfold conjunction
     for c in candidate_depot:
         if unfold_conjunction:
@@ -245,12 +245,12 @@ def coref_candidates(
                     map_icoref_source_target[k] = k, ac
 
     # map (iroot, coref_index) -> clean atomic candidate
-    deq: deque[tuple[int, Candidate]] = deque()
+    deq: deque[tuple[str, Candidate]] = deque()
     for iroot, candidates in ncp.items():
         for sigma_candidate in candidates:
             deq.append((iroot, sigma_candidate))
 
-    ncp2: defaultdict[int, list] = defaultdict(list)
+    ncp2: defaultdict[str, list] = defaultdict(list)
     cnt = 0
     max_cnt = max([len(map_icoref_source_target) ** 2, len(deq) ** 2])
     while deq and cnt < max_cnt:
@@ -280,5 +280,5 @@ def coref_candidates(
                         )
                     deq.append((iroot, sigma_copy))
         else:
-            ncp2[iroot] += [sigma_candidate.normalize()]
+            ncp2[iroot] += [sigma_candidate.normalize().sort_index_tree()]
     return ncp2

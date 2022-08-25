@@ -17,6 +17,7 @@ from lm_service.coref import (
 from lm_service.graph import phrase_to_deptree, transform_advcl
 from lm_service.onto import Candidate, Token
 from lm_service.relation import graph_to_candidate_pile
+from lm_service.util import to_string
 
 logger = logging.getLogger(__name__)
 
@@ -62,29 +63,33 @@ class TestCoref(unittest.TestCase):
             map_chain_to_most_specific,
         ) = render_coref_candidate_map(coref_graph)
 
+        map_subbable_to_chain_str, map_chain_to_most_specific_str = to_string(
+            [map_subbable_to_chain, map_chain_to_most_specific]
+        )
+
         map_token_specific_token = {
             i: sub_coreference(
-                map_subbable_to_chain, map_chain_to_most_specific, i
+                map_subbable_to_chain_str, map_chain_to_most_specific_str, i
             )
-            for i in map_subbable_to_chain
+            for i in map_subbable_to_chain_str
         }
 
         self.assertEqual(
             map_token_specific_token,
             {
-                1: [10],
-                6: [10],
-                10: [10],
-                17: [10],
-                19: [10],
-                7: [7],
-                15: [7],
-                20: [20],
-                22: [10, 20],
-                27: [10, 20],
-                32: [10, 20],
-                30: [30],
-                35: [30],
+                "1": ["10"],
+                "6": ["10"],
+                "10": ["10"],
+                "17": ["10"],
+                "19": ["10"],
+                "7": ["7"],
+                "15": ["7"],
+                "20": ["20"],
+                "22": ["10", "20"],
+                "27": ["10", "20"],
+                "32": ["10", "20"],
+                "30": ["30"],
+                "35": ["30"],
             },
         )
 
@@ -97,7 +102,7 @@ class TestCoref(unittest.TestCase):
         )
 
         token_dict = {
-            i: Token(
+            str(i): Token(
                 **graph.nodes[i],
                 successors=set(graph.successors(i)),
                 predecessors=set(graph.predecessors(i)),
@@ -109,11 +114,14 @@ class TestCoref(unittest.TestCase):
             map_chain_to_most_specific,
         ) = render_coref_maps_wrapper(rdoc, graph)
 
+        map_subbable_to_chain_str = to_string(map_subbable_to_chain)
+        map_chain_to_most_specific_str = to_string(map_chain_to_most_specific)
+
         ncp = coref_candidates(
             graph,
             candidate_depot,
-            map_subbable_to_chain,
-            map_chain_to_most_specific,
+            map_subbable_to_chain_str,
+            map_chain_to_most_specific_str,
             token_dict,
             unfold_conjunction=True,
         )
@@ -122,18 +130,18 @@ class TestCoref(unittest.TestCase):
         self.assertEqual(
             ncp_test,
             {
-                10: [[9, 10]],
-                23: [[23]],
-                30: [[30]],
-                25: [[25]],
-                17: [[9, 10], [20, 1020, 9, 10]],
-                27: [[9, 10], [20, 1020, 9, 10]],
-                1: [[9, 10]],
-                22: [[9, 10], [20, 1020, 9, 10]],
-                32: [[9, 10], [20, 1020, 9, 10]],
-                35: [[30]],
-                7: [[7, 1010, 9, 10]],
-                15: [[7, 1010, 9, 10]],
+                "10": [["10", "9"]],
+                "23": [["23"]],
+                "30": [["30"]],
+                "25": [["25"]],
+                "17": [["10", "9"], ["20", "20a", "10", "9"]],
+                "27": [["10", "9"], ["20", "20a", "10", "9"]],
+                "1": [["10", "9"]],
+                "22": [["10", "9"], ["20", "20a", "10", "9"]],
+                "32": [["10", "9"], ["20", "20a", "10", "9"]],
+                "35": [["30"]],
+                "7": [["7", "7a", "10", "9"]],
+                "15": [["7", "7a", "10", "9"]],
             },
         )
 
