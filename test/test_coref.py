@@ -15,9 +15,8 @@ from lm_service.coref import (
     sub_coreference,
 )
 from lm_service.graph import phrase_to_deptree, transform_advcl
-from lm_service.onto import Candidate, Token
+from lm_service.onto import Candidate, Token, to_string
 from lm_service.relation import graph_to_candidate_pile
-from lm_service.util import to_string
 
 logger = logging.getLogger(__name__)
 
@@ -77,19 +76,19 @@ class TestCoref(unittest.TestCase):
         self.assertEqual(
             map_token_specific_token,
             {
-                "1": ["10"],
-                "6": ["10"],
-                "10": ["10"],
-                "17": ["10"],
-                "19": ["10"],
-                "7": ["7"],
-                "15": ["7"],
-                "20": ["20"],
-                "22": ["10", "20"],
-                "27": ["10", "20"],
-                "32": ["10", "20"],
-                "30": ["30"],
-                "35": ["30"],
+                "001": ["010"],
+                "006": ["010"],
+                "010": ["010"],
+                "017": ["010"],
+                "019": ["010"],
+                "007": ["007"],
+                "015": ["007"],
+                "020": ["020"],
+                "022": ["010", "020"],
+                "027": ["010", "020"],
+                "032": ["010", "020"],
+                "030": ["030"],
+                "035": ["030"],
             },
         )
 
@@ -101,14 +100,17 @@ class TestCoref(unittest.TestCase):
             graph, self.rules
         )
 
-        token_dict = {
-            str(i): Token(
+        tokens = [
+            Token(
                 **graph.nodes[i],
-                successors=set(graph.successors(i)),
-                predecessors=set(graph.predecessors(i)),
+                successors=graph.successors(i),
+                predecessors=graph.predecessors(i),
             )
             for i in graph.nodes()
-        }
+        ]
+
+        token_dict = {t.s: t for t in tokens}
+
         (
             map_subbable_to_chain,
             map_chain_to_most_specific,
@@ -126,22 +128,22 @@ class TestCoref(unittest.TestCase):
             unfold_conjunction=True,
         )
 
-        ncp_test = {k: [vv.itokens for vv in v] for k, v in ncp.items()}
+        ncp_test = {k: [vv.stokens for vv in v] for k, v in ncp.items()}
         self.assertEqual(
             ncp_test,
             {
-                "10": [["10", "9"]],
-                "23": [["23"]],
-                "30": [["30"]],
-                "25": [["25"]],
-                "17": [["10", "9"], ["20", "20a", "10", "9"]],
-                "27": [["10", "9"], ["20", "20a", "10", "9"]],
-                "1": [["10", "9"]],
-                "22": [["10", "9"], ["20", "20a", "10", "9"]],
-                "32": [["10", "9"], ["20", "20a", "10", "9"]],
-                "35": [["30"]],
-                "7": [["7", "7a", "10", "9"]],
-                "15": [["7", "7a", "10", "9"]],
+                "010": [["009", "010"]],
+                "023": [["023"]],
+                "030": [["030"]],
+                "025": [["025"]],
+                "017": [["009", "010"], ["020", "020a", "009", "010"]],
+                "027": [["009", "010"], ["020", "020a", "009", "010"]],
+                "001": [["009", "010"]],
+                "022": [["009", "010"], ["020", "020a", "009", "010"]],
+                "032": [["009", "010"], ["020", "020a", "009", "010"]],
+                "035": [["030"]],
+                "007": [["007", "007a", "009", "010"]],
+                "015": [["007", "007a", "009", "010"]],
             },
         )
 

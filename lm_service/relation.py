@@ -30,9 +30,10 @@ from lm_service.onto import (
     Target,
     Token,
     TripleCandidate,
+    to_string,
+    to_string_keys,
 )
 from lm_service.piles import CandidatePile, SRTPile
-from lm_service.util import to_string, to_string_keys
 
 logger = logging.getLogger(__name__)
 
@@ -94,8 +95,7 @@ def find_candidates_bfs(
         foo(graph, original_graph, deque([(current_vertex, 0)]), current_candidate, **kwargs)  # type: ignore
 
     if not current_candidate.empty:  # type: ignore
-        current_candidate.sort_index()  # type: ignore
-        candidate_pile.append(current_candidate.clean_dangling_edges())  # type: ignore
+        candidate_pile.append(current_candidate.clean_dangling_edges().sort_index())  # type: ignore
 
     deq.extend(successors & set(graph.nodes))
     find_candidates_bfs(
@@ -121,7 +121,6 @@ def find_relation_subtree_dfs(
     if not deq:
         return
     current_vertex, level = deq.pop()
-    # print(current_vertex, end="->")
     if (
         current_relation.empty
         and level > 0
@@ -190,7 +189,6 @@ def find_sourcetarget_subtree_dfs(
         return
     # current_vertex, level = q.popleft()
     current_vertex, level = deq.pop()
-    # print(current_vertex, end="->")
 
     if (
         source_target_cand.empty
@@ -204,8 +202,6 @@ def find_sourcetarget_subtree_dfs(
         )
     ):
         return
-    if current_vertex == 19:
-        print("h")
 
     vtoken = Token(
         **graph.nodes[current_vertex],
@@ -421,7 +417,7 @@ def derive_sources_per_relaton(
 
     # for each source add penalty if its dep_ is "attr" or "dobj"
     targetlike_penalty = pd.DataFrame(
-        [(s.i, int(s.dep_ in ["attr", "dobj"])) for s in pile_sources_roots],
+        [(s.s, int(s.dep_ in ["attr", "dobj"])) for s in pile_sources_roots],
         columns=["s", "syn_penalty"],
     )
     decision = decision.merge(targetlike_penalty, how="left", on="s")
@@ -489,14 +485,16 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
     # iii) modified graph to use for distance computation
     pile, candidate_depot, mod_graph = graph_to_candidate_pile(graph, rules)
 
-    token_dict = {
-        str(i): Token(
+    tokens = [
+        Token(
             **graph.nodes[i],
-            successors=set(graph.successors(i)),
-            predecessors=set(graph.predecessors(i)),
+            successors=graph.successors(i),
+            predecessors=graph.predecessors(i),
         )
         for i in graph.nodes()
-    }
+    ]
+
+    token_dict = {t.s: t for t in tokens}
 
     (
         pile,
@@ -538,6 +536,11 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
                 )
             ]
 
+    triples = sorted(
+        triples,
+        key=lambda x: (x.source.sroot, x.relation.sroot, x.target.sroot),
+    )
+
     return triples
 
 
@@ -560,7 +563,7 @@ def graph_to_maps(
     # create relevant graphs for distance calculations : undirected, reversed ...
     g_undirected, g_reversed, g_weighted = generate_extra_graphs(mod_graph)
 
-    relation_indices = [int(c.root.i) for c in pile.relations]
+    relation_indices = [c.root.i for c in pile.relations]
 
     (
         distance_undirected,

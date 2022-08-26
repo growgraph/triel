@@ -14,7 +14,13 @@ import spacy
 import yaml
 
 from lm_service.graph import phrase_to_deptree
-from lm_service.onto import ACandidateKind, Relation, SourceOrTarget
+from lm_service.onto import (
+    ACandidateKind,
+    Candidate,
+    Relation,
+    SourceOrTarget,
+    Token,
+)
 from lm_service.piles import CandidatePile
 from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
@@ -49,7 +55,6 @@ class TestR(unittest.TestCase):
         "He treated her unfairly.",
     ]
 
-    # @unittest.skip("")
     def test_relation_candidates(self):
 
         piles = []
@@ -96,7 +101,7 @@ class TestR(unittest.TestCase):
                 ACandidateKind.SOURCE_TARGET,
                 rules=self.rules,
             )
-            piles += [rp]
+            piles += [rp.sort_index()]
 
         self.assertEqual(
             [len(rp) for rp in piles],
@@ -115,7 +120,7 @@ class TestR(unittest.TestCase):
                 ],
                 1: [
                     ["CHEOPS", "(", ")"],
-                    ["telescope", "a", "european", "space"],
+                    ["a", "european", "space", "telescope"],
                     ["CHaracterising", "ExOPlanets", "Satellite"],
                     ["the", "size", "of", "know", "extrasolar", "planet"],
                     [
@@ -147,7 +152,7 @@ class TestR(unittest.TestCase):
             ograph = graph.copy()
             cr = Relation()
             find_relation_subtree_dfs(graph, ograph, deq, cr)
-            cr.sort_index()
+            cr.clean_dangling_edges().sort_index()
             piles += [cr]
 
         self.assertEqual(
@@ -156,8 +161,8 @@ class TestR(unittest.TestCase):
         )
 
         self.assertEqual(
-            {k: p.itokens for k, p in enumerate(piles)},
-            {0: ["2", "3", "4"], 1: ["21", "22"], 2: ["1"]},
+            {k: p.stokens for k, p in enumerate(piles)},
+            {0: ["002", "003", "004"], 1: ["021", "022"], 2: ["001"]},
         )
 
     def test_st_subtree_dfs(self):
@@ -180,24 +185,24 @@ class TestR(unittest.TestCase):
         )
 
         self.assertEqual(
-            {k: p.itokens for k, p in enumerate(piles)},
+            {k: p.stokens for k, p in enumerate(piles)},
             {
-                0: ["5", "6", "7", "8", "9"],
+                0: ["005", "006", "007", "008", "009"],
                 1: [
-                    "23",
-                    "24",
-                    "25",
-                    "26",
-                    "27",
-                    "28",
-                    "29",
-                    "30",
-                    "31",
-                    "32",
-                    "33",
-                    "34",
+                    "023",
+                    "024",
+                    "025",
+                    "026",
+                    "027",
+                    "028",
+                    "029",
+                    "030",
+                    "031",
+                    "032",
+                    "033",
+                    "034",
                 ],
-                2: ["2"],
+                2: ["002"],
             },
         )
 
@@ -237,6 +242,37 @@ class TestR(unittest.TestCase):
         self.assertEqual(
             sizes,
             [(10, 8, 3), (36, 35, 12), (5, 5, 5)],
+        )
+
+    def test_sort_index_tree(self):
+        tokens = [
+            Token(**{"i": 2, "text": "a0", "successors": {1, 0}}),
+            Token(**{"i": 1, "text": "a1", "predecessors": {2}}),
+            Token(
+                **{
+                    "i": 0,
+                    "text": "a2",
+                    "predecessors": {2},
+                    "successors": {15},
+                }
+            ),
+            Token(
+                **{
+                    "i": 15,
+                    "text": "b0",
+                    "predecessors": {2},
+                    "successors": {16, 17},
+                }
+            ),
+            Token(**{"i": 16, "text": "b1", "predecessors": {15}}),
+            Token(**{"i": 17, "text": "b2", "predecessors": {15}}),
+        ]
+        ac = Candidate().from_tokens(tokens)
+
+        ac.sort_index()
+
+        self.assertEqual(
+            ac.stokens, ["000", "015", "016", "017", "001", "002"]
         )
 
 

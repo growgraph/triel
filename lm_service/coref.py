@@ -228,37 +228,49 @@ def coref_candidates(
     # unfold conjunction
     for c in candidate_depot:
         if unfold_conjunction:
-            ncp[c.root.i].extend(partition_conjunctive_wrapper(c, dep_tree))
+            ncp[c.root.s].extend(partition_conjunctive_wrapper(c, dep_tree))
         else:
-            ncp[c.root.i] = [c]
+            ncp[c.root.s] = [c]
 
-    # itoken -> atomic candidate
-    for iroot, candidates in ncp.items():
+    # stoken -> atomic candidate
+    for sroot, candidates in ncp.items():
         for sigma_candidate in candidates:
             for k in all_coref_i:
-                if k in sigma_candidate.itokens:
-                    map_icoref_source_target[k] = iroot, deepcopy(
+                if k in sigma_candidate.stokens:
+                    map_icoref_source_target[k] = sroot, deepcopy(
                         sigma_candidate
                     )
-                elif k not in map_icoref_source_target:
+                elif (
+                    k not in map_icoref_source_target
+                ):  # the case when coref pointer is not a candidate
                     ac = Candidate().from_tokens([token_dict[k]])
                     map_icoref_source_target[k] = k, ac
 
     # map (iroot, coref_index) -> clean atomic candidate
     deq: deque[tuple[str, Candidate]] = deque()
-    for iroot, candidates in ncp.items():
+    for sroot, candidates in ncp.items():
         for sigma_candidate in candidates:
-            deq.append((iroot, sigma_candidate))
+            deq.append((sroot, sigma_candidate))
 
     ncp2: defaultdict[str, list] = defaultdict(list)
     cnt = 0
     max_cnt = max([len(map_icoref_source_target) ** 2, len(deq) ** 2])
     while deq and cnt < max_cnt:
         cnt += 1
-        iroot, sigma_candidate = deq.popleft()
-        candidate_ix_subs = set(map_trunc) & set(sigma_candidate.itokens)
-        if candidate_ix_subs:
-            for sub in candidate_ix_subs:
+        sroot, sigma_candidate = deq.popleft()
+        # indices that will be substituted using coreference
+        candidate_ix_subs = set(map_trunc) & set(sigma_candidate.stokens)
+        map_trunc_local_uniq: dict[str, list[str]] = dict()
+        subs_to_remove = set()
+        for sub in candidate_ix_subs:
+            if map_trunc[sub] in map_trunc_local_uniq.values():
+                subs_to_remove |= {sub}
+            else:
+                map_trunc_local_uniq[sub] = map_trunc[sub]
+        for sub in subs_to_remove:
+            sigma_candidate.remove(sub)
+        if map_trunc_local_uniq:
+            for sub, iy_subs in map_trunc_local_uniq.items():
                 iy_subs = map_trunc[sub]
                 for y in iy_subs:
                     sigma_copy = deepcopy(sigma_candidate)
@@ -267,8 +279,8 @@ def coref_candidates(
                         sigma_candidate_substitution,
                     ) = map_icoref_source_target[y]
                     if not (
-                        set(sigma_copy.itokens)
-                        & set(sigma_candidate_substitution.itokens)
+                        set(sigma_copy.stokens)
+                        & set(sigma_candidate_substitution.stokens)
                     ):
                         # replace sub with sigma_candidate_substitution but only starting from token y and onwards
                         # token y is a precise position given by
@@ -278,7 +290,7 @@ def coref_candidates(
                         sigma_copy.replace_token_with_acandidate(
                             sub, sub_tree_cand
                         )
-                    deq.append((iroot, sigma_copy))
+                    deq.append((sroot, sigma_copy))
         else:
-            ncp2[iroot] += [sigma_candidate.normalize().sort_index_tree()]
+            ncp2[sroot] += [sigma_candidate.normalize().sort_index()]
     return ncp2

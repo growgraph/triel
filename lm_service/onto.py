@@ -36,6 +36,10 @@ def is_int(s):
 CandidateType = TypeVar("CandidateType", bound="Candidate")
 
 
+class ConfigToken:
+    representation_leading_zero = 3
+
+
 @dataclasses.dataclass(repr=False)
 class Token(JSONWizard):
     """
@@ -45,8 +49,9 @@ class Token(JSONWizard):
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
 
-    i: str
+    i: int
     text: str
+    s: str = None  # type: ignore
     dep_: str = ""
     tag_: str = ""
     lower: str = ""
@@ -58,13 +63,35 @@ class Token(JSONWizard):
     successors: set[str] = dataclasses.field(default_factory=set)
 
     def __post_init__(self):
-        self.i = str(self.i)
-        self.predecessors = set(str(i) for i in self.predecessors)
-        self.successors = set(str(i) for i in self.successors)
+        if self.s is None:
+            self.s = self.i2s(self.i)
+        self.predecessors = set(self.i2s(i) for i in self.predecessors)
+        self.successors = set(self.i2s(i) for i in self.successors)
+        if not self.lemma and self.text:
+            self.lemma = self.text
+        if not self.lower and self.text:
+            self.lower = self.text.lower()
 
     def __repr__(self):
         content = [f" {k} : {v}" for k, v in self.__dict__.items()]
         return f"Token fields:" + " |".join(content)
+
+    @classmethod
+    def i2s(cls, i) -> str:
+        """
+        cast integer index `i` to string index s used in Token
+        :param i:
+        :return:
+        """
+
+        if isinstance(i, int):
+            return f"{i:0{ConfigToken.representation_leading_zero}}"
+        elif not isinstance(i, str):
+            raise TypeError(
+                f" Token.i2s received i={i} of type {type(i)}, type in expected."
+            )
+        else:
+            return i
 
 
 @dataclasses.dataclass(repr=False)
@@ -88,12 +115,12 @@ class Candidate(JSONWizard):
 
     def __repr__(self):
         content = []
-        for i in self.itokens:
-            t = self._tokens[i]
+        for s in self.stokens:
+            t = self._tokens[s]
             str_succ = ", ".join([f"{s}" for s in t.successors])
             str_pred = ", ".join([f"{s}" for s in t.predecessors])
             content += [
-                f" {t.i} : {t.lower} : {t.tag_} : {t.dep_} : pred < {str_pred} : succ > {str_succ}"
+                f" {t.s} : {t.lower} : {t.tag_} : {t.dep_} : pred < {str_pred} : succ > {str_succ}"
             ]
 
         return (
@@ -107,7 +134,7 @@ class Candidate(JSONWizard):
         return self
 
     def clean_dangling_edges(self):
-        present = set(self.itokens)
+        present = set(self.stokens)
         for k, t in self._tokens.items():
             t.successors &= present
             t.predecessors &= present
@@ -132,7 +159,7 @@ class Candidate(JSONWizard):
             self._root = next(iter(roots))
 
     @property
-    def iroot(self):
+    def sroot(self):
         return self._root
 
     @property
@@ -140,12 +167,12 @@ class Candidate(JSONWizard):
         return self._tokens[self._root]
 
     @property
-    def itokens(self):
+    def stokens(self):
         return self._index_vec
 
-    @property
-    def itokens_intable(self):
-        return (int(x) for x in self.itokens if is_int(x))
+    # @property
+    # def itokens_intable(self):
+    #     return (int(x) for x in self.itokens if is_int(x))
 
     def token(self, i, index=False):
         if index:
@@ -153,14 +180,14 @@ class Candidate(JSONWizard):
                 return self._tokens[self._index_vec[i]]
             else:
                 raise RequestedIndexDoesNotExist(
-                    f" size of Candidate {len(self)}, requesting index {i}"
+                    f" size of {self.__class__.__name__} obj {len(self)}, requesting index {i}"
                 )
         else:
             if i in self._index_vec:
                 return self._tokens[i]
             else:
                 raise MissingTokenInACandidate(
-                    f"token {i} not present in ACandidate containing {self.itokens}"
+                    f"token {i} not present in {self.__class__.__name__} containing {self.stokens}"
                 )
 
     def view_tokens(self, ifrom=None, ito=None):
@@ -172,14 +199,14 @@ class Candidate(JSONWizard):
             iito = self._index_vec.index(ito) + 1
         else:
             iito = None
-        return [self.token(i) for i in self.itokens[iifrom:iito]]
+        return [self.token(s) for s in self.stokens[iifrom:iito]]
 
     def from_subtree(self, i: str):
         acc: list[str] = []
         self._pick_successors(i, acc)
         return (
             Candidate()
-            .from_tokens([self.token(j) for j in self._index_vec if j in acc])
+            .from_tokens([self.token(s) for s in self._index_vec if s in acc])
             .clean_dangling_edges()
         )
 
@@ -190,7 +217,7 @@ class Candidate(JSONWizard):
 
     @property
     def tokens(self):
-        return (self.token(i) for i in self.itokens)
+        return (self.token(s) for s in self.stokens)
 
     @property
     def empty(self):
@@ -207,12 +234,12 @@ class Candidate(JSONWizard):
         :return:
         """
         pp = []
-        for i in self.itokens:
-            x = self.token(i)
-            if x.ent_iob in (0, 2):
-                pp += [x.text]
+        for s in self.stokens:
+            token = self.token(s)
+            if token.ent_iob in (0, 2):
+                pp += [token.text]
             else:
-                pp += [x.lemma]
+                pp += [token.lemma]
         return pp
 
     def project_to_text_str(self):
@@ -225,9 +252,9 @@ class Candidate(JSONWizard):
 
     def append(self, token: Token):
         if self.empty:
-            self._root = token.i
-        self._tokens[token.i] = token
-        self._index_vec.append(token.i)
+            self._root = token.s
+        self._tokens[token.s] = token
+        self._index_vec.append(token.s)
 
     def drop_tokens(self, drop_indices):
         """
@@ -235,10 +262,6 @@ class Candidate(JSONWizard):
         """
         for i in drop_indices:
             self.remove(i)
-
-    def sort_index(self):
-        self._index_vec = sorted(self._index_vec)
-        return self
 
     def _sort_wrt_tree(
         self,
@@ -276,37 +299,13 @@ class Candidate(JSONWizard):
         for s in succs:
             self._sort_wrt_tree(s, sorter)
 
-    def sort_index_tree(self):
-        proposed_sorter = {self.iroot: (0, None, None)}
-        self._sort_wrt_tree(self.iroot, sorter=proposed_sorter)
+    def sort_index(self):
+        proposed_sorter = {self.sroot: (0, None, None)}
+        self._sort_wrt_tree(self.sroot, sorter=proposed_sorter)
         self._index_vec = sorted(proposed_sorter, key=proposed_sorter.get)
         return self
 
-    # def insert_at(self, j: str, tokens: list[Token], token_index=False):
-    #     """
-    #
-    #     :param j:
-    #     :param tokens:
-    #     :param token_index: treat j as token index if true, token position in ACandidate if false
-    #     :return:
-    #     """
-    #     # if set(t.i for t in tokens) & set(self.itokens):
-    #     #     raise InsertingExistingTokens(f"{[t.i for t in tokens]} vs {self.itokens}")
-    #
-    #     if token_index:
-    #         if j in self._index_vec:
-    #             jindex = self._index_vec.index(j)
-    #         else:
-    #             raise MissingTokenInACandidate(
-    #                 f"token {j} not in ACandidate {self.itokens}"
-    #             )
-    #     self._index_vec = (
-    #         self._index_vec[:j] + [t.i for t in tokens] + self._index_vec[j:]
-    #     )
-    #     for t in tokens:
-    #         self._tokens[t.i] = t
-
-    def insert_before(self, ac: Candidate, j: str):
+    def insert_before(self, ac: Candidate, s: str):
         """
             extend self with ac candidate
             such that jpred -> j becomes jpred -> ac.root -> j
@@ -316,98 +315,37 @@ class Candidate(JSONWizard):
 
 
         :param ac:
-        :param j:
+        :param s:
 
         :return:
         """
-
-        if j not in self._index_vec:
+        ac = deepcopy(ac)
+        if s not in self._index_vec:
             raise MissingTokenInACandidate(
-                f"token {j} not in ACandidate {self.itokens}"
+                f"token {s} not in ACandidate {self.stokens}"
             )
 
-        jindex = self._index_vec.index(j)
+        jindex = self._index_vec.index(s)
+
+        ac_root = ac.sroot
 
         # update _index_vec
         self._index_vec = (
-            self._index_vec[:jindex] + ac.itokens + self._index_vec[jindex:]
+            self._index_vec[:jindex] + ac.stokens + self._index_vec[jindex:]
         )
 
         # update _tokens
         for t in ac.tokens:
-            self._tokens[t.i] = t
+            self._tokens[t.s] = t
 
         # update upward edges (NB: should be 1-step iteration)
-        for pred in self.token(j).predecessors:
-            self.token(pred).successors |= {ac.root.i}
-            ac.root.predecessors |= {pred}
+        for pred in self.token(s).predecessors:
+            self.token(pred).successors |= {ac_root}
+            self.token(pred).successors -= {s}
+            self.token(ac_root).predecessors |= {pred}
 
-        ac.root.successors |= {j}
-        self.token(j).predecessors |= {ac.root.i}
-        # ac._recompute_root()
-
-    # def extend_with_candidate(
-    #     self,
-    #     ac: Candidate,
-    #     j: int,
-    #     token_index=False,
-    #     succ=None,
-    #     pred=None,
-    # ):
-    #     """
-    #         extend self with ac candidate
-    #         NB: likely should be followed by _recompute_root()
-    #
-    #         first token of ac will be placed at position j in self
-    #
-    #         if succ is given ac becomes a successor of j from self
-    #         if pred is given ac becomes a predecessor of j from self
-    #
-    #     :param ac:
-    #     :param j:
-    #     :param token_index: interpret j as token id if true, rather than a position in self._index_set
-    #     :param succ: index from self, ac becomes successor of succ
-    #     :param pred: index from self, ac becomes predecessor of pred
-    #                 (currently only becoming a pred of root of self makes sense)
-    #
-    #     :return:
-    #     """
-    #     if succ and pred:
-    #         raise ValueError(" both succ and pred were provided")
-    #
-    #     # attach ac either as a successor of succ or pred
-    #     if pred:
-    #         if pred not in self.itokens:
-    #             raise ValueError("pred not in self.itokens")
-    #         if self.token(pred).predecessors:
-    #             raise ValueError(
-    #                 "Candidate token can have only one predecessor"
-    #             )
-    #     if succ and succ not in self.itokens:
-    #         raise ValueError("succ not in self.itokens")
-    #
-    #     if token_index:
-    #         if j in self._index_vec:
-    #             j = self._index_vec.index(j)
-    #         else:
-    #             raise MissingTokenInACandidate(
-    #                 f"token {j} not in ACandidate {self.itokens}"
-    #             )
-    #
-    #     self._index_vec = (
-    #         self._index_vec[:j] + ac.itokens + self._index_vec[j:]
-    #     )
-    #     for t in ac.tokens:
-    #         self._tokens[t.i] = t
-    #
-    #     if succ is not None:
-    #         self.token(succ).successors |= {ac.root.i}
-    #         ac.root.predecessors = {succ}
-    #
-    #     # in that case ac replaces at the root (the only possible case)
-    #     if pred is not None:
-    #         self.token(pred).predecessors |= {ac.root.i}
-    #         ac.root.successors = {pred}
+        self.token(ac_root).successors |= {s}
+        self.token(s).predecessors = {ac.sroot}
 
     def replace_token_with_acandidate(self, i: str, ac: Candidate):
         """
@@ -421,11 +359,12 @@ class Candidate(JSONWizard):
         if self.token(i).dep_ == "poss":
             try:
                 of_index = next(iter(self.token(i).predecessors))
-            except:
+            except StopIteration:
                 of_index = i
+
             of_token = Token(
-                # NB this is the source of the problem
-                i=of_index + "a",
+                i=-1,
+                s=of_index[:] + "a",
                 lower="of",
                 text="of",
                 lemma="of",
@@ -434,12 +373,12 @@ class Candidate(JSONWizard):
             )
             nc = Candidate().from_tokens([of_token])
             ac = deepcopy(ac)
-            ac.insert_before(nc, j=ac.root.i)
+            ac.insert_before(nc, s=ac.root.s)
             ac._recompute_root()
-        self.insert_before(ac, j=i)
+        self.insert_before(ac, s=i)
 
         self.remove(i)
-        self.clean_dangling_edges().sort_index_tree()
+        self.clean_dangling_edges().sort_index()
 
     def remove(self, i: str):
         # edges
@@ -462,8 +401,8 @@ class Candidate(JSONWizard):
 
     def print(self):
         content = []
-        for i in self.itokens:
-            t = self._tokens[i]
+        for s in self.stokens:
+            t = self._tokens[s]
             content += [f" {t.text}"]
 
         return (
@@ -472,7 +411,7 @@ class Candidate(JSONWizard):
 
     @property
     def lemmas(self):
-        return [self._tokens[k].lemma for k in self.itokens]
+        return [self._tokens[k].lemma for k in self.stokens]
 
     def drop_articles(self):
         # t.dep_ == "det" or t.tag_ != "DT"
@@ -524,8 +463,8 @@ class Relation(Candidate):
     def normalize(self):
         if self.passive:
             # find auxpass, inflect it to was
-            for i in self.itokens:
-                token = self.token(i)
+            for s in self.stokens:
+                token = self.token(s)
                 if token.dep_ == "auxpass":
                     lemmas = getLemma(token.text, upos="VERB")
                     if lemmas:
@@ -539,13 +478,13 @@ class Relation(Candidate):
             ]
             self.drop_tokens(drop_aux_indices)
             # inflect remaining VBs
-            for i, t in self._tokens.items():
+            for s, t in self._tokens.items():
                 if t.tag_.startswith("VB"):
                     lemmas = getLemma(t.text, upos="VERB")
                     if lemmas:
                         inflected = getInflection(lemmas[0], tag="VBZ")
                         if inflected:
-                            self._tokens[i].text = inflected[0]
+                            self._tokens[s].text = inflected[0]
 
 
 @dataclasses.dataclass(repr=False)
@@ -556,7 +495,7 @@ class SourceOrTarget(Candidate):
             .drop_punct()
             .drop_articles()
             .clean_dangling_edges()
-            .sort_index_tree()
+            .sort_index()
         )
 
 
@@ -614,3 +553,21 @@ class TripleCandidate(JSONWizard):
     def __repr__(self):
         s = f"\t{self.source.__repr__()}\n\t{self.relation.__repr__()}\n\t{self.target.__repr__()}\n"
         return s
+
+
+def to_string(obj):
+    if isinstance(obj, dict):
+        return {Token.i2s(k): to_string(item) for k, item in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [to_string(item) for item in obj]
+    else:
+        return Token.i2s(obj)
+
+
+def to_string_keys(obj):
+    if isinstance(obj, dict):
+        return {to_string_keys(k): item for k, item in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return tuple(to_string(item) for item in obj)
+    else:
+        return Token.i2s(obj)

@@ -6,13 +6,7 @@ from copy import deepcopy
 
 import networkx as nx
 
-from lm_service.onto import (
-    Candidate,
-    CandidateType,
-    SourceOrTarget,
-    Token,
-    is_int,
-)
+from lm_service.onto import Candidate, CandidateType, SourceOrTarget, Token
 
 
 @dataclasses.dataclass(repr=False)
@@ -27,7 +21,7 @@ class CandidatePile:
     def __post_init__(self):
         for j, r in enumerate(self._candidates):
             r.r0 = j
-            self.iroot_to_candidate[r.root.i] = r
+            self.iroot_to_candidate[r.root.s] = r
 
     def __len__(self) -> int:
         return len(self.candidates)
@@ -71,7 +65,7 @@ class CandidatePile:
 
         :return: relation index in pile : relation tokens
         """
-        return {r.r0: [x for x in r.itokens] for r in self.candidates}
+        return {r.r0: [x for x in r.stokens] for r in self.candidates}
 
     @property
     def roots(self) -> list[Token]:
@@ -79,15 +73,15 @@ class CandidatePile:
 
     @property
     def iroots(self) -> list[str]:
-        return [r.root.i for r in self.candidates]
+        return [r.root.s for r in self.candidates]
 
     @property
     def tokens(self) -> set[str]:
-        return set([x for r in self.candidates for x in r.itokens])
+        return set([x for r in self.candidates for x in r.stokens])
 
     def append(self, r: CandidateType, index=None):
         r.r0 = len(self.candidates)
-        self.iroot_to_candidate[r.root.i if index is None else index] = r
+        self.iroot_to_candidate[r.root.s if index is None else index] = r
         self._candidates += [r]
 
     def project_to_text(self):
@@ -128,13 +122,13 @@ class CandidatePile:
         new._candidates = [c.sort_index() for c in new._candidates]
         return new
 
-    def unfold_conjunction(self, graph):
-        apile = CandidatePile()
-        for c in self._candidates:
-            accum = partition_conjunctive_wrapper(c, graph)
-            accum = accum.sort_index().drop_punct().drop_cc()
-            apile += accum
-        return apile
+    # def unfold_conjunction(self, graph):
+    #     apile = CandidatePile()
+    #     for c in self._candidates:
+    #         accum = partition_conjunctive_wrapper(c, graph)
+    #         accum = accum.drop_punct().drop_cc().sort_index()
+    #         apile += accum
+    #     return apile
 
 
 @dataclasses.dataclass
@@ -147,16 +141,18 @@ class SRTPile:
 def partition_conjunctive_dfs(
     c: CandidateType,
     graph: nx.DiGraph,
-    deq: deque[tuple[str, str]],
+    deq: deque[tuple[int, int]],
     current_cand,
-    accumulist: list[tuple[str, Candidate]],
-    iparent0: str,
+    accumulist: list[tuple[int, Candidate]],
+    iparent0: int = -1,
 ):
     """
-    :param c:
+    partition candidate into conjunctive pieces used DFS (depth first search)
+
+    :param c: the original candidate that potentially contains multiple conj pieces
     :param graph:
     :param deq: (!) the initial call should have only a single vertex in q
-    :param current_cand:
+    :param current_cand: candidate to accumulate the conjunctive piece
     :param accumulist: list that accumulates [(iparent0, transformed Candidate)]
     :param iparent0: for each Candidate iparent0 is the index of parent graph vertex
 
@@ -166,18 +162,19 @@ def partition_conjunctive_dfs(
     if not deq:
         return
     itoken, iparent = deq.pop()
+    stoken = Token.i2s(itoken)
 
-    if c.token(itoken).dep_ == "conj":
+    if c.token(stoken).dep_ == "conj":
         current_cand = Candidate()
         iparent0 = iparent
-    current_cand.append(c.token(itoken))
+    current_cand.append(c.token(stoken))
 
     if len(current_cand) == 1:
         accumulist.append((iparent0, current_cand))
 
-    successors = sorted(
-        [str(i) for i in graph.successors(int(itoken)) if str(i) in c.itokens]
-    )
+    successors = [
+        x for x in graph.successors(itoken) if Token.i2s(x) in c.stokens
+    ]
 
     for v in successors:
         deq.append((v, itoken))
@@ -195,12 +192,17 @@ def partition_conjunctive_wrapper(
     :param graph:
     :return:
     """
+
+    # init partition_conjunctive_dfs parameters
     deq: deque = deque()
+
+    # queue starts with a root
     deq.append((candidate.root.i, -1))
+
     cand: SourceOrTarget = SourceOrTarget()
-    accumulist: list[tuple[str, Candidate]] = []
+    accumulist: list[tuple[int, Candidate]] = []
     # NB check last arg (!)
-    partition_conjunctive_dfs(candidate, graph, deq, cand, accumulist, "")
+    partition_conjunctive_dfs(candidate, graph, deq, cand, accumulist, -1)
 
     # dangling edges appear during partition
     accumulist = [(x, y.clean_dangling_edges()) for x, y in accumulist]
@@ -214,13 +216,14 @@ def partition_conjunctive_wrapper(
 
     for _, candidate in clauses:
         iparent, _ = clauses[0]
+        sparent = Token.i2s(iparent)
         c_prime = deepcopy(root_candidate)
-        c_prime.replace_token_with_acandidate(i=iparent, ac=candidate)
+        c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
         acc.append(
             c_prime.drop_cc()
             .drop_punct()
             .drop_articles()
             .clean_dangling_edges()
-            .sort_index_tree()
+            .sort_index()
         )
     return acc
