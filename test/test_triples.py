@@ -10,6 +10,7 @@ import spacy
 import yaml
 
 from lm_service.graph import phrase_to_deptree, transform_advcl
+from lm_service.onto import to_string_keys
 from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
     compute_distances,
@@ -17,7 +18,6 @@ from lm_service.relation import (
     graph_to_candidate_pile,
     graph_to_triples,
 )
-from lm_service.util import to_string_keys
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class TestR(unittest.TestCase):
             rdoc, graph0 = phrase_to_deptree(self.nlp, document)
             pile, _, graph = graph_to_candidate_pile(graph0, self.rules)
             g_undirected, g_reversed, g_weighted = generate_extra_graphs(graph)
-            relation_indices = [int(c.root.i) for c in pile.relations]
+            relation_indices = [int(c.root.s) for c in pile.relations]
             (
                 distance_undirected,
                 distance_directed,
@@ -96,10 +96,10 @@ class TestR(unittest.TestCase):
         documents = {
             key: self.documents[key]
             for key in [
-                # "near-field",
-                # "cheops0_trunc",
+                "near-field",
+                "cheops0_trunc",
                 "cheops_ext",
-                # "photometric",
+                "photometric",
             ]
         }
         acc_triples = []
@@ -114,69 +114,74 @@ class TestR(unittest.TestCase):
             triples_projected[key] = [tri.project_to_text() for tri in triples]
 
         # NB known problems in cheops_ext
-        # reference = {
-        #     "near-field": [("medium", "wasAffectedBy", "nearFieldRadiation")],
-        #     "cheops0_trunc": [
-        #         ("CHEOPS", "is", "europeanSpaceTelescope"),
-        #         (
-        #             "europeanSpaceTelescope",
-        #             "determines",
-        #             "sizeOfKnownExtrasolarPlanets",
-        #         ),
-        #         (
-        #             "europeanSpaceTelescope",
-        #             "allows",
-        #             "estimationOfMassOfKnownExtrasolarPlanets",
-        #         ),
-        #     ],
-        #     "cheops_ext": [
-        #         ("Cheops", "is", "europeanSpaceTelescope"),
-        #         (
-        #             "europeanSpaceTelescope",
-        #             "is",
-        #             "firstSmallClassMissionInEsaCosmicVisionScienceProgramme",
-        #         ),
-        #         (
-        #             "europeanSpaceTelescope",
-        #             "determines",
-        #             "sizeOfKnownExtrasolarPlanets",
-        #         ),
-        #         (
-        #             "europeanSpaceTelescope",
-        #             "allows",
-        #             "estimationOfMassOfKnownExtrasolarPlanets",
-        #         ),
-        #         (
-        #             "europeanSpaceTelescope",
-        #             "allows",
-        #             "estimationOfDensityExtrasolarPlanetsOfKnown",
-        #         ),
-        #         (
-        #             "europeanSpaceTelescope",
-        #             "allows",
-        #             "estimationOfCompositionExtrasolarPlanetsOfKnown",
-        #         ),
-        #     ],
-        #     "photometric": [
-        #         ("Cheops", "measuresWith", "photometricSignals"),
-        #         (
-        #             "Cheops",
-        #             "measuresWith",
-        #             "precisionOf150PpmMinFor9thMagnitudeStar",
-        #         ),
-        #         (
-        #             "100PpmTransitDepth",
-        #             "correspondsTo",
-        #             "transitOfSizedPlanet",
-        #         ),
-        #     ],
-        # }
-        #
-        # tri = acc_triples[0]
-        # tt = tri.target
-        # tt.sort_index_tree()
-        # for k in triples_projected:
-        #     self.assertEqual(triples_projected[k], reference[k])
+        reference = {
+            "near-field": [("medium", "wasAffectedBy", "nearFieldRadiation")],
+            "cheops0_trunc": [
+                ("CHEOPS", "is", "europeanSpaceTelescope"),
+                (
+                    "europeanSpaceTelescope",
+                    "determines",
+                    "sizeOfKnownExtrasolarPlanets",
+                ),
+                (
+                    "europeanSpaceTelescope",
+                    "allows",
+                    "estimationOfMassOfKnownExtrasolarPlanets",
+                ),
+            ],
+            "cheops_ext": [
+                ("Cheops", "is", "europeanSpaceTelescope"),
+                (
+                    "europeanSpaceTelescope",
+                    "determines",
+                    "sizeOfKnownExtrasolarPlanets",
+                ),
+                (
+                    "europeanSpaceTelescope",
+                    "allows",
+                    "estimationOfMassOfKnownExtrasolarPlanets",
+                ),
+                (
+                    "europeanSpaceTelescope",
+                    "allows",
+                    "estimationOfDensityOfKnownExtrasolarPlanets",
+                ),
+                (
+                    "europeanSpaceTelescope",
+                    "allows",
+                    "estimationOfCompositionOfKnownExtrasolarPlanets",
+                ),
+                (
+                    "europeanSpaceTelescope",
+                    "allows",
+                    "estimationOfFormationOfKnownExtrasolarPlanets",
+                ),
+                (
+                    "europeanSpaceTelescope",
+                    "is",
+                    "firstSmallClassMissionInEsaCosmicVisionScienceProgramme",
+                ),
+            ],
+            "photometric": [
+                ("Cheops", "measuresWith", "photometricSignals"),
+                (
+                    "Cheops",
+                    "measuresWith",
+                    "precisionOf150PpmMinFor9thMagnitudeStar",
+                ),
+                (
+                    "100PpmTransitDepth",
+                    "correspondsTo",
+                    "transitOfSizedPlanet",
+                ),
+            ],
+        }
+
+        tri = acc_triples[0]
+        tt = tri.target
+        tt.sort_index()
+        for k in triples_projected:
+            self.assertEqual(triples_projected[k], reference[k])
 
 
 if __name__ == "__main__":

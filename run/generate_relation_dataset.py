@@ -62,7 +62,7 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
         for triple, text_relation in zip(triples, text_triples):
             dacc += [
                 [i]
-                + [triple.source, triple.relation.itokens, triple.target]
+                + [triple.source, triple.relation.stokens, triple.target]
                 + list(text_relation)
                 + [phrase]
             ]
