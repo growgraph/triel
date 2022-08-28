@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-import sys
 from copy import deepcopy
 from enum import Enum
 from typing import TypeVar
@@ -29,8 +28,6 @@ class RequestedIndexDoesNotExist(Exception):
 
 
 logger = logging.getLogger(__name__)
-
-logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
 
 
 def is_int(s):
