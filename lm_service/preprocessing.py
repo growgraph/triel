@@ -40,7 +40,7 @@ def normalize_input_text(text, terminal_full_stop=True):
     # 1. keep floats together
     # 2. word with apostrophe or dash is considered as a whole
     # 3. .,!?;:\()<>
-    pat = r"\d+(?:[.,]\d+)?|[\w\'\-\/]+|[.,!?;:\\(\)<>]"
+    pat = r"\d+(?:[.,]\d+)?|[\w\'\-\/]+|[.,!?;:\\(\)<>%]"
     tokenized_agg = re.findall(pat, text)
 
     phrases = split_tokens_into_phrases(tokenized_agg)

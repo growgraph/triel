@@ -350,7 +350,9 @@ class TestMetagraph(unittest.TestCase):
     pathlib.Path(current_path).mkdir(parents=True, exist_ok=True)
 
     def test_fold_graph(self):
-        fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
+        fp = pkgutil.get_data(
+            "lm_service.config", "prune_noun_compound_v2.yaml"
+        )
         rules = yaml.load(fp, Loader=yaml.FullLoader)
 
         metagraph = nx.DiGraph()

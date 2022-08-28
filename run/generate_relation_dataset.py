@@ -17,7 +17,7 @@ from lm_service.util import plot_graph
 
 
 def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
+    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     phrases = normalize_input_text(text, terminal_full_stop=True)
@@ -30,6 +30,7 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
         nmax = min([nmax, head])
     for i in range(nmax):
         fragment = " ".join(phrases[i : i + window_size])
+        print(fragment)
         (triples_expanded, triples_proj, graph) = phrase_to_triples(
             fragment, nlp, rules
         )
@@ -81,8 +82,8 @@ if __name__ == "__main__":
             "%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s"
         ),
         datefmt="%Y-%m-%d %H:%M:%S",
-        level=logging.INFO,
-        filemode="w",
+        level=logging.ERROR,
+        # filemode="w",
         stream=sys.stdout,
     )
 
