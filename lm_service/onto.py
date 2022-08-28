@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import dataclasses
+import logging
+import sys
 from copy import deepcopy
 from enum import Enum
 from typing import TypeVar
 
+import networkx as nx
 from dataclass_wizard import JSONWizard
 from lemminflect import getInflection, getLemma
 
@@ -23,6 +26,11 @@ class InsertingExistingTokens(Exception):
 
 class RequestedIndexDoesNotExist(Exception):
     pass
+
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
 
 
 def is_int(s):
@@ -133,12 +141,12 @@ class Candidate(JSONWizard):
         self.clean_dangling_edges()
         return self
 
-    def clean_dangling_edges(self):
+    def clean_dangling_edges(self, robust_mode=False):
         present = set(self.stokens)
         for k, t in self._tokens.items():
             t.successors &= present
             t.predecessors &= present
-        self._recompute_root()
+        self._recompute_root(robust_mode)
         return self
 
     def max_level(self) -> int:
@@ -146,17 +154,31 @@ class Candidate(JSONWizard):
             0 if self.empty else max(t._level for t in self._tokens.values())
         )
 
-    def _recompute_root(self):
+    def _recompute_root(self, robust_mode=False):
         roots = [
             k for k, v in self._tokens.items() if len(v.predecessors) == 0
         ]
-        if len(roots) != 1:
-            print(self)
-            raise ValueError(
-                f" candidate has {len(roots)} roots, should be one"
-            )
-        else:
+        if len(roots) > 1:
+            logger.error(f" {len(roots)} roots: dumping self")
+            logger.error(f" {self}")
+            if robust_mode:
+                logger.error(
+                    f" robust_mode picking a root with a smaller index"
+                )
+                root = sorted(roots)
+                acc = []
+                self._pick_successors(root[0], acc)
+                to_drop = set(self._tokens) - set(acc)
+                self.drop_tokens(to_drop)
+                self._recompute_root(robust_mode)
+            else:
+                raise ValueError(
+                    f" candidate has {len(roots)} roots, should be one"
+                )
+        elif len(roots) == 1:
             self._root = next(iter(roots))
+        else:
+            raise ValueError(f" {len(roots)} roots : inconsistent candidate")
 
     @property
     def sroot(self):
@@ -169,10 +191,6 @@ class Candidate(JSONWizard):
     @property
     def stokens(self):
         return self._index_vec
-
-    # @property
-    # def itokens_intable(self):
-    #     return (int(x) for x in self.itokens if is_int(x))
 
     def token(self, i, index=False):
         if index:
@@ -258,7 +276,7 @@ class Candidate(JSONWizard):
 
     def drop_tokens(self, drop_indices):
         """
-        NB: make it consistent wrt to graph operations
+        NB: consistent wrt to graph operations
         """
         for i in drop_indices:
             self.remove(i)
@@ -309,7 +327,6 @@ class Candidate(JSONWizard):
         """
             extend self with ac candidate
             such that jpred -> j becomes jpred -> ac.root -> j
-            NB: likely should be followed by _recompute_root()
 
             first token of ac will be placed at position j in self
 
@@ -338,7 +355,7 @@ class Candidate(JSONWizard):
         for t in ac.tokens:
             self._tokens[t.s] = t
 
-        # update upward edges (NB: should be 1-step iteration)
+        # update upward edges (NB: should be only one predecessors) : maybe check for that?
         for pred in self.token(s).predecessors:
             self.token(pred).successors |= {ac_root}
             self.token(pred).successors -= {s}
@@ -346,6 +363,7 @@ class Candidate(JSONWizard):
 
         self.token(ac_root).successors |= {s}
         self.token(s).predecessors = {ac.sroot}
+        self._recompute_root()
 
     def replace_token_with_acandidate(self, i: str, ac: Candidate):
         """
@@ -374,7 +392,6 @@ class Candidate(JSONWizard):
             nc = Candidate().from_tokens([of_token])
             ac = deepcopy(ac)
             ac.insert_before(nc, s=ac.root.s)
-            ac._recompute_root()
         self.insert_before(ac, s=i)
 
         self.remove(i)
@@ -446,6 +463,37 @@ class Candidate(JSONWizard):
         self.drop_tokens(drop_aux_indices)
         return self
 
+    def to_nx_graph(self, offset=0, use_successors=True):
+
+        # i -> s, inverse to _index_set
+
+        s2index = {s: j + offset for j, s in enumerate(self._index_vec)}
+
+        g = nx.DiGraph()
+
+        vertex_desc = [
+            (
+                s2index[s],
+                self.token(s).__dict__,
+                [
+                    s2index[ss]
+                    for ss in (
+                        self.token(s).successors
+                        if use_successors
+                        else self.token(s).predecessors
+                    )
+                ],
+            )
+            for j, s in enumerate(self._index_vec)
+        ]
+        g.add_nodes_from((i, props) for i, props, _ in vertex_desc)
+        g.add_edges_from(
+            (i, j) if use_successors else (j, i)
+            for i, _, es in vertex_desc
+            for j in es
+        )
+        return g
+
 
 class ACandidateKind(Enum):
     RELATION = 1
@@ -498,6 +546,9 @@ class SourceOrTarget(Candidate):
             .sort_index()
         )
 
+    def has_pronoun(self):
+        return any(t for t in self._tokens.values() if t.tag_ == "PRP")
+
 
 @dataclasses.dataclass(repr=False)
 class Source(SourceOrTarget):
@@ -549,6 +600,9 @@ class TripleCandidate(JSONWizard):
     def normalize_relation(self):
         self.relation.normalize()
         return self
+
+    def has_pronouns(self):
+        return self.source.has_pronoun() or self.source.has_pronoun()
 
     def __repr__(self):
         s = f"\t{self.source.__repr__()}\n\t{self.relation.__repr__()}\n\t{self.target.__repr__()}\n"

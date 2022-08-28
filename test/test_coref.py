@@ -30,7 +30,7 @@ class TestCoref(unittest.TestCase):
         "They travelled to Spain because they loved the country very much."
     )
 
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
+    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     nlp = spacy.load("en_core_web_trf")
@@ -92,7 +92,6 @@ class TestCoref(unittest.TestCase):
             },
         )
 
-    # @unittest.skip("")
     def test_substitution_in_depot(self):
         rdoc, graph = phrase_to_deptree(self.nlp, self.phrase)
 

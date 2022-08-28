@@ -137,3 +137,4 @@ dmypy.json
 **/*pdf
 
 nbs/
+debug/

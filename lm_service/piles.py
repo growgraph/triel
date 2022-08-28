@@ -15,13 +15,14 @@ class CandidatePile:
     pile of candidates of one type
     """
 
-    iroot_to_candidate: dict[int, CandidateType] = dataclasses.field(default_factory=dict)  # type: ignore
+    # TODO refactor out _candidates
+    sroot_to_candidate: dict[int, CandidateType] = dataclasses.field(default_factory=dict)  # type: ignore
     _candidates: list[CandidateType] = dataclasses.field(default_factory=list)  # type: ignore
 
     def __post_init__(self):
         for j, r in enumerate(self._candidates):
             r.r0 = j
-            self.iroot_to_candidate[r.root.s] = r
+            self.sroot_to_candidate[r.root.s] = r
 
     def __len__(self) -> int:
         return len(self.candidates)
@@ -32,7 +33,7 @@ class CandidatePile:
         :return: relation index in pile : relation tokens
         """
 
-        return self.iroot_to_candidate[key]
+        return self.sroot_to_candidate[key]
 
     def __repr__(self):
         return str(self.map)
@@ -72,7 +73,7 @@ class CandidatePile:
         return [r.root for r in self.candidates]
 
     @property
-    def iroots(self) -> list[str]:
+    def sroots(self) -> list[str]:
         return [r.root.s for r in self.candidates]
 
     @property
@@ -81,7 +82,7 @@ class CandidatePile:
 
     def append(self, r: CandidateType, index=None):
         r.r0 = len(self.candidates)
-        self.iroot_to_candidate[r.root.s if index is None else index] = r
+        self.sroot_to_candidate[r.root.s if index is None else index] = r
         self._candidates += [r]
 
     def project_to_text(self):
@@ -121,6 +122,13 @@ class CandidatePile:
         new = deepcopy(self)
         new._candidates = [c.sort_index() for c in new._candidates]
         return new
+
+    def promote_to_metaindex(self, i: int):
+        """
+        change index in all Candidates from s for f"{i}#{s}"
+        :param i:
+        :return:
+        """
 
     # def unfold_conjunction(self, graph):
     #     apile = CandidatePile()
@@ -188,6 +196,8 @@ def partition_conjunctive_wrapper(
 ) -> CandidatePile:
     """
 
+    TODO: potentially graph is not a necessary input (can be replaced succs of candidate)
+
     :param candidate:
     :param graph:
     :return:
@@ -201,7 +211,7 @@ def partition_conjunctive_wrapper(
 
     cand: SourceOrTarget = SourceOrTarget()
     accumulist: list[tuple[int, Candidate]] = []
-    # NB check last arg (!)
+
     partition_conjunctive_dfs(candidate, graph, deq, cand, accumulist, -1)
 
     # dangling edges appear during partition
