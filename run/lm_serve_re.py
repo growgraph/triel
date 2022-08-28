@@ -12,7 +12,7 @@ from graph_cast.util import ResourceHandler
 
 from lm_service.graph import transform_advcl
 from lm_service.preprocessing import normalize_input_text
-from lm_service.relation import add_hash, phrase_to_relations
+from lm_service.relation import add_hash, phrase_to_triples
 
 app = Flask(__name__)
 api = Api(app)
@@ -42,7 +42,7 @@ def re():
             metagraph,
             triples_expanded,
             triples_proj,
-        ) = phrase_to_relations(fragment, nlp, rules)
+        ) = phrase_to_triples(fragment, nlp, rules)
 
         return jsonify({"triples": triples_proj}), 200
 
@@ -91,7 +91,7 @@ if __name__ == "__main__":
                 metagraph,
                 triples_expanded,
                 triples_proj,
-            ) = phrase_to_relations(fragment, nlp, rules)
+            ) = phrase_to_triples(fragment, nlp, rules)
             r = add_hash(triples_expanded, graph)
             return jsonify({"triples": r}), 200
 

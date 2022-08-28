@@ -26,8 +26,14 @@ def split_tokens_into_phrases(tokens_list, terminal_puncts=None):
     return phrases
 
 
-def normalize_input_text(article, terminal_full_stop=True):
-    article = unidecode(article)
+def normalize_input_text(text, terminal_full_stop=True):
+    """
+
+    :param text:
+    :param terminal_full_stop: add terminal full stop to each phrase, or not
+    :return:
+    """
+    text = unidecode(text)
 
     # split if word or punctuation
     # regex
@@ -35,7 +41,7 @@ def normalize_input_text(article, terminal_full_stop=True):
     # 2. word with apostrophe or dash is considered as a whole
     # 3. .,!?;:\()<>
     pat = r"\d+(?:[.,]\d+)?|[\w\'\-\/]+|[.,!?;:\\(\)<>]"
-    tokenized_agg = re.findall(pat, article)
+    tokenized_agg = re.findall(pat, text)
 
     phrases = split_tokens_into_phrases(tokenized_agg)
     if not terminal_full_stop:

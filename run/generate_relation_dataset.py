@@ -12,7 +12,7 @@ import yaml
 
 from lm_service.graph import transform_advcl
 from lm_service.preprocessing import normalize_input_text
-from lm_service.relation import phrase_to_relations
+from lm_service.relation import phrase_to_triples
 from lm_service.util import plot_graph
 
 
@@ -20,7 +20,7 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    phrases = normalize_input_text(text, terminal_full_stop=False)
+    phrases = normalize_input_text(text, terminal_full_stop=True)
     phrases = [transform_advcl(nlp, p) for p in phrases]
 
     acc = []
@@ -29,9 +29,9 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
     if head is not None:
         nmax = min([nmax, head])
     for i in range(nmax):
-        fragment = ". ".join(phrases[i : i + window_size])
-        (triples_expanded, triples_proj, graph) = phrase_to_relations(
-            fragment, nlp, rules, debug=True
+        fragment = " ".join(phrases[i : i + window_size])
+        (triples_expanded, triples_proj, graph) = phrase_to_triples(
+            fragment, nlp, rules
         )
         acc += [(i, fragment, triples_expanded, triples_proj)]
         if plot:
@@ -55,7 +55,8 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
             g.add_node(si, label=s)
             g.add_node(ti, label=t)
             g.add_edge(si, ti, label=r)
-    plot_graph(g, fig_path, f"doc")
+    if plot:
+        plot_graph(g, fig_path, f"doc")
 
     dacc = []
     for i, phrase, triples, text_triples in acc:

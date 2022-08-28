@@ -1,0 +1,35 @@
+- - key: dep_
+    value: punct
+#  - key: tag_
+#    value: ","
+- - key: dep_
+    value: cc
+- - key: dep_
+    value: aux
+- - key: dep_
+    value: amod
+- - key: dep_
+    value: det
+- - key: dep_
+    value: poss
+- - how: startswith
+    key: tag_
+    value: NN
+  - key: dep_
+    value: conj
+- - how: startswith
+    key: tag_
+    value: NN
+  - key: dep_
+    value: compound
+- - key: tag_
+    value: CD
+- - key: tag_
+    value: IN
+  - key: dep_
+    value: prep
+- - how: startswith
+    key: tag_
+    value: NN
+  - key: dep_
+    value: pobj

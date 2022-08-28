@@ -37,7 +37,7 @@ class TestR(unittest.TestCase):
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     path = Path(__file__).parent
 
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
+    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     with open(os.path.join(path, f"./data/cheops.txt"), "r") as f:

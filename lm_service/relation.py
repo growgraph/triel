@@ -10,16 +10,8 @@ from typing import List, Tuple
 import networkx as nx
 import pandas as pd
 
-from lm_service.coref import (
-    coref_candidates,
-    render_coref_candidate_map,
-    render_coref_graph,
-    render_coref_maps_wrapper,
-    sub_coreference,
-)
+from lm_service.coref import coref_candidates, render_coref_maps_wrapper
 from lm_service.folding import get_flag
-
-# import pygraphviz as pgv
 from lm_service.graph import excise_node, phrase_to_deptree
 from lm_service.onto import (
     ACandidateKind,
@@ -58,6 +50,7 @@ def find_candidates_bfs(
     deq: deque[int],
     candidate_pile: CandidatePile,
     how: ACandidateKind,
+    robust_mode=False,
     **kwargs,
 ):
     """
@@ -67,6 +60,7 @@ def find_candidates_bfs(
     :param deq: deque to keep track of vertices while traversing
     :param candidate_pile: pile to accumulate candidates
     :param how:
+    :param robust_mode: if True, try to resolve errors
     :return:
     """
     # VB, VBP, VBZ, VBD, VBG, VBN
@@ -95,11 +89,17 @@ def find_candidates_bfs(
         foo(graph, original_graph, deque([(current_vertex, 0)]), current_candidate, **kwargs)  # type: ignore
 
     if not current_candidate.empty:  # type: ignore
-        candidate_pile.append(current_candidate.clean_dangling_edges().sort_index())  # type: ignore
+        candidate_pile.append(current_candidate.clean_dangling_edges(robust_mode).sort_index())  # type: ignore
 
     deq.extend(successors & set(graph.nodes))
     find_candidates_bfs(
-        graph, original_graph, deq, candidate_pile, how, **kwargs
+        graph,
+        original_graph,
+        deq,
+        candidate_pile,
+        how,
+        robust_mode=robust_mode,
+        **kwargs,
     )
 
 
@@ -139,6 +139,8 @@ def find_relation_subtree_dfs(
     )
 
     len_current_relation = len(current_relation)
+
+    # TODO externalize logic using get_flag_advanced()
 
     if level == 0 and current_relation.empty:
         if vtoken.tag_.startswith("VB") and vtoken.dep_ != "amod":
@@ -218,11 +220,8 @@ def find_sourcetarget_subtree_dfs(
         ):
             source_target_cand.append(vtoken)
     elif level > 0 and not source_target_cand.empty:
-        vflag = get_flag(vtoken.__dict__, rules)
-        if vflag:
+        if get_flag(vtoken.__dict__, rules):
             source_target_cand.append(vtoken)
-
-    # q.extend((v, level + 1) for v in graph.successors(current_vertex))
 
     successors = list(graph.successors(current_vertex))
 
@@ -234,10 +233,6 @@ def find_sourcetarget_subtree_dfs(
             find_sourcetarget_subtree_dfs(
                 graph, original_graph, deq, source_target_cand, rules
             )
-
-    # if len(current_st) > len_current_relation:
-    #     excise_node(graph, current_vertex)
-    #     find_st_subtree_dfs(graph, q, current_st, rules)
 
 
 def maybe_source(n) -> bool:
@@ -262,12 +257,13 @@ def check_condition(graph, s, foo_condition) -> bool:
 
 
 def graph_to_candidate_pile(
-    graph: nx.DiGraph, rules
+    graph: nx.DiGraph, rules, robust_mode=False
 ) -> tuple[SRTPile, CandidatePile, nx.DiGraph]:
     """
 
     :param graph:
     :param rules:
+    :param robust_mode:
     :return: tuple[SRTPile, nx.DiGraph]
         a tuple of SourceRelationTarget Pile and a modified graph
             (that does not contain vertices that became parts of Candidates,
@@ -284,6 +280,7 @@ def graph_to_candidate_pile(
         deque(roots),
         relation_pile,
         ACandidateKind.RELATION,
+        robust_mode=True,
     )
 
     candidate_pile = CandidatePile()
@@ -294,6 +291,7 @@ def graph_to_candidate_pile(
         candidate_pile,
         ACandidateKind.SOURCE_TARGET,
         rules=rules,
+        robust_mode=robust_mode,
     )
 
     source_candidates, target_candidates = sieve_sources_targets(
@@ -377,7 +375,7 @@ def compute_distances(
     return distance_undirected, distance_directed, distance_levels
 
 
-def derive_sources_per_relaton(
+def derive_sources_per_relation(
     relation_candidate_roots: list[str],
     source_candidate_roots: list[str],
     distance_undirected: dict[tuple[str, str], int],
@@ -503,6 +501,10 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
         g_undirected,
     ) = graph_to_maps(mod_graph=mod_graph, pile=pile)
 
+    itriples = form_triples(
+        pile, sources_per_relation, targets_per_relation, g_undirected
+    )
+
     (
         map_subbable_to_chain,
         map_chain_to_most_specific,
@@ -512,6 +514,8 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
         [map_subbable_to_chain, map_chain_to_most_specific]
     )
 
+    # ncp : dict[str, list[Candidate]]
+    # for each root -> a list of relevant candidates
     ncp = coref_candidates(
         graph,
         candidate_depot,
@@ -519,10 +523,6 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
         map_chain_to_most_specific_str,
         token_dict,
         unfold_conjunction=True,
-    )
-
-    itriples = form_triples(
-        pile, sources_per_relation, targets_per_relation, g_undirected
     )
 
     triples = []
@@ -548,6 +548,9 @@ def graph_to_maps(
     mod_graph, pile
 ) -> tuple[SRTPile, dict[str, set[str]], dict[str, set[str]], nx.Graph]:
     """
+
+    TODO pile might not be a necessary input
+
     derive maps
         a. relation -> source
         b. relation -> target
@@ -557,8 +560,6 @@ def graph_to_maps(
 
     :return:
     """
-
-    # pile, candidate_depot, mod_raph = graph_to_candidate_pile(graph, rules)
 
     # create relevant graphs for distance calculations : undirected, reversed ...
     g_undirected, g_reversed, g_weighted = generate_extra_graphs(mod_graph)
@@ -580,15 +581,15 @@ def graph_to_maps(
     distance_directed_str = to_string_keys(distance_directed)
     distance_levels_str = to_string_keys(distance_levels)
 
-    target_candidate_roots = pile.targets.iroots
-    source_candidate_roots = pile.sources.iroots
-    relation_candidate_roots = pile.relations.iroots
+    target_candidate_roots = pile.targets.sroots
+    source_candidate_roots = pile.sources.sroots
+    relation_candidate_roots = pile.relations.sroots
 
     targets_per_relation: dict[str, set[str]] = derive_targets_per_relaton(
         relation_candidate_roots, target_candidate_roots, distance_directed_str
     )
 
-    sources_per_relation: dict[str, set[str]] = derive_sources_per_relaton(
+    sources_per_relation: dict[str, set[str]] = derive_sources_per_relation(
         relation_candidate_roots,
         source_candidate_roots,
         distance_undirected_str,
@@ -612,35 +613,35 @@ def form_triples(
 ) -> list:
     triples = []
 
-    for iroot in pile.relations.iroots:
-        sources = sources_per_relation[iroot]
-        targets = list(targets_per_relation[iroot] - set(sources))
+    for sroot in pile.relations.sroots:
+        sources = sources_per_relation[sroot]
+        targets = list(targets_per_relation[sroot] - set(sources))
 
         if sources and targets:
             for s, t in product(sources, targets):
-                si, ti, irooti = map(int, (s, t, iroot))
+                si, ti, srooti = map(int, (s, t, sroot))
                 path = nx.shortest_path(g_undirected, si, ti)
                 # to make sure relation is in dep tree path between the source and the target
-                if s != t and irooti in path:
-                    triples += [(s, iroot, t)]
-        # elif not sources and relaxed:
-        #     triples += [
-        #         TripleCandidate(
-        #             source=Source(),
-        #             relation=pile.relations[iroot],
-        #             target=pile.targets[t],
-        #         )
-        #         for t in targets
-        #     ]
-        # elif not targets and relaxed:
-        #     triples += [
-        #         TripleCandidate(
-        #             source=pile.sources[s],
-        #             relation=pile.relations[iroot],
-        #             target=Target(),
-        #         )
-        #         for s in sources
-        #     ]
+                if s != t and srooti in path:
+                    triples += [(s, sroot, t)]
+        elif not sources and relaxed:
+            triples += [
+                TripleCandidate(
+                    source=Source(),
+                    relation=pile.relations[sroot],
+                    target=pile.targets[t],
+                )
+                for t in targets
+            ]
+        elif not targets and relaxed:
+            triples += [
+                TripleCandidate(
+                    source=pile.sources[s],
+                    relation=pile.relations[sroot],
+                    target=Target(),
+                )
+                for s in sources
+            ]
 
     return triples
 
@@ -657,17 +658,20 @@ def sieve_sources_targets(
     return sources, targets
 
 
-# TODO WIP
-def phrase_to_relations(
+def phrase_to_triples(
     phrase, nlp, rules, filter_pronouns=True
-) -> Tuple[List[TripleCandidate], List[Tuple[str, str, str]],]:
+) -> Tuple[List[TripleCandidate], List[Tuple[str, str, str]], nx.DiGraph]:
     logger.info(f"{phrase}")
 
     rdoc, graph = phrase_to_deptree(nlp, phrase)
 
     triples = graph_to_triples(rdoc, graph, rules)
+
+    triples = [tri.normalize_relation() for tri in triples]
+    if filter_pronouns:
+        triples = [tri for tri in triples if not tri.has_pronouns()]
     triples_proj = [tri.project_to_text() for tri in triples]
-    return triples, triples_proj
+    return triples, triples_proj, graph
 
 
 def add_hash(triples_expanded, graph):
