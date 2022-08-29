@@ -2,6 +2,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+subs = {"ne": "__ne__"}
+
 
 def get_flag(props, rules):
     hows = {"eq"}
@@ -18,6 +20,8 @@ def get_flag(props, rules):
                 how = "__eq__"
             else:
                 how = subrule["how"]
+                if how in subs:
+                    how = subs[how]
             foo = get_foo(how, props[subrule["key"]])
             subflag = foo(subrule["value"])
             flag.append(subflag)

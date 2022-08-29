@@ -84,14 +84,13 @@ def find_candidates_bfs(
     current_vertex = deq.popleft()
     current_candidate = foo_map_class[how]()  # type: ignore
 
-    successors = set(graph.successors(current_vertex))
-    if current_vertex not in candidate_pile.tokens:
+    if Token.i2s(current_vertex) not in candidate_pile.tokens:
         foo(graph, original_graph, deque([(current_vertex, 0)]), current_candidate, **kwargs)  # type: ignore
 
     if not current_candidate.empty:  # type: ignore
         candidate_pile.append(current_candidate.clean_dangling_edges(robust_mode).sort_index())  # type: ignore
 
-    deq.extend(successors & set(graph.nodes))
+    deq.extend(graph.successors(current_vertex))
     find_candidates_bfs(
         graph,
         original_graph,
@@ -143,7 +142,10 @@ def find_relation_subtree_dfs(
     # TODO externalize logic using get_flag_advanced()
 
     if level == 0 and current_relation.empty:
-        if vtoken.tag_.startswith("VB") and vtoken.dep_ != "amod":
+        if vtoken.tag_.startswith("VB") and (
+            vtoken.dep_ != "amod"
+            or (vtoken.tag_ == "VBN" and vtoken.dep_ == "acl")
+        ):
             current_relation.append(vtoken)
     elif level > 0 and not current_relation.empty:
         # auxpass or aux
@@ -156,7 +158,8 @@ def find_relation_subtree_dfs(
         elif (vtoken.tag_ == "IN" and vtoken.dep_ == "prep") or (
             vtoken.tag_ == "IN" and vtoken.dep_ == "agent"
         ):
-            current_relation.append(vtoken)
+            if current_relation.sroot < vtoken.s:
+                current_relation.append(vtoken)
 
     successors = list(graph.successors(current_vertex))
 
@@ -190,7 +193,6 @@ def find_sourcetarget_subtree_dfs(
     if not deq:
         return
     current_vertex, level = deq.pop()
-
     if (
         source_target_cand.empty
         and level > 0
@@ -232,27 +234,6 @@ def find_sourcetarget_subtree_dfs(
             find_sourcetarget_subtree_dfs(
                 graph, original_graph, deq, source_target_cand, rules
             )
-
-
-def maybe_source(n) -> bool:
-    return (("NN" in n["tag_"]) or (n["tag_"] == "PRP")) and (
-        n["dep_"] != "pobj"
-    )
-
-
-def maybe_target(n) -> bool:
-    return (
-        ("NN" in n["tag_"]) or (n["dep_"] == "pobj") or (n["dep_"] == "ccomp")
-    )
-
-
-def check_condition(graph, s, foo_condition) -> bool:
-    logger.debug(f" {s} : {id(graph)} : {graph.nodes[s]}")
-    flag = [foo_condition(graph.nodes[s])]
-    if "leaf" in graph.nodes[s]:
-        leaf = graph.nodes[s]["leaf"]
-        flag += [foo_condition(prop) for n, prop in leaf.nodes if n != s]
-    return any(flag)
 
 
 def graph_to_candidate_pile(

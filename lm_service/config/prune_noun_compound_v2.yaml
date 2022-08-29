@@ -33,3 +33,12 @@
     value: NN
   - key: dep_
     value: pobj
+#- - key: dep_
+#    value: acl
+#  - how: ne
+#    key: tag_
+#    value: VBN
+- - key: tag_
+    value: CD
+  - key: dep_
+    value: nummod

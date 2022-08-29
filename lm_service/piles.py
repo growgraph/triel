@@ -4,8 +4,6 @@ import dataclasses
 from collections import deque
 from copy import deepcopy
 
-import networkx as nx
-
 from lm_service.onto import Candidate, CandidateType, SourceOrTarget, Token
 
 
@@ -29,7 +27,10 @@ class CandidatePile:
         return self._root_to_candidate[key]
 
     def __repr__(self):
-        return str(self._root_to_candidate)
+        s = f""
+        for k, v in self._root_to_candidate.items():
+            s += f"{k} : {v.__repr__()} \n"
+        return s
 
     def __iter__(self):
         for r in self.candidates:
