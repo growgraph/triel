@@ -1,0 +1,227 @@
+{
+  "r0": 6,
+  "_tokens": {
+    "024": {
+      "i": 24,
+      "text": "estimation",
+      "s": "024",
+      "dep_": "dobj",
+      "tag_": "NN",
+      "lower": "estimation",
+      "lemma": "estimation",
+      "ent_iob": 2,
+      "_level": 0,
+      "label": "24-estimation-dobj-NN",
+      "predecessors": [],
+      "successors": [
+        "025",
+        "023"
+      ]
+    },
+    "023": {
+      "i": 23,
+      "text": "the",
+      "s": "023",
+      "dep_": "det",
+      "tag_": "DT",
+      "lower": "the",
+      "lemma": "the",
+      "ent_iob": 2,
+      "_level": 1,
+      "label": "23-the-det-DT",
+      "predecessors": [
+        "024"
+      ],
+      "successors": []
+    },
+    "025": {
+      "i": 25,
+      "text": "of",
+      "s": "025",
+      "dep_": "prep",
+      "tag_": "IN",
+      "lower": "of",
+      "lemma": "of",
+      "ent_iob": 2,
+      "_level": 1,
+      "label": "25-of-prep-IN",
+      "predecessors": [
+        "024"
+      ],
+      "successors": [
+        "027"
+      ]
+    },
+    "027": {
+      "i": 27,
+      "text": "mass",
+      "s": "027",
+      "dep_": "pobj",
+      "tag_": "NN",
+      "lower": "mass",
+      "lemma": "mass",
+      "ent_iob": 2,
+      "_level": 2,
+      "label": "27-mass-pobj-NN",
+      "predecessors": [
+        "025"
+      ],
+      "successors": [
+        "028",
+        "026",
+        "029"
+      ]
+    },
+    "026": {
+      "i": 26,
+      "text": "their",
+      "s": "026",
+      "dep_": "poss",
+      "tag_": "PRP$",
+      "lower": "their",
+      "lemma": "their",
+      "ent_iob": 2,
+      "_level": 3,
+      "label": "26-their-poss-PRP$",
+      "predecessors": [
+        "027"
+      ],
+      "successors": []
+    },
+    "028": {
+      "i": 28,
+      "text": ",",
+      "s": "028",
+      "dep_": "punct",
+      "tag_": ",",
+      "lower": ",",
+      "lemma": ",",
+      "ent_iob": 2,
+      "_level": 3,
+      "label": "28-,-punct-,",
+      "predecessors": [
+        "027"
+      ],
+      "successors": []
+    },
+    "029": {
+      "i": 29,
+      "text": "density",
+      "s": "029",
+      "dep_": "conj",
+      "tag_": "NN",
+      "lower": "density",
+      "lemma": "density",
+      "ent_iob": 2,
+      "_level": 3,
+      "label": "29-density-conj-NN",
+      "predecessors": [
+        "027"
+      ],
+      "successors": [
+        "030",
+        "031"
+      ]
+    },
+    "030": {
+      "i": 30,
+      "text": ",",
+      "s": "030",
+      "dep_": "punct",
+      "tag_": ",",
+      "lower": ",",
+      "lemma": ",",
+      "ent_iob": 2,
+      "_level": 4,
+      "label": "30-,-punct-,",
+      "predecessors": [
+        "029"
+      ],
+      "successors": []
+    },
+    "031": {
+      "i": 31,
+      "text": "composition",
+      "s": "031",
+      "dep_": "conj",
+      "tag_": "NN",
+      "lower": "composition",
+      "lemma": "composition",
+      "ent_iob": 2,
+      "_level": 4,
+      "label": "31-composition-conj-NN",
+      "predecessors": [
+        "029"
+      ],
+      "successors": [
+        "034",
+        "032"
+      ]
+    },
+    "032": {
+      "i": 32,
+      "text": "and",
+      "s": "032",
+      "dep_": "cc",
+      "tag_": "CC",
+      "lower": "and",
+      "lemma": "and",
+      "ent_iob": 2,
+      "_level": 5,
+      "label": "32-and-cc-CC",
+      "predecessors": [
+        "031"
+      ],
+      "successors": []
+    },
+    "034": {
+      "i": 34,
+      "text": "formation",
+      "s": "034",
+      "dep_": "conj",
+      "tag_": "NN",
+      "lower": "formation",
+      "lemma": "formation",
+      "ent_iob": 2,
+      "_level": 5,
+      "label": "34-formation-conj-NN",
+      "predecessors": [
+        "031"
+      ],
+      "successors": [
+        "033"
+      ]
+    },
+    "033": {
+      "i": 33,
+      "text": "their",
+      "s": "033",
+      "dep_": "poss",
+      "tag_": "PRP$",
+      "lower": "their",
+      "lemma": "their",
+      "ent_iob": 2,
+      "_level": 6,
+      "label": "33-their-poss-PRP$",
+      "predecessors": [
+        "034"
+      ],
+      "successors": []
+    }
+  },
+  "_indexVec": [
+    "023",
+    "024",
+    "025",
+    "026",
+    "027",
+    "028",
+    "029",
+    "030",
+    "031",
+    "032",
+    "033",
+    "034"
+  ],
+  "_root": "024"
+}

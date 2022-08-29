@@ -1,18 +1,18 @@
 import argparse
 import logging
 import pkgutil
-import yaml
-import spacy
+
 import coreferee
-from flask import Flask, request, jsonify
+import spacy
+import yaml
+from flask import Flask, jsonify, request
 from flask_restful import Api, reqparse
-
-from graph_cast.util import ResourceHandler
 from graph_cast.db.factory import ConfigFactory
+from graph_cast.util import ResourceHandler
 
-from lm_service.relation import parse_relations_advanced, add_hash
-from lm_service.preprocessing import normalize_input_text
 from lm_service.graph import transform_advcl
+from lm_service.preprocessing import normalize_input_text
+from lm_service.relation import add_hash, phrase_to_triples
 
 app = Flask(__name__)
 api = Api(app)
@@ -42,7 +42,7 @@ def re():
             metagraph,
             triples_expanded,
             triples_proj,
-        ) = parse_relations_advanced(fragment, nlp, rules)
+        ) = phrase_to_triples(fragment, nlp, rules)
 
         return jsonify({"triples": triples_proj}), 200
 
@@ -50,7 +50,10 @@ def re():
 if __name__ == "__main__":
     logging.basicConfig(
         filename="lm_service.log",
-        format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
+        format=(
+            "%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s:"
+            " %(message)s"
+        ),
         datefmt="%Y-%m-%d %H:%M:%S",
         level=logging.INFO,
         filemode="w",
@@ -88,8 +91,9 @@ if __name__ == "__main__":
                 metagraph,
                 triples_expanded,
                 triples_proj,
-            ) = parse_relations_advanced(fragment, nlp, rules)
+            ) = phrase_to_triples(fragment, nlp, rules)
             r = add_hash(triples_expanded, graph)
             return jsonify({"triples": r}), 200
+
     print(f" wsgi: host {wsgi_re.host}")
     app.run(port=wsgi_re.port, host=wsgi_re.host)

@@ -1,24 +1,26 @@
-import spacy
-import coreferee
-import pandas as pd
-import sys
-import networkx as nx
-import pkgutil
-import os
-import yaml
-import logging
 import argparse
-from lm_service.relation import parse_relations_advanced
-from lm_service.util import plot_graph, plot_leaves
-from lm_service.preprocessing import normalize_input_text
+import logging
+import os
+import pkgutil
+import sys
+
+import coreferee
+import networkx as nx
+import pandas as pd
+import spacy
+import yaml
+
 from lm_service.graph import transform_advcl
+from lm_service.preprocessing import normalize_input_text
+from lm_service.relation import phrase_to_triples
+from lm_service.util import plot_graph
 
 
 def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
+    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    phrases = normalize_input_text(text, terminal_full_stop=False)
+    phrases = normalize_input_text(text, terminal_full_stop=True)
     phrases = [transform_advcl(nlp, p) for p in phrases]
 
     acc = []
@@ -27,26 +29,22 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
     if head is not None:
         nmax = min([nmax, head])
     for i in range(nmax):
-        fragment = ". ".join(phrases[i : i + window_size])
-        (
-            graph,
-            coref_graph,
-            metagraph,
-            triples_expanded,
-            triples_proj,
-        ) = parse_relations_advanced(fragment, nlp, rules)
+        fragment = " ".join(phrases[i : i + window_size])
+        print(fragment)
+        (triples_expanded, triples_proj, graph) = phrase_to_triples(
+            fragment, nlp, rules
+        )
         acc += [(i, fragment, triples_expanded, triples_proj)]
         if plot:
             plot_graph(graph, fig_path, f"fragment_{i}_full")
-            plot_graph(metagraph, fig_path, f"fragment_{i}_mg")
-            plot_graph(coref_graph, fig_path, f"fragment_{i}_coref")
-            plot_leaves(metagraph, fig_path, f"fragment_{i}")
 
     sources = [s for _, _, _, triples_proj in acc for s, _, _ in triples_proj]
-    relations = [r for _, _, _, triples_proj in acc for _, r, _ in triples_proj]
+    relations = [
+        r for _, _, _, triples_proj in acc for _, r, _ in triples_proj
+    ]
     targets = [t for _, _, _, triples_proj in acc for _, _, t in triples_proj]
 
-    tokens = sorted(set(sources) | set(targets) | set(relations))
+    tokens = sorted(set(set(sources) | set(targets) | set(relations)))
     token_map = {t: ii for ii, t in enumerate(tokens)}
     g = nx.DiGraph()
 
@@ -58,18 +56,21 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
             g.add_node(si, label=s)
             g.add_node(ti, label=t)
             g.add_edge(si, ti, label=r)
-    plot_graph(g, fig_path, f"doc")
+    if plot:
+        plot_graph(g, fig_path, f"doc", prog="sfdp")
 
     dacc = []
     for i, phrase, triples, text_triples in acc:
         for triple, text_relation in zip(triples, text_triples):
             dacc += [
                 [i]
-                + [triple.source, triple.relation.tokens, triple.target]
+                + [triple.source, triple.relation.stokens, triple.target]
                 + list(text_relation)
                 + [phrase]
             ]
-    df = pd.DataFrame(dacc, columns=["ip", "is", "ir", "it", "s", "r", "t", "phrase"])
+    df = pd.DataFrame(
+        dacc, columns=["ip", "is", "ir", "it", "s", "r", "t", "phrase"]
+    )
     df.to_csv(os.path.join(fig_path, "relations.csv"))
 
 
@@ -77,10 +78,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     logging.basicConfig(
-        format="%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s",
+        format=(
+            "%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s"
+        ),
         datefmt="%Y-%m-%d %H:%M:%S",
-        level=logging.INFO,
-        filemode="w",
+        level=logging.ERROR,
+        # filemode="w",
         stream=sys.stdout,
     )
 

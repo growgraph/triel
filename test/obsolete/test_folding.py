@@ -1,12 +1,15 @@
-import pkgutil
-import yaml
-import sys
-import os
-import unittest
-import networkx as nx
 import logging
+import os
+import pathlib
+import pkgutil
+import sys
+import unittest
 from pathlib import Path
-from lm_service.folding import fold_graph
+
+import networkx as nx
+import yaml
+
+from lm_service.obsolete.folding import fold_graph
 from lm_service.util import plot_graph, plot_leaves
 
 nl_data = {
@@ -340,8 +343,16 @@ class TestMetagraph(unittest.TestCase):
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     path = Path(__file__).parent
 
+    figs_folder = "./figs"
+    current_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), figs_folder
+    )
+    pathlib.Path(current_path).mkdir(parents=True, exist_ok=True)
+
     def test_fold_graph(self):
-        fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
+        fp = pkgutil.get_data(
+            "lm_service.config", "prune_noun_compound_v2.yaml"
+        )
         rules = yaml.load(fp, Loader=yaml.FullLoader)
 
         metagraph = nx.DiGraph()
@@ -351,14 +362,21 @@ class TestMetagraph(unittest.TestCase):
         metagraph = fold_graph(graph, metagraph, None, roots[0], None, rules)
 
         metagraph_name = "test_fold_graph"
-        plot_graph(metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}")
+        plot_graph(
+            metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}"
+        )
 
-        plot_leaves(metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}")
+        plot_leaves(
+            metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}"
+        )
 
-        self.assertEqual(len(metagraph.nodes()), 13)
-        size_ggs = [1, 1, 1, 1, 1, 1, 1, 4, 2, 7, 1, 2, 12]
+        self.assertEqual(len(metagraph.nodes), 10)
+        size_ggs = [3, 1, 2, 1, 4, 2, 7, 1, 2, 12]
         self.assertEqual(
-            [len(metagraph.nodes[n]["leaf"]) for n in sorted(metagraph.nodes())],
+            [
+                len(metagraph.nodes[n]["leaf"])
+                for n in sorted(metagraph.nodes())
+            ],
             size_ggs,
         )
 

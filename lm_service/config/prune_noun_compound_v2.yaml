@@ -12,12 +12,12 @@
     value: det
 - - key: dep_
     value: poss
-- - how: starts
+- - how: startswith
     key: tag_
     value: NN
   - key: dep_
     value: conj
-- - how: starts
+- - how: startswith
     key: tag_
     value: NN
   - key: dep_
@@ -28,7 +28,7 @@
     value: IN
   - key: dep_
     value: prep
-- - how: starts
+- - how: startswith
     key: tag_
     value: NN
   - key: dep_

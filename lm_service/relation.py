@@ -1,21 +1,31 @@
-import logging
+from __future__ import annotations
+
 import hashlib
+import logging
+from collections import deque
 from copy import deepcopy
-
-from typing import Dict
-import pandas as pd
 from itertools import product
+from typing import List, Tuple
+
 import networkx as nx
+import pandas as pd
 
-from lm_service.folding import fold_graph_top
-from spacy.tokens import Doc
-
-# import pygraphviz as pgv
-from lm_service.graph import dep_tree_from_phrase
-
-from dataclasses import dataclass, field
-from typing import Optional, List, Set, Tuple
-
+from lm_service.coref import coref_candidates, render_coref_maps_wrapper
+from lm_service.folding import get_flag
+from lm_service.graph import excise_node, phrase_to_deptree
+from lm_service.onto import (
+    ACandidateKind,
+    CandidateType,
+    Relation,
+    Source,
+    SourceOrTarget,
+    Target,
+    Token,
+    TripleCandidate,
+    to_string,
+    to_string_keys,
+)
+from lm_service.piles import CandidatePile, SRTPile
 
 logger = logging.getLogger(__name__)
 
@@ -30,279 +40,211 @@ logger = logging.getLogger(__name__)
 """
 
 
-class RelationHasNoTargetCandidatesError(Exception):
+class SimplifiedConjunctionHypothesisFailure(Exception):
     pass
 
 
-class ACandidate:
-    @staticmethod
-    def concretize(x, graph):
-        # return lemma if not entity, otherwise return text
-        return (
-            graph.nodes[x]["lemma"]
-            if not graph.nodes[x]["ent_iob"] not in (0, 2)
-            else graph.nodes[x]["text"]
-        )
+def find_candidates_bfs(
+    graph: nx.DiGraph,
+    original_graph: nx.DiGraph,
+    deq: deque[int],
+    candidate_pile: CandidatePile,
+    how: ACandidateKind,
+    robust_mode=False,
+    **kwargs,
+):
+    """
 
+    :param graph: please provide a copy graph, find_candidates_bfs potentially modifies graph structure
+    :param original_graph: to assign edges for candi ates correctly
+    :param deq: deque to keep track of vertices while traversing
+    :param candidate_pile: pile to accumulate candidates
+    :param how:
+    :param robust_mode: if True, try to resolve errors
+    :return:
+    """
+    # VB, VBP, VBZ, VBD, VBG, VBN
+    # auxiliary verb uses of be, have, do, and get: AUX
+    # the infinitive to is PART
 
-class Token:
-    def __init__(self, i, dep_, tag_, **kwargs):
-        self.i: int = i
-        self.dep_: str = dep_
-        self.tag_: str = tag_
-
-
-@dataclass
-class Relation(ACandidate):
-    @property
-    def tokens(self):
-        return [t.i for t in self.atokens]
-
-    r0: Optional[int] = None
-    passive: bool = False
-    atokens: Optional[List[Token]] = field(default_factory=list)
-
-    def project_to_text(self, graph):
-        ll = [ACandidate.concretize(r, graph) for r in self.tokens]
-        return ll
-
-    def project_to_text_str(self, graph):
-        ll = self.project_to_text(graph)
-        txt = "".join([ll[0]] + [x.capitalize() for x in ll[1:]])
-        return txt
-
-
-@dataclass
-class TripleCandidate:
-    source: int
-    relation: Relation
-    target: int
-
-    def project_to_text(self, graph):
-        s = ACandidate.concretize(self.source, graph)
-        t = ACandidate.concretize(self.target, graph)
-        r = self.relation.project_to_text_str(graph)
-        return s, r, t
-
-
-class RelationPile:
-    def __init__(self, relations: List[Relation]):
-        self.relations: List[Relation] = relations
-        self.tokens: Set[int] = set([x for r in self.relations for x in r.tokens])
-        self.map: Dict[int, List[int]] = {
-            r.r0: [x for x in r.tokens] for r in self.relations
-        }
-
-    def __repr__(self):
-        return str(self.map)
-
-    def __iter__(self):
-        for r in self.relations:
-            yield r
-
-
-class SourcePile:
-    def __init__(self, sources: List[int]):
-        self.data: List[int] = sources
-
-
-class TargetPile:
-    def __init__(self, targets: List[int]):
-        self.data: List[int] = targets
-
-
-@dataclass
-class CandidatePile:
-    sources: SourcePile
-    targets: TargetPile
-    relations: RelationPile
-
-
-class CorefGraph:
-    def __init__(self, graph: nx.DiGraph, root: int, map_specific: Dict[int, int]):
-        self.graph: nx.DiGraph = graph
-        self.root: int = root
-        self.map_specific: Dict[int:int] = map_specific
-
-
-def render_coref_graph(rdoc: Doc, graph: nx.DiGraph, full=False):
-
-    chains = rdoc._.coref_chains if rdoc._.coref_chains is not None else []
-    vs_coref = []
-    es_coref = []
-
-    mention_nodes = []
-    chain_specific_mention = dict()
-    concept_specific_blank = dict()
-
-    coref_root = max([token.i for token in rdoc]) + 1
-    jc = coref_root + 1
-
-    vs_coref += [
-        (
-            coref_root,
-            {"label": f"{coref_root}-*-coref-root", "tag_": "coref", "dep_": "root"},
-        )
-    ]
-
-    for jchain, chain in enumerate(chains):
-        coref_chain = jc
-        chain_specific_mention[coref_chain] = chain[chain.most_specific_mention_index]
-        vs_coref += [
-            (
-                coref_chain,
-                {
-                    "label": f"{coref_chain}-*-coref-chain",
-                    "tag_": "coref",
-                    "dep_": "chain",
-                    "chain": jchain,
-                },
-            )
-        ]
-        es_coref.append((coref_root, coref_chain))
-        jc += 1
-        for kth, x in enumerate(chain.mentions):
-            coref_blank = jc
-            if kth == chain.most_specific_mention_index:
-                concept_specific_blank[coref_chain] = coref_blank
-            vs_coref += [
-                (
-                    coref_blank,
-                    {
-                        "label": f"{coref_blank}-*-coref-blank",
-                        "tag_": "coref",
-                        "dep_": "blank",
-                        "chain": jchain,
-                    },
-                )
-            ]
-            es_coref.append((coref_chain, coref_blank))
-            jc += 1
-            mention_nodes.extend(x.token_indexes)
-            for y in x.token_indexes:
-                vs_coref += [(y, graph.nodes[y])]
-                es_coref.append((coref_blank, y))
-
-    chs = {
-        j: [[graph.nodes[x]["lower"] for x in item] for item in k.mentions]
-        for j, k in enumerate(chains)
+    foo_map = {
+        ACandidateKind.RELATION: find_relation_subtree_dfs,
+        ACandidateKind.SOURCE_TARGET: find_sourcetarget_subtree_dfs,
     }
-    logger.info(f"{chs}")
-    chs = {
-        j: [graph.nodes[x]["lower"] for x in k.mentions[k.most_specific_mention_index]]
-        for j, k in enumerate(chains)
+
+    foo_map_class = {
+        ACandidateKind.RELATION: Relation,
+        ACandidateKind.SOURCE_TARGET: SourceOrTarget,
     }
-    logger.info(f"specifics {chs}")
 
-    if full:
-        coref_graph = deepcopy(graph)
-    else:
-        coref_graph = nx.DiGraph()
+    foo = foo_map[how]
+    if not deq:
+        return
 
-    coref_graph.add_nodes_from(vs_coref)
-    coref_graph.add_edges_from(es_coref)
-    return coref_graph, mention_nodes, concept_specific_blank
+    current_vertex = deq.popleft()
+    current_candidate = foo_map_class[how]()  # type: ignore
 
+    successors = set(graph.successors(current_vertex))
+    if current_vertex not in candidate_pile.tokens:
+        foo(graph, original_graph, deque([(current_vertex, 0)]), current_candidate, **kwargs)  # type: ignore
 
-def render_mstar_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
-    coref_graph, mention_nodes, concept_specific_blank = render_coref_graph(rdoc, graph)
+    if not current_candidate.empty:  # type: ignore
+        candidate_pile.append(current_candidate.clean_dangling_edges(robust_mode).sort_index())  # type: ignore
 
-    for m in mention_nodes:
-        # find m_star
-        blanks = list(coref_graph.predecessors(m))
-        blank_metrics = []
-        for b in blanks:
-            # one concept per blank
-            c0 = [concept for concept in coref_graph.predecessors(b)][0]
-            best_blank_per_concept = concept_specific_blank[c0]
-            specific_mentions = list(coref_graph.successors(best_blank_per_concept))
-            blank_metrics += [
-                (
-                    best_blank_per_concept,
-                    propotion_of_pronouns(coref_graph, specific_mentions),
-                )
-            ]
-        blank_metrics = sorted(blank_metrics, key=lambda item: item[1])
-        coref_graph.nodes[m]["m*"] = list(coref_graph.successors(blank_metrics[0][0]))
-
-    return coref_graph
-
-
-def propotion_of_pronouns(graph, mentions):
-    return sum([graph.nodes[m]["tag_"].startswith("PRP") for m in mentions]) / len(
-        mentions
+    deq.extend(successors & set(graph.nodes))
+    find_candidates_bfs(
+        graph,
+        original_graph,
+        deq,
+        candidate_pile,
+        how,
+        robust_mode=robust_mode,
+        **kwargs,
     )
 
 
-def find_relation_candidates(graph):
-    r_candidates = [
-        v
-        for v in graph.nodes()
-        if graph.nodes[v]["tag_"][:2] == "VB" and graph.nodes[v]["dep_"] != "aux"
-    ]
-    return r_candidates
+def find_relation_subtree_dfs(
+    graph: nx.DiGraph,
+    original_graph: nx.DiGraph,
+    deq: deque[tuple[int, int]],
+    current_relation: CandidateType,
+):
+    """
+
+    :param graph:
+    :param original_graph:
+    :param deq: (!) the initial call should have only a single vertex in q
+    :param current_relation:
+    :return:
+    """
+
+    if not deq:
+        return
+    current_vertex, level = deq.pop()
+    if (
+        current_relation.empty
+        and level > 0
+        or (
+            not current_relation.empty
+            and level - current_relation.max_level() > 1
+        )
+    ):
+        return
+
+    vtoken = Token(
+        **graph.nodes[current_vertex],
+        _level=level,
+        successors=original_graph.successors(current_vertex),
+        predecessors=original_graph.predecessors(current_vertex),
+    )
+
+    len_current_relation = len(current_relation)
+
+    # TODO externalize logic using get_flag_advanced()
+
+    if level == 0 and current_relation.empty:
+        if vtoken.tag_.startswith("VB") and vtoken.dep_ != "amod":
+            current_relation.append(vtoken)
+    elif level > 0 and not current_relation.empty:
+        # auxpass or aux
+        if (vtoken.tag_.startswith("VB") or (vtoken.tag_ == "MD")) and (
+            "aux" in vtoken.dep_
+        ):
+            current_relation.append(vtoken)
+        # elif vtoken.tag_.startswith("VB") and vtoken.dep_ == "advcl":
+        #     current_relation.append(vtoken)
+        elif (vtoken.tag_ == "IN" and vtoken.dep_ == "prep") or (
+            vtoken.tag_ == "IN" and vtoken.dep_ == "agent"
+        ):
+            current_relation.append(vtoken)
+
+    successors = list(graph.successors(current_vertex))
+
+    if len(current_relation) > len_current_relation:
+        if level > 0:
+            excise_node(graph, current_vertex)
+        for v in successors:
+            deq.append((v, level + 1))
+            find_relation_subtree_dfs(
+                graph, original_graph, deq, current_relation
+            )
 
 
-def find_relation_candidates_new(graph: nx.DiGraph) -> RelationPile:
-    r_candidates = []
-    for v in graph.nodes():
-        cand = Relation()
-        if graph.nodes[v]["tag_"].startswith("VB"):
-            # TODO check graph.nodes[v]["dep_"] != "aux"
-            vtoken = Token(**graph.nodes[v])
-            if vtoken.tag_ == "VBN" and vtoken.dep_ == "acl":
-                cand.passive = True
+def find_sourcetarget_subtree_dfs(
+    graph: nx.DiGraph,
+    original_graph: nx.DiGraph,
+    deq: deque[tuple[int, int]],
+    source_target_cand: CandidateType,
+    rules=None,
+):
+    """
 
-            if len(list(graph.successors(v))) > 0:
-                cand.atokens = [vtoken]
-            for w in graph.successors(v):
-                wtoken = Token(**graph.nodes[w])
+    :param graph:
+    :param original_graph:
+    :param deq: (!) the initial call should have only a single vertex in q
+    :param source_target_cand: source or target
+    :param rules:
+    :return:
+    """
 
-                if wtoken.tag_.startswith("VB"):
-                    if (
-                        vtoken.tag_ == "VBN"
-                        and
-                        # VBN or VBZ
-                        (
-                            "VB" in wtoken.tag_
-                            # auxpass or aux
-                            and "aux" in wtoken.dep_
-                        )
-                    ):
-                        cand.atokens = [wtoken] + cand.atokens
-                        cand.passive = True
-                    elif (
-                        vtoken.tag_ == "VBZ"
-                        and wtoken.tag_ == "VBN"
-                        and wtoken.dep_ == "advcl"
-                    ):
-                        cand.atokens = cand.atokens + [wtoken]
-                        cand.passive = True
-                if (wtoken.tag_ == "IN" and wtoken.dep_ == "prep") or (
-                    wtoken.tag_ == "IN" and wtoken.dep_ == "agent"
-                ):
-                    if any([t.tag_ == "IN" for t in cand.atokens]):
-                        cand2 = deepcopy(cand)
-                        for j, t in enumerate(cand2.atokens):
-                            if t.tag_ == "IN":
-                                cand2.atokens[j] = wtoken
-                        r_candidates += [cand2]
-                    else:
-                        cand.atokens = cand.atokens + [wtoken]
-        if cand.tokens:
-            r_candidates += [cand]
-    for j, r in enumerate(r_candidates):
-        r.r0 = j
+    if not deq:
+        return
+    # current_vertex, level = q.popleft()
+    current_vertex, level = deq.pop()
 
-    return RelationPile(relations=r_candidates)
+    if (
+        source_target_cand.empty
+        and level > 0
+        or (
+            not source_target_cand.empty
+            and (
+                (level - source_target_cand.max_level() > 1)
+                or (source_target_cand.root.dep_ == "ccomp")
+            )
+        )
+    ):
+        return
+
+    vtoken = Token(
+        **graph.nodes[current_vertex],
+        _level=level,
+        successors=original_graph.successors(current_vertex),
+        predecessors=original_graph.predecessors(current_vertex),
+    )
+
+    len_current_relation = len(source_target_cand)
+
+    if level == 0 and source_target_cand.empty:
+        if (("NN" in vtoken.tag_) or (vtoken.tag_ == "PRP")) or (
+            vtoken.dep_ == "ccomp"
+        ):
+            source_target_cand.append(vtoken)
+    elif level > 0 and not source_target_cand.empty:
+        if get_flag(vtoken.__dict__, rules):
+            source_target_cand.append(vtoken)
+
+    successors = list(graph.successors(current_vertex))
+
+    if len(source_target_cand) > len_current_relation:
+        if level > 0:
+            excise_node(graph, current_vertex)
+        for v in successors:
+            deq.append((v, level + 1))
+            find_sourcetarget_subtree_dfs(
+                graph, original_graph, deq, source_target_cand, rules
+            )
 
 
 def maybe_source(n) -> bool:
-    return (("NN" in n["tag_"]) or (n["tag_"] == "PRP")) and (n["dep_"] != "pobj")
+    return (("NN" in n["tag_"]) or (n["tag_"] == "PRP")) and (
+        n["dep_"] != "pobj"
+    )
 
 
 def maybe_target(n) -> bool:
-    return ("NN" in n["tag_"]) or (n["dep_"] == "pobj") or (n["dep_"] == "ccomp")
+    return (
+        ("NN" in n["tag_"]) or (n["dep_"] == "pobj") or (n["dep_"] == "ccomp")
+    )
 
 
 def check_condition(graph, s, foo_condition) -> bool:
@@ -314,72 +256,215 @@ def check_condition(graph, s, foo_condition) -> bool:
     return any(flag)
 
 
-def find_candidates(graph: nx.DiGraph):
-    rp = find_relation_candidates_new(graph)
+def graph_to_candidate_pile(
+    graph: nx.DiGraph, rules, robust_mode=False
+) -> tuple[SRTPile, CandidatePile, nx.DiGraph]:
+    """
 
-    source_candidates = [
-        i for i in graph.nodes if check_condition(graph, i, maybe_source)
-    ]
-    target_candidates = [
-        i for i in graph.nodes if check_condition(graph, i, maybe_target)
-    ]
+    :param graph:
+    :param rules:
+    :param robust_mode:
+    :return: tuple[SRTPile, nx.DiGraph]
+        a tuple of SourceRelationTarget Pile and a modified graph
+            (that does not contain vertices that became parts of Candidates,
+            so only one node (root note) per candidate is preserved)
+    """
+    roots = [n for n, d in graph.in_degree() if d == 0]
+    relation_pile = CandidatePile()
 
-    logger.info(f" relations: {rp}")
-    for r in rp.relations:
-        logger.info(f" relations: {[graph.nodes[r0]['lower'] for r0 in r.tokens]}")
-    logger.info(
-        f" sources: {source_candidates} {[graph.nodes[r]['lower'] for r in source_candidates]}"
+    mgraph = deepcopy(graph)
+
+    find_candidates_bfs(
+        mgraph,
+        graph,
+        deque(roots),
+        relation_pile,
+        ACandidateKind.RELATION,
+        robust_mode=True,
     )
-    logger.info(
-        f" targets: {target_candidates} {[graph.nodes[r]['lower'] for r in target_candidates]}"
+
+    candidate_pile = CandidatePile()
+    find_candidates_bfs(
+        mgraph,
+        graph,
+        deque(roots),
+        candidate_pile,
+        ACandidateKind.SOURCE_TARGET,
+        rules=rules,
+        robust_mode=robust_mode,
     )
 
-    return CandidatePile(
-        relations=rp,
-        sources=SourcePile(source_candidates),
-        targets=TargetPile(target_candidates),
+    source_candidates, target_candidates = sieve_sources_targets(
+        candidate_pile
+    )
+
+    logger.info(f" relations: {relation_pile}")
+
+    return (
+        SRTPile(
+            relations=relation_pile,
+            sources=source_candidates,
+            targets=target_candidates,
+        ),
+        candidate_pile,
+        mgraph,
     )
 
 
-def compute_distances(graph: nx.DiGraph, rp: RelationPile):
+def generate_extra_graphs(
+    graph: nx.DiGraph,
+) -> tuple[nx.Graph, nx.DiGraph, nx.Graph]:
+    g_undirected = graph.to_undirected()
+    g_reversed = graph.reverse()
 
-    undirected = graph.to_undirected()
-    greverse = graph.reverse()
-    nx.set_edge_attributes(greverse, values=-1, name="weight")
-    gextra = graph.copy()
-    nx.set_edge_attributes(gextra, values=1, name="weight")
+    nx.set_edge_attributes(g_reversed, values=-1, name="weight")
 
-    gextra.add_weighted_edges_from(
-        [(u, v, greverse.edges[u, v]["weight"]) for u, v in greverse.edges],
+    g_weighted = graph.copy()
+
+    nx.set_edge_attributes(g_weighted, values=1, name="weight")
+
+    # distance wrt to weights defined in this way will be 0 for the same level
+    # +1 or -1 for level k to k+1 and vice versa
+    g_weighted.add_weighted_edges_from(
+        [
+            (u, v, g_reversed.edges[u, v]["weight"])
+            for u, v in g_reversed.edges
+        ],
         weight="weight",
     )
 
-    # compute distances
-    paths = {r: nx.shortest_path(gextra, r) for r in rp.tokens}
-    path_weights = {
-        r: {v: nx.path_weight(gextra, pp, "weight") for v, pp in batch.items()}
-        for r, batch in paths.items()
+    return g_undirected, g_reversed, g_weighted
+
+
+def compute_distances(
+    graph: nx.DiGraph,
+    g_undirected: nx.Graph,
+    g_weighted: nx.Graph,
+    indices_of_interest: list[int],
+) -> tuple[
+    dict[tuple[int, int], int],
+    dict[tuple[int, int], int],
+    dict[tuple[int, int], int],
+]:
+
+    # (u, v) : distance
+    distance_directed: dict[tuple[int, int], int] = {
+        (i, v): ll
+        for i in indices_of_interest
+        for v, ll in nx.shortest_path_length(graph, i).items()
     }
 
-    distance_directed = {r: nx.shortest_path_length(graph, r) for r in rp.tokens}
+    # (u, v) : distance
+    distance_undirected: dict[tuple[int, int], int] = {
+        (i, v): ll
+        for i in indices_of_interest
+        for v, ll in nx.shortest_path_length(g_undirected, i).items()
+    }
 
-    # dm = pd.DataFrame.from_dict(distance_directed).sort_index(axis=0)
+    # compute distances
+    # gextra | dag paths
+    paths = {i: nx.shortest_path(g_weighted, i) for i in indices_of_interest}
 
-    # distance_reverse = {r: nx.shortest_path_length(greverse, r) for r in rs}
-    # rdm = pd.DataFrame.from_dict(distance_reverse).sort_index(axis=0)
+    # g_original | (root, vertex) : weight
+    distance_levels: dict[tuple[int, int], int] = {
+        (r, v): nx.path_weight(g_weighted, pp, "weight")
+        for r, batch in paths.items()
+        for v, pp in batch.items()
+    }
 
-    distance_undirected = {r: nx.shortest_path_length(undirected, r) for r in rp.tokens}
-
-    # undirected graph distance matrix
-    udm = pd.DataFrame.from_dict(distance_undirected).sort_index(axis=0)
-
-    # weighted graph distance matrix
-    wdm = pd.DataFrame.from_dict(path_weights).sort_index(axis=0)
-
-    return undirected, distance_directed, udm, wdm
+    return distance_undirected, distance_directed, distance_levels
 
 
-def parse_relations_basic(graph):
+def derive_sources_per_relation(
+    relation_candidate_roots: list[str],
+    source_candidate_roots: list[str],
+    distance_undirected: dict[tuple[str, str], int],
+    distance_levels: dict[tuple[str, str], int],
+    pile_sources_roots: list[Token],
+) -> dict[str, set[str]]:
+    # find sources per relation; sources may be up the tree, using undirected graph
+    # for each relation find source candidates
+    # a. close to relation on the tree
+    # b. negative cost preferred (close in reverse direction),
+    # c. add penalty if dep is attr for given node
+
+    # distance_undirected, distance_directed, distance_levels
+
+    # find targets per relation; targets are down the tree
+    udist_to_sources: list[tuple] = [
+        (r, s, distance_undirected[r, s])
+        for r in relation_candidate_roots
+        for s in source_candidate_roots
+        if (r, s) in distance_undirected
+    ]
+
+    ldist_to_sources: list[tuple] = [
+        (r, s, distance_levels[r, s])
+        for r in relation_candidate_roots
+        for s in source_candidate_roots
+        if (r, s) in distance_levels
+    ]
+
+    udm = pd.DataFrame(udist_to_sources, columns=["r", "s", "ud"]).sort_values(
+        ["r", "s"]
+    )
+    ldm = pd.DataFrame(ldist_to_sources, columns=["r", "s", "ld"]).sort_values(
+        ["r", "s"]
+    )
+    decision = pd.merge(udm, ldm, on=["r", "s"], how="outer")
+
+    # for each source add penalty if its dep_ is "attr" or "dobj"
+    targetlike_penalty = pd.DataFrame(
+        [(s.s, int(s.dep_ in ["attr", "dobj"])) for s in pile_sources_roots],
+        columns=["s", "syn_penalty"],
+    )
+    decision = decision.merge(targetlike_penalty, how="left", on="s")
+
+    decision["mcost"] = (
+        decision["ud"] + decision["ld"] + decision["syn_penalty"]
+    )
+
+    # source decisions are based on mcost
+
+    s = decision.set_index(["r", "s"])["mcost"]
+
+    # mask minimum values of mcost per relation
+    mask = s.eq(s.groupby(level=0).transform("min"))
+
+    s = s[mask].reset_index(level=1)["s"]
+    sources_per_relation = s.groupby(level=0).apply(set).to_dict()
+    return sources_per_relation
+
+
+def derive_targets_per_relaton(
+    relation_candidate_roots: list[str],
+    target_candidate_roots: list[str],
+    distance_directed: dict[tuple[str, str], int],
+) -> dict[str, set[str]]:
+
+    # find targets per relation; targets are down the tree
+    dist_to_targets: dict[str, dict[str, int]] = {
+        r: {
+            t: distance_directed[r, t]
+            for t in target_candidate_roots
+            if (r, t) in distance_directed
+        }
+        for r in relation_candidate_roots
+    }
+
+    min_dists: dict[str, int] = {
+        r: min(item.values()) if item else -1
+        for r, item in dist_to_targets.items()
+    }
+
+    targets_per_relation: dict[str, set[str]] = {
+        r: {t for t, d in item.items() if d == min_dists[r]} if item else set()
+        for r, item in dist_to_targets.items()
+    }
+    return targets_per_relation
+
+
+def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
     """
     find triplets in a dep graph:
         a. find relation candidates
@@ -387,238 +472,211 @@ def parse_relations_basic(graph):
         c. find target candidates
 
     :param graph: nx.Digraph
+    :param rules:
 
     :return:
     """
 
+    # derive
+    # i) pile of source, relation, target
+    # ii) depot of candidates (mixed)
+    # iii) modified graph to use for distance computation
+    pile, candidate_depot, mod_graph = graph_to_candidate_pile(graph, rules)
+
+    tokens = [
+        Token(
+            **graph.nodes[i],
+            successors=graph.successors(i),
+            predecessors=graph.predecessors(i),
+        )
+        for i in graph.nodes()
+    ]
+
+    token_dict = {t.s: t for t in tokens}
+
+    (
+        sources_per_relation,
+        targets_per_relation,
+        g_undirected,
+    ) = graph_to_maps(mod_graph=mod_graph, pile=pile)
+
+    itriples = form_triples(
+        pile, sources_per_relation, targets_per_relation, g_undirected
+    )
+
+    (
+        map_subbable_to_chain,
+        map_chain_to_most_specific,
+    ) = render_coref_maps_wrapper(rdoc, graph)
+
+    map_subbable_to_chain_str, map_chain_to_most_specific_str = to_string(
+        [map_subbable_to_chain, map_chain_to_most_specific]
+    )
+
+    # ncp : dict[str, list[Candidate]]
+    # for each root -> a list of relevant candidates
+    ncp = coref_candidates(
+        candidate_depot,
+        map_subbable_to_chain_str,
+        map_chain_to_most_specific_str,
+        token_dict,
+        unfold_conjunction=True,
+    )
+
     triples = []
-
-    cp = find_candidates(graph)
-
-    # create relevant graphs for distance calculations : undirected, reversed ...
-
-    undirected, distance_directed, udm, wdm = compute_distances(graph, cp.relations)
-
-    target_per_relation = dict()
-    sources_per_relation = dict()
-
-    target_candidates = cp.targets.data
-    source_candidates = cp.sources.data
-
-    # find targets per relation; targets are down the tree
-    for r_parent, rels in cp.relations.map.items():
-        dist_r_parent = []
-        for r in rels:
-            dist = distance_directed[r]
-            # for r, dist in distance_directed.items():
-            # find min distance to source candidate on the tree wrt relation r
-            # target could be the same as r (if subgraph is hiding in r)
-            dist_to_targets = [
-                (r, target, dist[target])
-                for target in target_candidates
-                if target in dist and target not in rels
-            ]
-            dist_r_parent += dist_to_targets
-
-        if dist_r_parent:
-            min_dist = min([d for _, _, d in dist_r_parent])
-            # find all such targets
-            target_per_relation[r_parent] = set(
-                [
-                    target
-                    for relation_part, target, d_rk in dist_r_parent
-                    if d_rk == min_dist
-                ]
-            )
-
-        if not dist_r_parent:
-            target_per_relation[r_parent] = set()
-            logger.error(f" relation {r_parent} has not target candidates")
-            # raise RelationHasNoTargetCandidatesError(f" relation {r} has not target candidates")
-
-    udm_source = list(set(source_candidates) & set(udm.index))
-    wdm_source = list(set(source_candidates) & set(wdm.index))
-
-    # find sources per relation; sources may be up the tree, using undirected graph
-    # for each relation find source candidates
-    # a. close to relation on the tree
-    # b. negative cost preferred (close in reverse direction),
-    # c. add penalty if dep is attr for given node
-    for r_parent, rels in cp.relations.map.items():
-        try:
-            undirected_to_source = udm.loc[udm_source, rels].unstack()
-        except ValueError:
-            sources_per_relation[r_parent] = []
-            continue
-
-        try:
-            cost_to_source = wdm.loc[wdm_source, rels].unstack()
-        except ValueError:
-            sources_per_relation[r_parent] = []
-            continue
-
-        decision = pd.concat(
-            [undirected_to_source.rename("undirected"), cost_to_source.rename("cost")],
-            axis=1,
-        )
-
-        # if candidate is "attr" or "dobj" add penalty (because they are likely to be targets
-        decision["syn_penalty"] = pd.Series(
-            decision.index.map(
-                lambda x: int(graph.nodes[x[1]]["dep_"] in ["attr", "dobj"])
-            ),
-            index=decision.index,
-        )
-
-        decision["mcost"] = (
-            decision["undirected"] + decision["cost"] + decision["syn_penalty"]
-        )
-
-        decision = decision.sort_values(
-            ["mcost", "undirected", "cost", "syn_penalty"],
-            ascending=[True, True, True, True],
-        )
-        top_row = decision.iloc[0]
-        mask = (decision == top_row).all(axis=1)
-        sources_per_relation[r_parent] = (
-            decision[mask].index.get_level_values(1).tolist()
-        )
-
-    for r in cp.relations:
-        sources = sources_per_relation[r.r0]
-        targets = set(target_per_relation[r.r0]) - set(sources_per_relation[r.r0])
-
-        for s, t in product(sources, targets):
-            path = nx.shortest_path(undirected, s, t)
-            if any([token in path for token in r.tokens]) and s != t:
-                triples += [TripleCandidate(s, r, t)]
-                logger.info(
-                    f" {graph.nodes[s]['lower']}, {r.project_to_text_str(graph)}, {graph.nodes[t]['lower']}"
+    # expand using coref and conj maps
+    for tri in itriples:
+        s, r, t = tri
+        for sprime, tprime in product(ncp[s], ncp[t]):
+            triples += [
+                TripleCandidate(
+                    source=sprime, target=tprime, relation=pile.relations[r]
                 )
+            ]
+
+    triples = sorted(
+        triples,
+        key=lambda x: (x.source.sroot, x.relation.sroot, x.target.sroot),
+    )
+
     return triples
 
 
-def graph_to_relations(
-    graph: nx.DiGraph, rules
-) -> Tuple[nx.DiGraph, List[TripleCandidate], List[Tuple[str, str, str]], nx.DiGraph]:
-
-    # fold graph : fold certain vertices, representing context into subgraphs
-    folded_graph = fold_graph_top(graph, rules)
-
-    logger.info(
-        f"{[(n, folded_graph.nodes[n]['lower']) for n in sorted(folded_graph.nodes())]}"
-    )
-
-    # extract relation from the folded graph
-    triples = parse_relations_basic(folded_graph)
-
-    triples_projected = [tri.project_to_text(graph) for tri in triples]
-    return graph, triples, triples_projected, folded_graph
-
-
-def yield_star_nodes(graph, node_list):
+def graph_to_maps(
+    mod_graph, pile
+) -> tuple[dict[str, set[str]], dict[str, set[str]], nx.Graph]:
     """
-    yield most specific mentions for any mentions, given a coref graph
-    :param graph:
-    :param node_list:
+
+    derive maps
+        a. relation -> source
+        b. relation -> target
+
+    :param mod_graph: nx.Digraph
+    :param pile:
+
     :return:
     """
-    nlist = set()
-    for n in node_list:
-        if "m*" in graph.nodes[n] and n in graph.nodes[n]["m*"]:
-            nlist |= {n}
-        else:
-            nlist |= yield_star_nodes(graph, graph.nodes[n]["m*"])
-    return nlist
+
+    # create relevant graphs for distance calculations : undirected, reversed ...
+    g_undirected, g_reversed, g_weighted = generate_extra_graphs(mod_graph)
+
+    relation_indices = [c.root.i for c in pile.relations]
+
+    (
+        distance_undirected,
+        distance_directed,
+        distance_levels,
+    ) = compute_distances(
+        graph=mod_graph,
+        g_undirected=g_undirected,
+        g_weighted=g_weighted,
+        indices_of_interest=relation_indices,
+    )
+
+    distance_undirected_str = to_string_keys(distance_undirected)
+    distance_directed_str = to_string_keys(distance_directed)
+    distance_levels_str = to_string_keys(distance_levels)
+
+    target_candidate_roots = pile.targets.sroots
+    source_candidate_roots = pile.sources.sroots
+    relation_candidate_roots = pile.relations.sroots
+
+    targets_per_relation: dict[str, set[str]] = derive_targets_per_relaton(
+        relation_candidate_roots, target_candidate_roots, distance_directed_str
+    )
+
+    sources_per_relation: dict[str, set[str]] = derive_sources_per_relation(
+        relation_candidate_roots,
+        source_candidate_roots,
+        distance_undirected_str,
+        distance_levels_str,
+        pile.sources.roots,
+    )
+    return (
+        sources_per_relation,
+        targets_per_relation,
+        g_undirected,
+    )
 
 
-def expand_mstar(candidates, coref_graph):
-    candidates_out = set()
-    for c in candidates:
-        if c in coref_graph.nodes():
-            candidates_out |= yield_star_nodes(coref_graph, coref_graph.nodes[c]["m*"])
-        else:
-            candidates_out |= {c}
-    return list(candidates_out)
+def form_triples(
+    pile: SRTPile,
+    sources_per_relation: dict[str, set[str]],
+    targets_per_relation: dict[str, set[str]],
+    g_undirected: nx.Graph,
+    relaxed=False,
+) -> list:
+    triples = []
+
+    for sroot in pile.relations.sroots:
+        sources = sources_per_relation[sroot]
+        targets = list(targets_per_relation[sroot] - set(sources))
+
+        if sources and targets:
+            for s, t in product(sources, targets):
+                si, ti, srooti = map(int, (s, t, sroot))
+                path = nx.shortest_path(g_undirected, si, ti)
+                # to make sure relation is in dep tree path between the source and the target
+                if s != t and srooti in path:
+                    triples += [(s, sroot, t)]
+        elif not sources and relaxed:
+            triples += [
+                TripleCandidate(
+                    source=Source(),
+                    relation=pile.relations[sroot],
+                    target=pile.targets[t],
+                )
+                for t in targets
+            ]
+        elif not targets and relaxed:
+            triples += [
+                TripleCandidate(
+                    source=pile.sources[s],
+                    relation=pile.relations[sroot],
+                    target=Target(),
+                )
+                for s in sources
+            ]
+
+    return triples
 
 
-def expand_candidate(candidate_token: int, metagraph, coref_graph):
-
-    # t = st.tree
-    # [(t.nodes[n]["lower"], t.nodes[n]["tag_"], t.nodes[n]["dep_"]) for n in t.nodes() if "lower" in t.nodes[n]]
-
-    candidates = [candidate_token]
-    if metagraph.nodes[candidate_token]["leaf"].is_compound():
-        candidates = metagraph.nodes[candidate_token]["leaf"].compute_conj()
-    candidates = expand_mstar(candidates, coref_graph)
-    return candidates
-
-
-def doc_to_chunks(rdoc):
-    """
-
-    :param rdoc:
-    :return: (root, start, end) NB: last token is at end-1
-    """
-    acc = []
-    for chunk in rdoc.noun_chunks:
-        acc += [(chunk.root.i, chunk.start, chunk.end)]
-    return acc
+def sieve_sources_targets(
+    pile: CandidatePile,
+) -> tuple[CandidatePile, CandidatePile]:
+    sources, targets = CandidatePile(), CandidatePile()
+    for c in pile:
+        if not c.root.dep_ == "pobj":
+            sources.append(c)
+        if True:
+            targets.append(c)
+    return sources, targets
 
 
-def parse_relations_advanced(
+def phrase_to_triples(
     phrase, nlp, rules, filter_pronouns=True
-) -> Tuple[
-    nx.DiGraph,
-    nx.DiGraph,
-    nx.DiGraph,
-    List[TripleCandidate],
-    List[Tuple[str, str, str]],
-]:
-    logging.info(f"{phrase}")
+) -> Tuple[List[TripleCandidate], List[Tuple[str, str, str]], nx.DiGraph]:
+    logger.info(f"{phrase}")
 
-    rdoc, graph = dep_tree_from_phrase(nlp, phrase)
+    rdoc, graph = phrase_to_deptree(nlp, phrase)
 
-    # chunks = doc_to_chunks(rdoc)
+    triples = graph_to_triples(rdoc, graph, rules)
 
-    _, triples, triples_projected, metagraph = graph_to_relations(graph, rules)
-
-    coref_graph = render_mstar_graph(rdoc, graph)
-
-    triples_expanded = []
-
-    for triple in triples:
-        s_candidates = expand_candidate(
-            triple.source, metagraph=metagraph, coref_graph=coref_graph
-        )
-        t_candidates = expand_candidate(
-            triple.target, metagraph=metagraph, coref_graph=coref_graph
-        )
-
-        triples_expanded += [
-            TripleCandidate(source=sp, relation=triple.relation, target=tp)
-            for sp, tp in product(s_candidates, t_candidates)
-        ]
-
+    triples = [tri.normalize_relation() for tri in triples]
     if filter_pronouns:
-        triples_expanded = [
-            tri
-            for tri in triples_expanded
-            if graph.nodes[tri.source]["tag_"] != "PRP"
-            and graph.nodes[tri.target]["tag_"] != "PRP"
-        ]
-
-    triples_proj = [tri.project_to_text(graph) for tri in triples_expanded]
-    return graph, coref_graph, metagraph, triples_expanded, triples_proj
+        triples = [tri for tri in triples if not tri.has_pronouns()]
+    triples_proj = [tri.project_to_text() for tri in triples]
+    return triples, triples_proj, graph
 
 
 def add_hash(triples_expanded, graph):
     agg = []
 
     for tri in triples_expanded:
-        source_txt = ACandidate.concretize(tri.source, graph)
-        target_txt = ACandidate.concretize(tri.target, graph)
-        relation_txt = tri.relation.project_to_text_str(graph)
+        # TODO
+        source_txt = tri.relation.project_to_text_str()
+        target_txt = tri.relation.project_to_text_str()
+        relation_txt = tri.relation.project_to_text_str()
 
         subitem = [
             {
@@ -627,7 +685,9 @@ def add_hash(triples_expanded, graph):
                 "type": "source",
             },
             {
-                "hash": hashlib.sha256(relation_txt.encode("utf-8")).hexdigest(),
+                "hash": hashlib.sha256(
+                    relation_txt.encode("utf-8")
+                ).hexdigest(),
                 "text": relation_txt,
                 "type": "relation",
             },
