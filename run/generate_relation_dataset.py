@@ -57,7 +57,7 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
             g.add_node(ti, label=t)
             g.add_edge(si, ti, label=r)
     if plot:
-        plot_graph(g, fig_path, f"doc")
+        plot_graph(g, fig_path, f"doc", prog="sfdp")
 
     dacc = []
     for i, phrase, triples, text_triples in acc:

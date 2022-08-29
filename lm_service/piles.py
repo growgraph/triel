@@ -16,16 +16,15 @@ class CandidatePile:
     """
 
     # TODO refactor out _candidates
-    sroot_to_candidate: dict[int, CandidateType] = dataclasses.field(default_factory=dict)  # type: ignore
-    _candidates: list[CandidateType] = dataclasses.field(default_factory=list)  # type: ignore
-
-    def __post_init__(self):
-        for j, r in enumerate(self._candidates):
-            r.r0 = j
-            self.sroot_to_candidate[r.root.s] = r
+    # _candidates: list[int]
+    _root_to_candidate: dict[str, CandidateType] = dataclasses.field(default_factory=dict)  # type: ignore
+    # def __post_init__(self):
+    #     for j, r in enumerate(self._candidates):
+    #         r.r0 = j
+    #         self.sroot_to_candidate[r.root.s] = r
 
     def __len__(self) -> int:
-        return len(self.candidates)
+        return len(self._root_to_candidate)
 
     def __getitem__(self, key) -> CandidateType:
         """
@@ -33,10 +32,10 @@ class CandidatePile:
         :return: relation index in pile : relation tokens
         """
 
-        return self.sroot_to_candidate[key]
+        return self._root_to_candidate[key]
 
     def __repr__(self):
-        return str(self.map)
+        return str(self._root_to_candidate)
 
     def __iter__(self):
         for r in self.candidates:
@@ -58,15 +57,7 @@ class CandidatePile:
 
         :return: relation index in pile : relation tokens
         """
-        return self._candidates
-
-    @property
-    def map(self) -> dict[int, list[int]]:
-        """
-
-        :return: relation index in pile : relation tokens
-        """
-        return {r.r0: [x for x in r.stokens] for r in self.candidates}
+        return self._root_to_candidate.values()
 
     @property
     def roots(self) -> list[Token]:
@@ -74,53 +65,68 @@ class CandidatePile:
 
     @property
     def sroots(self) -> list[str]:
-        return [r.root.s for r in self.candidates]
+        return list(self._root_to_candidate.keys())
 
     @property
     def tokens(self) -> set[str]:
         return set([x for r in self.candidates for x in r.stokens])
 
-    def append(self, r: CandidateType, index=None):
-        r.r0 = len(self.candidates)
-        self.sroot_to_candidate[r.root.s if index is None else index] = r
-        self._candidates += [r]
+    def append(self, r: CandidateType):
+        self._root_to_candidate[r.root.s] = r
 
     def project_to_text(self):
-        return [c.project_to_text_str() for c in self._candidates]
+        return [
+            c.project_to_text_str() for c in self._root_to_candidate.values()
+        ]
 
     def drop_amod_vbn(self):
         new = deepcopy(self)
-        new._candidates = [c.drop_amod_vbn() for c in new._candidates]
+        new._root_to_candidate = {
+            k: c.drop_amod_vbn() for k, c in new._root_to_candidate.items()
+        }
         return new
 
     def drop_cc(self):
         new = deepcopy(self)
-        new._candidates = [c.drop_cc() for c in new._candidates]
+        new._root_to_candidate = {
+            k: c.drop_cc() for k, c in new._root_to_candidate.items()
+        }
         return new
 
     def drop_punct(self):
         new = deepcopy(self)
-        new._candidates = [c.drop_punct() for c in new._candidates]
+        new._root_to_candidate = {
+            k: c.drop_punct() for k, c in new._root_to_candidate.items()
+        }
         return new
 
     def drop_articles(self):
         new = deepcopy(self)
-        new._candidates = [c.drop_articles() for c in new._candidates]
+        new._root_to_candidate = {
+            k: c.drop_articles() for k, c in new._root_to_candidate.items()
+        }
         return new
 
     def normalize(self):
         new = deepcopy(self)
-        new._candidates = [c.normalize() for c in new._candidates]
+        new._root_to_candidate = {
+            k: c.normalize() for k, c in new._root_to_candidate.items()
+        }
         return new
 
     def clean_dangling_edges(self):
         new = deepcopy(self)
-        new._candidates = [c.clean_dangling_edges() for c in new._candidates]
+        new._root_to_candidate = {
+            k: c.clean_dangling_edges()
+            for k, c in new._root_to_candidate.items()
+        }
         return new
 
     def sort_index(self):
         new = deepcopy(self)
-        new._candidates = [c.sort_index() for c in new._candidates]
+        new._root_to_candidate = {
+            k: c.sort_index() for k, c in new._root_to_candidate.items()
+        }
         return new
 
     def promote_to_metaindex(self, i: int):
@@ -173,7 +179,7 @@ def partition_conjunctive_dfs(
     stoken = Token.i2s(itoken)
 
     if c.token(stoken).dep_ == "conj":
-        current_cand = Candidate()
+        current_cand = SourceOrTarget()
         iparent0 = iparent
     current_cand.append(c.token(stoken))
 
@@ -193,7 +199,7 @@ def partition_conjunctive_dfs(
 
 def partition_conjunctive_wrapper(
     candidate: CandidateType, graph: nx.DiGraph
-) -> CandidatePile:
+) -> list[Candidate]:
     """
 
     TODO: potentially graph is not a necessary input (can be replaced succs of candidate)
@@ -218,7 +224,7 @@ def partition_conjunctive_wrapper(
     accumulist = [(x, y.clean_dangling_edges()) for x, y in accumulist]
 
     accumulist = sorted(accumulist, key=lambda x: x[0])
-    acc = CandidatePile()
+    acc: list[Candidate] = []
 
     (_, root_candidate), clauses = accumulist[0], accumulist[1:]
 

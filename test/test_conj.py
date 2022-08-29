@@ -172,18 +172,19 @@ class TestR(unittest.TestCase):
         lens = dict()
         for key in ["coref", "cheops0"]:
             lens[key] = {}
-            apile = CandidatePile()
+            apile = []
             rdoc, graph = phrase_to_deptree(self.nlp, self.documents[key])
             pile, _, mgraph = graph_to_candidate_pile(graph, self.rules)
             lens[key]["was"] = len(pile.sources)
 
             for c in pile.sources:
                 accum = partition_conjunctive_wrapper(c, graph)
-                accum = (
-                    accum.sort_index().drop_punct().drop_cc().drop_articles()
-                )
+                accum = [
+                    x.sort_index().drop_punct().drop_cc().drop_articles()
+                    for x in accum
+                ]
                 apile += accum
-            text = apile.project_to_text()
+            text = [x.project_to_text() for x in apile]
             lens[key]["became"] = len(apile)
             print(text)
         self.assertEqual(

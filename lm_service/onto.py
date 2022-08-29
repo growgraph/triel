@@ -104,7 +104,6 @@ class Candidate(JSONWizard):
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
 
-    r0: int | None = None  # position in CandidatePile
     _tokens: dict[str, Token] = dataclasses.field(default_factory=dict)
     _index_vec: list[str] = dataclasses.field(default_factory=list)
     _root: str | None = None
@@ -459,6 +458,9 @@ class Candidate(JSONWizard):
         ]
         self.drop_tokens(drop_aux_indices)
         return self
+
+    def normalize(self):
+        pass
 
     def to_nx_graph(self, offset=0, use_successors=True):
 
