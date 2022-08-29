@@ -189,7 +189,6 @@ def find_sourcetarget_subtree_dfs(
 
     if not deq:
         return
-    # current_vertex, level = q.popleft()
     current_vertex, level = deq.pop()
 
     if (
@@ -669,11 +668,10 @@ def phrase_to_triples(
     return triples, triples_proj, graph
 
 
-def add_hash(triples_expanded, graph):
+def add_hash(triples_expanded):
     agg = []
 
     for tri in triples_expanded:
-        # TODO
         source_txt = tri.relation.project_to_text_str()
         target_txt = tri.relation.project_to_text_str()
         relation_txt = tri.relation.project_to_text_str()
