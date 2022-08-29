@@ -74,10 +74,7 @@ class TestR(unittest.TestCase):
         )
 
         self.assertEqual(
-            {
-                k: [c.lemmas for c in p._candidates]
-                for k, p in enumerate(piles)
-            },
+            {k: [c.lemmas for c in p.candidates] for k, p in enumerate(piles)},
             {
                 0: [["be", "affect", "by"]],
                 1: [["be"], ["determine"], ["will", "allow"]],
@@ -109,10 +106,7 @@ class TestR(unittest.TestCase):
         )
 
         self.assertEqual(
-            {
-                k: [c.lemmas for c in p._candidates]
-                for k, p in enumerate(piles)
-            },
+            {k: [c.lemmas for c in p.candidates] for k, p in enumerate(piles)},
             {
                 0: [
                     ["the", "medium"],
