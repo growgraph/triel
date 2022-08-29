@@ -31,18 +31,18 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
     for i in range(nmax):
         fragment = " ".join(phrases[i : i + window_size])
         print(fragment)
-        (triples_expanded, triples_proj, graph) = phrase_to_triples(
+        (triples_expanded, triples_text, graph) = phrase_to_triples(
             fragment, nlp, rules
         )
-        acc += [(i, fragment, triples_expanded, triples_proj)]
+        acc += [(i, fragment, triples_expanded, triples_text)]
         if plot:
             plot_graph(graph, fig_path, f"fragment_{i}_full")
 
-    sources = [s for _, _, _, triples_proj in acc for s, _, _ in triples_proj]
+    sources = [s for _, _, _, triples_text in acc for s, _, _ in triples_text]
     relations = [
-        r for _, _, _, triples_proj in acc for _, r, _ in triples_proj
+        r for _, _, _, triples_text in acc for _, r, _ in triples_text
     ]
-    targets = [t for _, _, _, triples_proj in acc for _, _, t in triples_proj]
+    targets = [t for _, _, _, triples_text in acc for _, _, t in triples_text]
 
     tokens = sorted(set(set(sources) | set(targets) | set(relations)))
     token_map = {t: ii for ii, t in enumerate(tokens)}
@@ -59,17 +59,31 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
     if plot:
         plot_graph(g, fig_path, f"doc", prog="sfdp")
 
-    dacc = []
+    df_acc = []
     for i, phrase, triples, text_triples in acc:
         for triple, text_relation in zip(triples, text_triples):
-            dacc += [
+            df_acc += [
                 [i]
-                + [triple.source, triple.relation.stokens, triple.target]
+                + [
+                    triple.source.stokens,
+                    triple.relation.stokens,
+                    triple.target.stokens,
+                ]
                 + list(text_relation)
                 + [phrase]
             ]
     df = pd.DataFrame(
-        dacc, columns=["ip", "is", "ir", "it", "s", "r", "t", "phrase"]
+        df_acc,
+        columns=[
+            "phrase_ix",
+            "source_ix",
+            "relation_ix",
+            "target_ix",
+            "relation_txt",
+            "relation_txt",
+            "target_txt",
+            "phrase",
+        ],
     )
     df.to_csv(os.path.join(fig_path, "relations.csv"))
 
