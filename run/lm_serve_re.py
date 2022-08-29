@@ -36,13 +36,9 @@ def re():
         phrases = normalize_input_text(text, terminal_full_stop=False)
         phrases = [transform_advcl(nlp, p) for p in phrases]
         fragment = ". ".join(phrases)
-        (
-            graph,
-            coref_graph,
-            metagraph,
-            triples_expanded,
-            triples_proj,
-        ) = phrase_to_triples(fragment, nlp, rules)
+        (triples_expanded, triples_proj, graph) = phrase_to_triples(
+            fragment, nlp, rules
+        )
 
         return jsonify({"triples": triples_proj}), 200
 
@@ -85,14 +81,10 @@ if __name__ == "__main__":
             phrases = normalize_input_text(text, terminal_full_stop=False)
             phrases = [transform_advcl(nlp, p) for p in phrases]
             fragment = ". ".join(phrases)
-            (
-                graph,
-                coref_graph,
-                metagraph,
-                triples_expanded,
-                triples_proj,
-            ) = phrase_to_triples(fragment, nlp, rules)
-            r = add_hash(triples_expanded, graph)
+            (triples_expanded, triples_proj, graph) = phrase_to_triples(
+                fragment, nlp, rules
+            )
+            r = add_hash(triples_expanded)
             return jsonify({"triples": r}), 200
 
     print(f" wsgi: host {wsgi_re.host}")
