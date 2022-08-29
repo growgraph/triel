@@ -119,7 +119,6 @@ class TestCoref(unittest.TestCase):
         map_chain_to_most_specific_str = to_string(map_chain_to_most_specific)
 
         ncp = coref_candidates(
-            graph,
             candidate_depot,
             map_subbable_to_chain_str,
             map_chain_to_most_specific_str,

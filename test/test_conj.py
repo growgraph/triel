@@ -178,7 +178,7 @@ class TestR(unittest.TestCase):
             lens[key]["was"] = len(pile.sources)
 
             for c in pile.sources:
-                accum = partition_conjunctive_wrapper(c, graph)
+                accum = partition_conjunctive_wrapper(c)
                 accum = [
                     x.sort_index().drop_punct().drop_cc().drop_articles()
                     for x in accum

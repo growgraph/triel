@@ -15,13 +15,7 @@ class CandidatePile:
     pile of candidates of one type
     """
 
-    # TODO refactor out _candidates
-    # _candidates: list[int]
     _root_to_candidate: dict[str, CandidateType] = dataclasses.field(default_factory=dict)  # type: ignore
-    # def __post_init__(self):
-    #     for j, r in enumerate(self._candidates):
-    #         r.r0 = j
-    #         self.sroot_to_candidate[r.root.s] = r
 
     def __len__(self) -> int:
         return len(self._root_to_candidate)
@@ -154,58 +148,54 @@ class SRTPile:
 
 def partition_conjunctive_dfs(
     c: CandidateType,
-    graph: nx.DiGraph,
-    deq: deque[tuple[int, int]],
+    deq: deque[tuple[str, str]],
     current_cand,
-    accumulist: list[tuple[int, Candidate]],
-    iparent0: int = -1,
+    accumulist: list[tuple[str, Candidate]],
+    sparent0: str = "/",
 ):
     """
     partition candidate into conjunctive pieces used DFS (depth first search)
 
     :param c: the original candidate that potentially contains multiple conj pieces
-    :param graph:
     :param deq: (!) the initial call should have only a single vertex in q
     :param current_cand: candidate to accumulate the conjunctive piece
     :param accumulist: list that accumulates [(iparent0, transformed Candidate)]
-    :param iparent0: for each Candidate iparent0 is the index of parent graph vertex
+    :param sparent0: for each Candidate sparent0 is the index of parent graph vertex (NB : "/" < "[0,9]")
 
     :return:
     """
 
     if not deq:
         return
-    itoken, iparent = deq.pop()
-    stoken = Token.i2s(itoken)
+    stoken, sparent = deq.pop()
 
     if c.token(stoken).dep_ == "conj":
         current_cand = SourceOrTarget()
-        iparent0 = iparent
+        sparent0 = sparent
     current_cand.append(c.token(stoken))
 
     if len(current_cand) == 1:
-        accumulist.append((iparent0, current_cand))
+        accumulist.append((sparent0, current_cand))
 
-    successors = [
-        x for x in graph.successors(itoken) if Token.i2s(x) in c.stokens
-    ]
+    successors = [s for s in c.token(stoken).successors]
 
     for v in successors:
-        deq.append((v, itoken))
+        deq.append((v, stoken))
         partition_conjunctive_dfs(
-            c, graph, deq, current_cand, accumulist, iparent0
+            c,
+            deq,
+            current_cand,
+            accumulist,
+            sparent0,
         )
 
 
 def partition_conjunctive_wrapper(
-    candidate: CandidateType, graph: nx.DiGraph
+    candidate: CandidateType,
 ) -> list[Candidate]:
     """
 
-    TODO: potentially graph is not a necessary input (can be replaced succs of candidate)
-
     :param candidate:
-    :param graph:
     :return:
     """
 
@@ -213,12 +203,18 @@ def partition_conjunctive_wrapper(
     deq: deque = deque()
 
     # queue starts with a root
-    deq.append((candidate.root.i, -1))
+    deq.append((candidate.root.s, "/"))
 
     cand: SourceOrTarget = SourceOrTarget()
-    accumulist: list[tuple[int, Candidate]] = []
+    accumulist: list[tuple[str, Candidate]] = []
 
-    partition_conjunctive_dfs(candidate, graph, deq, cand, accumulist, -1)
+    partition_conjunctive_dfs(
+        candidate,
+        deq,
+        cand,
+        accumulist,
+        "/",
+    )
 
     # dangling edges appear during partition
     accumulist = [(x, y.clean_dangling_edges()) for x, y in accumulist]
@@ -231,8 +227,7 @@ def partition_conjunctive_wrapper(
     acc.append(root_candidate)
 
     for _, candidate in clauses:
-        iparent, _ = clauses[0]
-        sparent = Token.i2s(iparent)
+        sparent, _ = clauses[0]
         c_prime = deepcopy(root_candidate)
         c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
         acc.append(

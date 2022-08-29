@@ -495,7 +495,6 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
     token_dict = {t.s: t for t in tokens}
 
     (
-        pile,
         sources_per_relation,
         targets_per_relation,
         g_undirected,
@@ -517,7 +516,6 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
     # ncp : dict[str, list[Candidate]]
     # for each root -> a list of relevant candidates
     ncp = coref_candidates(
-        graph,
         candidate_depot,
         map_subbable_to_chain_str,
         map_chain_to_most_specific_str,
@@ -546,10 +544,8 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
 
 def graph_to_maps(
     mod_graph, pile
-) -> tuple[SRTPile, dict[str, set[str]], dict[str, set[str]], nx.Graph]:
+) -> tuple[dict[str, set[str]], dict[str, set[str]], nx.Graph]:
     """
-
-    TODO pile might not be a necessary input
 
     derive maps
         a. relation -> source
@@ -597,7 +593,6 @@ def graph_to_maps(
         pile.sources.roots,
     )
     return (
-        pile,
         sources_per_relation,
         targets_per_relation,
         g_undirected,

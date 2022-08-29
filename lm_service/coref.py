@@ -202,7 +202,6 @@ def sub_coreference(
 
 
 def coref_candidates(
-    dep_tree: nx.DiGraph,
     candidate_depot: CandidatePile,
     map_subbable_to_chain: defaultdict[str, list[str]],
     map_chain_to_most_specific: defaultdict[str, list[str]],
@@ -228,7 +227,7 @@ def coref_candidates(
     # unfold conjunction
     for c in candidate_depot:
         if unfold_conjunction:
-            ncp[c.root.s].extend(partition_conjunctive_wrapper(c, dep_tree))
+            ncp[c.root.s].extend(partition_conjunctive_wrapper(c))
         else:
             ncp[c.root.s] = [c]
 
