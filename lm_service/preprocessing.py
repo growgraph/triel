@@ -1,8 +1,11 @@
 import re
+
 from unidecode import unidecode
 
 
-def split_tokens_into_phrases(tokens_list, terminal_puncts=(".", "!", "?")):
+def split_tokens_into_phrases(tokens_list, terminal_puncts=None):
+    if terminal_puncts is None:
+        terminal_puncts = {".", "!", "?"}
     phrases = []
     cur_phrase = [tokens_list[0]]
 
@@ -23,10 +26,22 @@ def split_tokens_into_phrases(tokens_list, terminal_puncts=(".", "!", "?")):
     return phrases
 
 
-def normalize_input_text(article, terminal_full_stop=True):
-    article = unidecode(article)
+def normalize_input_text(text, terminal_full_stop=True):
+    """
 
-    tokenized_agg = re.findall(r"[\w']+|[.,!?;:-\\(\\)]", article)
+    :param text:
+    :param terminal_full_stop: add terminal full stop to each phrase, or not
+    :return:
+    """
+    text = unidecode(text)
+
+    # split if word or punctuation
+    # regex
+    # 1. keep floats together
+    # 2. word with apostrophe or dash is considered as a whole
+    # 3. .,!?;:\()<>
+    pat = r"\d+(?:[.,]\d+)?|[\w\'\-\/]+|[.,!?;:\\(\)<>%]"
+    tokenized_agg = re.findall(pat, text)
 
     phrases = split_tokens_into_phrases(tokenized_agg)
     if not terminal_full_stop:
