@@ -14,12 +14,32 @@ from lm_service.piles import CandidatePile, partition_conjunctive_wrapper
 logger = logging.getLogger(__name__)
 
 
-def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
+def get_subtree(graph: nx.DiGraph, v, acc):
+    acc += [v]
+    for w in graph.successors(v):
+        get_subtree(graph, w, acc)
+
+
+def graph_component_maps(graph: nx.DiGraph) -> dict[int, tuple[int, int]]:
+    roots = [n for n, d in graph.in_degree() if d == 0]
+
+    map_i_sg_j = {}
+    ss = 0
+    for sg, r in enumerate(sorted(roots)):
+        acc: list[int] = []
+        get_subtree(graph, r, acc)
+        for i in acc:
+            map_i_sg_j[i] = (sg, i - ss)
+        ss += len(acc)
+
+    return map_i_sg_j
+
+
+def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
     """
     render super graph using coreferee package
 
     :param rdoc:
-    :param graph:
     :return: coref graph is a Tree of 4 levels:
         root -> chain -> blank -> token
         chain corresponds to one co-referenced entity, like [("they"), ("Mary", "Peter")]
@@ -29,7 +49,7 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
             - 1 or many blanks per chain
             - 1 or many tokens per blank
 
-        NB: most specific mention is encodedin in blank attribute `most_specific`
+        NB: most specific mention is encoded by blank attribute `most_specific`
     """
 
     chains = rdoc._.coref_chains if rdoc._.coref_chains is not None else []
@@ -38,11 +58,6 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
 
     # edges for coref graph
     es_coref = []
-
-    # mention_nodes = []
-
-    # map : chain_id -> most_specific_mention_id
-    concept_specific_blank: dict[int, int] = dict()
 
     vertex_counter = max([token.i for token in rdoc]) + 1
     coref_root = vertex_counter
@@ -91,22 +106,8 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
             es_coref.append((coref_chain, coref_blank))
             vertex_counter += 1
             for y in x.token_indexes:
-                vs_coref += [(y, graph.nodes[y])]
+                vs_coref += [(y, {})]
                 es_coref.append((coref_blank, y))
-
-    chs = {
-        j: [[graph.nodes[x]["lower"] for x in item] for item in k.mentions]
-        for j, k in enumerate(chains)
-    }
-    logger.info(f"{chs}")
-    chs = {
-        j: [
-            graph.nodes[x]["lower"]
-            for x in k.mentions[k.most_specific_mention_index]
-        ]
-        for j, k in enumerate(chains)
-    }
-    logger.info(f"specifics {chs}")
 
     coref_graph = nx.DiGraph()
 
@@ -148,7 +149,7 @@ def render_coref_maps_wrapper(
     rdoc, graph
 ) -> tuple[defaultdict[int, list[int]], defaultdict[int, list[int]]]:
 
-    coref_graph = render_coref_graph(rdoc, graph)
+    coref_graph = render_coref_graph(rdoc)
     (
         map_subbable_to_chain,
         map_chain_to_most_specific,

@@ -37,7 +37,7 @@ def main(phrase, nlp):
 
     plot_graph(gmetagraph, fig_path, f"{chash[:6]}_folded")
 
-    coref_graph = render_coref_graph(rdoc, nx_graph)
+    coref_graph = render_coref_graph(rdoc)
 
     plot_graph(coref_graph, fig_path, f"{chash[:6]}_coref")
 

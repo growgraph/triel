@@ -56,7 +56,7 @@ class TestCoref(unittest.TestCase):
     def test_coref_substitution(self):
         doc = self.phrase
         rdoc, graph = phrase_to_deptree(self.nlp, doc)
-        coref_graph = render_coref_graph(rdoc, graph)
+        coref_graph = render_coref_graph(rdoc)
         (
             map_subbable_to_chain,
             map_chain_to_most_specific,

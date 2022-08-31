@@ -775,10 +775,10 @@ class TestR(unittest.TestCase):
         documents = {
             key: self.documents[key]
             for key in [
-                "near-field",
-                "cheops0_trunc",
+                # "near-field",
+                # "cheops0_trunc",
                 "cheops_ext",
-                "photometric",
+                # "photometric",
             ]
         }
         acc_triples = []
