@@ -8,31 +8,25 @@ from typing import Any
 import networkx as nx
 from spacy.tokens import Doc
 
+from lm_service.graph import get_subtree_wrapper
 from lm_service.onto import Candidate, Token
 from lm_service.piles import CandidatePile, partition_conjunctive_wrapper
 
 logger = logging.getLogger(__name__)
 
 
-def get_subtree(graph: nx.DiGraph, v, acc):
-    acc += [v]
-    for w in graph.successors(v):
-        get_subtree(graph, w, acc)
-
-
 def graph_component_maps(graph: nx.DiGraph) -> dict[int, tuple[int, int]]:
     roots = [n for n, d in graph.in_degree() if d == 0]
 
-    map_i_sg_j = {}
-    ss = 0
+    map_tree_subtree_index = {}
+    sum_nodes = 0
     for sg, r in enumerate(sorted(roots)):
-        acc: list[int] = []
-        get_subtree(graph, r, acc)
+        acc = get_subtree_wrapper(graph, r)
         for i in acc:
-            map_i_sg_j[i] = (sg, i - ss)
-        ss += len(acc)
+            map_tree_subtree_index[i] = (sg, i - sum_nodes)
+        sum_nodes += len(acc)
 
-    return map_i_sg_j
+    return map_tree_subtree_index
 
 
 def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
