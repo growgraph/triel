@@ -10,15 +10,15 @@ import coreferee
 import spacy
 import yaml
 
-from lm_service.graph import phrase_to_deptree, transform_advcl
-from lm_service.onto import to_string_keys
-from lm_service.preprocessing import normalize_input_text
-from lm_service.relation import (
-    compute_distances,
-    generate_extra_graphs,
-    graph_to_candidate_pile,
-    graph_to_triples,
+from lm_service.coref import graph_component_maps, render_coref_maps_wrapper
+from lm_service.graph import (
+    phrase_to_deptree,
+    relabel_nodes_and_key,
+    transform_advcl,
 )
+from lm_service.onto import AToken, apply_map
+from lm_service.preprocessing import normalize_input_text
+from lm_service.relation import graph_to_triples
 
 logger = logging.getLogger(__name__)
 
@@ -732,44 +732,44 @@ class TestR(unittest.TestCase):
         },
     }
 
-    def test_consecutive_candidates(self):
+    # def test_consecutive_candidates(self):
+    #
+    #     for document in self.documents.values():
+    #         rdoc, graph = phrase_to_deptree(self.nlp, document)
+    #         cp, _, mgraph = graph_to_candidate_pile(graph, rules=self.rules)
 
-        for document in self.documents.values():
-            rdoc, graph = phrase_to_deptree(self.nlp, document)
-            cp, _, mgraph = graph_to_candidate_pile(graph, rules=self.rules)
-
-    def test_distances(self):
-        distance_check = {}
-        for key, document in self.documents.items():
-            rdoc, graph0 = phrase_to_deptree(self.nlp, document)
-            pile, _, graph = graph_to_candidate_pile(graph0, self.rules)
-            g_undirected, g_reversed, g_weighted = generate_extra_graphs(graph)
-            relation_indices = [int(c.root.s) for c in pile.relations]
-            (
-                distance_undirected,
-                distance_directed,
-                distance_levels,
-            ) = compute_distances(
-                graph,
-                g_undirected=g_undirected,
-                g_weighted=g_weighted,
-                indices_of_interest=relation_indices,
-            )
-
-            distance_undirected = to_string_keys(distance_undirected)
-            distance_directed = to_string_keys(distance_directed)
-            distance_levels = to_string_keys(distance_levels)
-            distance_check.update(
-                {
-                    key: {
-                        "undirected": distance_undirected,
-                        "directed": distance_directed,
-                        "levels": distance_levels,
-                    }
-                }
-            )
-
-        self.assertEqual(distance_check, self.reference_distance)
+    # def test_distances(self):
+    #     distance_check = {}
+    #     for key, document in self.documents.items():
+    #         rdoc, graph0 = phrase_to_deptree(self.nlp, document)
+    #         pile, _, graph = graph_to_candidate_pile(graph0, self.rules)
+    #         g_undirected, g_reversed, g_weighted = generate_extra_graphs(graph)
+    #         relation_indices = [int(c.root.s) for c in pile.relations]
+    #         (
+    #             distance_undirected,
+    #             distance_directed,
+    #             distance_levels,
+    #         ) = compute_distances(
+    #             graph,
+    #             g_undirected=g_undirected,
+    #             g_weighted=g_weighted,
+    #             indices_of_interest=relation_indices,
+    #         )
+    #
+    #         distance_undirected = to_string_keys(distance_undirected)
+    #         distance_directed = to_string_keys(distance_directed)
+    #         distance_levels = to_string_keys(distance_levels)
+    #         distance_check.update(
+    #             {
+    #                 key: {
+    #                     "undirected": distance_undirected,
+    #                     "directed": distance_directed,
+    #                     "levels": distance_levels,
+    #                 }
+    #             }
+    #         )
+    #
+    #     self.assertEqual(distance_check, self.reference_distance)
 
     def test_relation(self):
         documents = {
@@ -783,10 +783,42 @@ class TestR(unittest.TestCase):
         }
         acc_triples = []
         triples_projected = {}
+        import networkx as nx
+
         for key, doc in documents.items():
             rdoc, graph = phrase_to_deptree(self.nlp, doc)
 
-            triples = graph_to_triples(rdoc, graph, self.rules)
+            # cast index to compound index
+            map_tree_subtree_index = graph_component_maps(graph)
+            map_tree_subtree_index = {
+                k: AToken.ituple2stuple(v)
+                for k, v in map_tree_subtree_index.items()
+            }
+            # graph_relabeled = nx.relabel_nodes(graph, map_tree_subtree_index)
+            graph_relabeled = relabel_nodes_and_key(
+                graph, map_tree_subtree_index, "s"
+            )
+
+            # coref maps
+            (
+                map_subbable_to_chain,
+                map_chain_to_most_specific,
+            ) = render_coref_maps_wrapper(rdoc)
+
+            (
+                map_subbable_to_chain_str,
+                map_chain_to_most_specific_str,
+            ) = apply_map(
+                [map_subbable_to_chain, map_chain_to_most_specific],
+                map_tree_subtree_index,
+            )
+
+            triples = graph_to_triples(
+                graph_relabeled,
+                map_subbable_to_chain_str,
+                map_chain_to_most_specific_str,
+                self.rules,
+            )
             triples = [tri.normalize_relation() for tri in triples]
             acc_triples += triples
 

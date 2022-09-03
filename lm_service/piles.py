@@ -4,7 +4,13 @@ import dataclasses
 from collections import deque
 from copy import deepcopy
 
-from lm_service.onto import Candidate, CandidateType, SourceOrTarget, Token
+from lm_service.onto import (
+    Candidate,
+    CandidateType,
+    SourceOrTarget,
+    Token,
+    TokenIndexT,
+)
 
 
 @dataclasses.dataclass(repr=False)
@@ -149,10 +155,10 @@ class SRTPile:
 
 def partition_conjunctive_dfs(
     c: CandidateType,
-    deq: deque[tuple[str, str]],
+    deq: deque[tuple[TokenIndexT, TokenIndexT]],
     current_cand,
-    accumulist: list[tuple[str, Candidate]],
-    sparent0: str = "/",
+    accumulist: list[tuple[TokenIndexT, Candidate]],
+    sparent0: TokenIndexT,
 ):
     """
     partition candidate into conjunctive pieces used DFS (depth first search)
@@ -201,20 +207,20 @@ def partition_conjunctive_wrapper(
     """
 
     # init partition_conjunctive_dfs parameters
-    deq: deque = deque()
+    deq: deque[tuple[TokenIndexT, TokenIndexT]] = deque()
 
     # queue starts with a root
-    deq.append((candidate.root.s, "/"))
+    deq.append((candidate.root.s, candidate.root.prior_s()))
 
     cand: SourceOrTarget = SourceOrTarget()
-    accumulist: list[tuple[str, Candidate]] = []
+    accumulist: list[tuple[TokenIndexT, Candidate]] = []
 
     partition_conjunctive_dfs(
-        candidate,
-        deq,
-        cand,
-        accumulist,
-        "/",
+        c=candidate,
+        deq=deq,
+        current_cand=cand,
+        accumulist=accumulist,
+        sparent0=candidate.root.prior_s(),
     )
 
     # dangling edges appear during partition

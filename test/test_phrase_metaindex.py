@@ -6,11 +6,20 @@ import unittest
 from pathlib import Path
 
 import coreferee
+import networkx as nx
 import spacy
 import yaml
 
-from lm_service.coref import graph_component_maps, render_coref_maps_wrapper
-from lm_service.graph import phrase_to_deptree, transform_advcl
+from lm_service.coref import (
+    graph_component_maps,
+    render_coref_graph,
+    render_coref_maps_wrapper,
+)
+from lm_service.graph import (
+    phrase_to_deptree,
+    relabel_nodes_and_key,
+    transform_advcl,
+)
 from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import graph_to_candidate_pile
 
@@ -37,19 +46,23 @@ class TestR(unittest.TestCase):
         fragment = [transform_advcl(self.nlp, p) for p in fragment]
 
         fragment_joined = " ".join(fragment)
-        # for doc in fragment:
-        #     rdoc, graph = phrase_to_deptree(self.nlp, doc)
-        #     pile, candidate_depot, mod_graph = graph_to_candidate_pile(
-        #         graph, self.rules
-        #     )
+        graphs = {}
+        for j, doc in enumerate(fragment):
+            rdoc, graph = phrase_to_deptree(self.nlp, doc)
+            graphs[j] = graph
 
         rdoc, graph = phrase_to_deptree(self.nlp, fragment_joined)
-        graph_component_maps(graph)
+        map_tree_subtree_index = graph_component_maps(graph)
 
-        (
-            map_subbable_to_chain,
-            map_chain_to_most_specific,
-        ) = render_coref_maps_wrapper(rdoc, graph)
+        graph_relabeled = relabel_nodes_and_key(
+            graph, map_tree_subtree_index, "s"
+        )
+        for j, graph in graphs.items():
+            for n in graph.nodes:
+                self.assertEqual(
+                    graph.nodes[n]["lemma"],
+                    graph_relabeled.nodes[(j, n)]["lemma"],
+                )
 
 
 if __name__ == "__main__":

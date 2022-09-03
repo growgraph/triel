@@ -27,7 +27,7 @@ def phrase_to_deptree(nlp: Language, document: str) -> tuple[Doc, nx.DiGraph]:
         (
             token.i,
             {
-                "i": token.i,
+                "s": token.i,
                 "dep_": token.dep_,
                 "tag_": token.tag_,
                 "lower": token.lower_,
@@ -144,3 +144,9 @@ def get_subtree(graph: nx.DiGraph, v, acc):
     acc += [v]
     for w in graph.successors(v):
         get_subtree(graph, w, acc)
+
+
+def relabel_nodes_and_key(g, map_tree_subtree_index, key="s"):
+    nx.set_node_attributes(g, map_tree_subtree_index, name=key)
+    graph_relabeled = nx.relabel_nodes(g, map_tree_subtree_index)
+    return graph_relabeled
