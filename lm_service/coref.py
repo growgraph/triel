@@ -9,13 +9,15 @@ import networkx as nx
 from spacy.tokens import Doc
 
 from lm_service.graph import get_subtree_wrapper
-from lm_service.onto import Candidate, Token
+from lm_service.onto import Candidate, Token, TokenIndexT
 from lm_service.piles import CandidatePile, partition_conjunctive_wrapper
 
 logger = logging.getLogger(__name__)
 
 
-def graph_component_maps(graph: nx.DiGraph) -> dict[int, tuple[int, int]]:
+def graph_component_maps(
+    graph: nx.DiGraph, initial_phrase_index=0
+) -> dict[int, tuple[int, int]]:
     roots = [n for n, d in graph.in_degree() if d == 0]
 
     map_tree_subtree_index = {}
@@ -23,7 +25,10 @@ def graph_component_maps(graph: nx.DiGraph) -> dict[int, tuple[int, int]]:
     for sg, r in enumerate(sorted(roots)):
         acc = get_subtree_wrapper(graph, r)
         for i in acc:
-            map_tree_subtree_index[i] = (sg, i - sum_nodes)
+            map_tree_subtree_index[i] = (
+                sg + initial_phrase_index,
+                i - sum_nodes,
+            )
         sum_nodes += len(acc)
 
     return map_tree_subtree_index
@@ -53,8 +58,8 @@ def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
     # edges for coref graph
     es_coref = []
 
-    vertex_counter = max([token.i for token in rdoc]) + 1
-    coref_root = vertex_counter
+    vertex_counter = 0
+    coref_root = (-1, vertex_counter)
 
     # add root
     vs_coref += [
@@ -70,7 +75,7 @@ def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
     vertex_counter += 1
 
     for jchain, chain in enumerate(chains):
-        coref_chain = vertex_counter
+        coref_chain = (-1, vertex_counter)
         chain_state: dict[str, Any] = {
             "tag_": "coref",
             "dep_": "chain",
@@ -84,7 +89,7 @@ def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
         es_coref.append((coref_root, coref_chain))
         vertex_counter += 1
         for kth, x in enumerate(chain.mentions):
-            coref_blank = vertex_counter
+            coref_blank = (-1, vertex_counter)
             blank_state: dict[str, Any] = {
                 "tag_": "coref",
                 "dep_": "blank"
@@ -140,10 +145,12 @@ def render_coref_candidate_map(
 
 
 def render_coref_maps_wrapper(
-    rdoc, graph
+    rdoc, map_tree_subtree_index=None
 ) -> tuple[defaultdict[int, list[int]], defaultdict[int, list[int]]]:
 
     coref_graph = render_coref_graph(rdoc)
+    if map_tree_subtree_index is not None:
+        coref_graph = nx.relabel_nodes(coref_graph, map_tree_subtree_index)
     (
         map_subbable_to_chain,
         map_chain_to_most_specific,
@@ -152,10 +159,10 @@ def render_coref_maps_wrapper(
 
 
 def sub_coreference(
-    map_subbable_to_chain: defaultdict[str, list[str]],
-    map_chain_to_most_specific: defaultdict[str, list[str]],
+    map_subbable_to_chain: defaultdict[TokenIndexT, list[TokenIndexT]],
+    map_chain_to_most_specific: defaultdict[TokenIndexT, list[TokenIndexT]],
     x,
-) -> list[str]:
+) -> list[TokenIndexT]:
     """
 
         from two maps
@@ -198,11 +205,11 @@ def sub_coreference(
 
 def coref_candidates(
     candidate_depot: CandidatePile,
-    map_subbable_to_chain: defaultdict[str, list[str]],
-    map_chain_to_most_specific: defaultdict[str, list[str]],
-    token_dict: dict[str, Token],
+    map_subbable_to_chain: defaultdict[TokenIndexT, list[TokenIndexT]],
+    map_chain_to_most_specific: defaultdict[TokenIndexT, list[TokenIndexT]],
+    token_dict: dict[TokenIndexT, Token],
     unfold_conjunction=True,
-) -> dict[str, list[Candidate]]:
+) -> dict[TokenIndexT, list[Candidate]]:
     map_token_specific_token = {
         i: sub_coreference(
             map_subbable_to_chain, map_chain_to_most_specific, i
@@ -216,9 +223,11 @@ def coref_candidates(
         i for subl in map_trunc.values() for i in subl
     }
 
-    map_icoref_source_target: dict[str, tuple[str, Candidate]] = {}
+    map_icoref_source_target: dict[
+        TokenIndexT, tuple[TokenIndexT, Candidate]
+    ] = {}
 
-    ncp: defaultdict[str, list] = defaultdict(list)
+    ncp: defaultdict[TokenIndexT, list] = defaultdict(list)
     # unfold conjunction
     for c in candidate_depot:
         if unfold_conjunction:
@@ -241,12 +250,12 @@ def coref_candidates(
                     map_icoref_source_target[k] = k, ac
 
     # map (iroot, coref_index) -> clean atomic candidate
-    deq: deque[tuple[str, Candidate]] = deque()
+    deq: deque[tuple[TokenIndexT, Candidate]] = deque()
     for sroot, candidates in ncp.items():
         for sigma_candidate in candidates:
             deq.append((sroot, sigma_candidate))
 
-    ncp2: defaultdict[str, list] = defaultdict(list)
+    ncp2: defaultdict[TokenIndexT, list] = defaultdict(list)
     cnt = 0
     max_cnt = max([len(map_icoref_source_target) ** 2, len(deq) ** 2])
     while deq and cnt < max_cnt:
@@ -254,7 +263,7 @@ def coref_candidates(
         sroot, sigma_candidate = deq.popleft()
         # indices that will be substituted using coreference
         candidate_ix_subs = set(map_trunc) & set(sigma_candidate.stokens)
-        map_trunc_local_uniq: dict[str, list[str]] = dict()
+        map_trunc_local_uniq: dict[TokenIndexT, list[TokenIndexT]] = dict()
         subs_to_remove = set()
         for sub in candidate_ix_subs:
             if map_trunc[sub] in map_trunc_local_uniq.values():
