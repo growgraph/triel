@@ -52,9 +52,9 @@ if __name__ == "__main__":
         " which will allow the estimation of their mass, density,"
         " composition and their formation.",
         # "The medium was affected by the near-field radiation",
-        "Although he was very busy with his work, Peter Brown had had enough of it. "
-        "He and his wife decided they needed a holiday. "
-        "They travelled to Spain because they loved the country very much.",
+        "Although he was very busy with his work, Peter Brown had had enough"
+        " of it. He and his wife decided they needed a holiday. They travelled"
+        " to Spain because they loved the country very much.",
         # "Although he was very busy with his work, Peter had had enough of it. "
         # "He and his wife decided they needed a holiday. "
         # "Peter would have caught the fish with a fishing rod, if not the"

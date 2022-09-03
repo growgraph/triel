@@ -209,7 +209,7 @@ def coref_candidates(
     map_chain_to_most_specific: defaultdict[TokenIndexT, list[TokenIndexT]],
     token_dict: dict[TokenIndexT, Token],
     unfold_conjunction=True,
-) -> dict[TokenIndexT, list[Candidate]]:
+) -> defaultdict[TokenIndexT, list[Candidate]]:
     map_token_specific_token = {
         i: sub_coreference(
             map_subbable_to_chain, map_chain_to_most_specific, i
@@ -227,7 +227,7 @@ def coref_candidates(
         TokenIndexT, tuple[TokenIndexT, Candidate]
     ] = {}
 
-    ncp: defaultdict[TokenIndexT, list] = defaultdict(list)
+    ncp: defaultdict[TokenIndexT, list[Candidate]] = defaultdict(list)
     # unfold conjunction
     for c in candidate_depot:
         if unfold_conjunction:
@@ -255,7 +255,7 @@ def coref_candidates(
         for sigma_candidate in candidates:
             deq.append((sroot, sigma_candidate))
 
-    ncp2: defaultdict[TokenIndexT, list] = defaultdict(list)
+    ncp2: defaultdict[TokenIndexT, list[Candidate]] = defaultdict(list)
     cnt = 0
     max_cnt = max([len(map_icoref_source_target) ** 2, len(deq) ** 2])
     while deq and cnt < max_cnt:
