@@ -106,7 +106,8 @@ class AToken(JSONWizard, ABC):
                 return i[0], cls.i2s(i[1])
             raise ValueError(f"expected tuple of len 2, {i} received")
         raise TypeError(
-            f" Token.ituple2stuple received i={i} of type {type(i)}, tuple expected."
+            f" Token.ituple2stuple received i={i} of type {type(i)}, tuple"
+            " expected."
         )
 
 
@@ -188,7 +189,8 @@ class Candidate(JSONWizard):
             str_succ = ", ".join([f"{s}" for s in t.successors])
             str_pred = ", ".join([f"{s}" for s in t.predecessors])
             content += [
-                f" \t {t.s} : {t.lower} : {t.tag_} : {t.dep_} : pred < {str_pred} : succ > {str_succ}"
+                f" \t {t.s} : {t.lower} : {t.tag_} : {t.dep_} : pred <"
+                f" {str_pred} : succ > {str_succ}"
             ]
 
         return (
@@ -260,14 +262,16 @@ class Candidate(JSONWizard):
                 return self._tokens[self._index_vec[i]]
             else:
                 raise RequestedIndexDoesNotExist(
-                    f" size of {self.__class__.__name__} obj {len(self)}, requesting index {i}"
+                    f" size of {self.__class__.__name__} obj {len(self)},"
+                    f" requesting index {i}"
                 )
         else:
             if i in self._index_vec:
                 return self._tokens[i]
             else:
                 raise MissingTokenInACandidate(
-                    f"token {i} not present in {self.__class__.__name__} containing {self.stokens}"
+                    f"token {i} not present in"
+                    f" {self.__class__.__name__} containing {self.stokens}"
                 )
 
     def view_tokens(self, ifrom=None, ito=None):

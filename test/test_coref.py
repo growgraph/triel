@@ -24,9 +24,9 @@ logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
 
 class TestCoref(unittest.TestCase):
     phrase = (
-        "Although he was very busy with his work, Peter Brown had had enough of it. "
-        "He and his wife decided they needed a holiday. "
-        "They travelled to Spain because they loved the country very much."
+        "Although he was very busy with his work, Peter Brown had had enough"
+        " of it. He and his wife decided they needed a holiday. They travelled"
+        " to Spain because they loved the country very much."
     )
 
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")

@@ -158,13 +158,18 @@ class TestR(unittest.TestCase):
     }
 
     documents = {
-        "cheops0": "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
-        " telescope to determine the size of known extrasolar planets,"
-        " which will allow the estimation of their mass, density,"
-        " composition and their formation.",
-        "coref": "Although he was very busy with his work, Peter Brown had had enough of it. "
-        "He and his wife decided they needed a holiday. "
-        "They travelled to Spain because they loved the country very much.",
+        "cheops0": (
+            "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+            " telescope to determine the size of known extrasolar planets,"
+            " which will allow the estimation of their mass, density,"
+            " composition and their formation."
+        ),
+        "coref": (
+            "Although he was very busy with his work, Peter Brown had had"
+            " enough of it. He and his wife decided they needed a holiday."
+            " They travelled to Spain because they loved the country very"
+            " much."
+        ),
     }
 
     def test_conjunctive(self):

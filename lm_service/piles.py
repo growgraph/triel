@@ -19,7 +19,7 @@ class CandidatePile:
     pile of candidates of one type
     """
 
-    _root_to_candidate: dict[str, CandidateType] = dataclasses.field(default_factory=dict)  # type: ignore
+    _root_to_candidate: dict[TokenIndexT, CandidateType] = dataclasses.field(default_factory=dict)  # type: ignore
 
     def __len__(self) -> int:
         return len(self._root_to_candidate)
@@ -65,11 +65,11 @@ class CandidatePile:
         return [r.root for r in self.candidates]
 
     @property
-    def sroots(self) -> list[str]:
+    def sroots(self) -> list[TokenIndexT]:
         return list(self._root_to_candidate.keys())
 
     @property
-    def tokens(self) -> set[str]:
+    def tokens(self) -> set[TokenIndexT]:
         return set([x for r in self.candidates for x in r.stokens])
 
     def append(self, r: CandidateType):
@@ -137,6 +137,7 @@ class CandidatePile:
         :return:
         """
 
+    # TODO move conj here
     # def unfold_conjunction(self, graph):
     #     apile = CandidatePile()
     #     for c in self._candidates:
