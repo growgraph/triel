@@ -46,7 +46,8 @@ class TestR(unittest.TestCase):
         " telescope to determine the size of known extrasolar planets,"
         " which will allow the estimation of their mass, density,"
         " composition and their formation.",
-        "Launched on 18 December 2019, it is the first Small-class mission in ESA's Cosmic Vision science programme.",
+        "Launched on 18 December 2019, it is the first Small-class mission in"
+        " ESA's Cosmic Vision science programme.",
     ]
 
     def test_relation_candidates(self):

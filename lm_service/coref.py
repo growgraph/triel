@@ -8,18 +8,42 @@ from typing import Any
 import networkx as nx
 from spacy.tokens import Doc
 
-from lm_service.onto import Candidate, Token
-from lm_service.piles import CandidatePile, partition_conjunctive_wrapper
+from lm_service.graph import get_subtree_wrapper
+from lm_service.onto import (
+    Candidate,
+    Token,
+    TokenIndexT,
+    partition_conjunctive_wrapper,
+)
+from lm_service.piles import CandidatePile, ExtCandidateList
 
 logger = logging.getLogger(__name__)
 
 
-def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
+def graph_component_maps(
+    graph: nx.DiGraph, initial_phrase_index=0
+) -> dict[int, tuple[int, int]]:
+    roots = [n for n, d in graph.in_degree() if d == 0]
+
+    map_tree_subtree_index = {}
+    sum_nodes = 0
+    for sg, r in enumerate(sorted(roots)):
+        acc = get_subtree_wrapper(graph, r)
+        for i in acc:
+            map_tree_subtree_index[i] = (
+                sg + initial_phrase_index,
+                i - sum_nodes,
+            )
+        sum_nodes += len(acc)
+
+    return map_tree_subtree_index
+
+
+def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
     """
     render super graph using coreferee package
 
     :param rdoc:
-    :param graph:
     :return: coref graph is a Tree of 4 levels:
         root -> chain -> blank -> token
         chain corresponds to one co-referenced entity, like [("they"), ("Mary", "Peter")]
@@ -29,7 +53,7 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
             - 1 or many blanks per chain
             - 1 or many tokens per blank
 
-        NB: most specific mention is encodedin in blank attribute `most_specific`
+        NB: most specific mention is encoded by blank attribute `most_specific`
     """
 
     chains = rdoc._.coref_chains if rdoc._.coref_chains is not None else []
@@ -39,13 +63,8 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
     # edges for coref graph
     es_coref = []
 
-    # mention_nodes = []
-
-    # map : chain_id -> most_specific_mention_id
-    concept_specific_blank: dict[int, int] = dict()
-
-    vertex_counter = max([token.i for token in rdoc]) + 1
-    coref_root = vertex_counter
+    vertex_counter = 0
+    coref_root = (-1, vertex_counter)
 
     # add root
     vs_coref += [
@@ -61,7 +80,7 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
     vertex_counter += 1
 
     for jchain, chain in enumerate(chains):
-        coref_chain = vertex_counter
+        coref_chain = (-1, vertex_counter)
         chain_state: dict[str, Any] = {
             "tag_": "coref",
             "dep_": "chain",
@@ -75,7 +94,7 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
         es_coref.append((coref_root, coref_chain))
         vertex_counter += 1
         for kth, x in enumerate(chain.mentions):
-            coref_blank = vertex_counter
+            coref_blank = (-1, vertex_counter)
             blank_state: dict[str, Any] = {
                 "tag_": "coref",
                 "dep_": "blank"
@@ -91,22 +110,8 @@ def render_coref_graph(rdoc: Doc, graph: nx.DiGraph) -> nx.DiGraph:
             es_coref.append((coref_chain, coref_blank))
             vertex_counter += 1
             for y in x.token_indexes:
-                vs_coref += [(y, graph.nodes[y])]
+                vs_coref += [(y, {})]
                 es_coref.append((coref_blank, y))
-
-    chs = {
-        j: [[graph.nodes[x]["lower"] for x in item] for item in k.mentions]
-        for j, k in enumerate(chains)
-    }
-    logger.info(f"{chs}")
-    chs = {
-        j: [
-            graph.nodes[x]["lower"]
-            for x in k.mentions[k.most_specific_mention_index]
-        ]
-        for j, k in enumerate(chains)
-    }
-    logger.info(f"specifics {chs}")
 
     coref_graph = nx.DiGraph()
 
@@ -145,10 +150,12 @@ def render_coref_candidate_map(
 
 
 def render_coref_maps_wrapper(
-    rdoc, graph
+    rdoc, map_tree_subtree_index=None
 ) -> tuple[defaultdict[int, list[int]], defaultdict[int, list[int]]]:
 
-    coref_graph = render_coref_graph(rdoc, graph)
+    coref_graph = render_coref_graph(rdoc)
+    if map_tree_subtree_index is not None:
+        coref_graph = nx.relabel_nodes(coref_graph, map_tree_subtree_index)
     (
         map_subbable_to_chain,
         map_chain_to_most_specific,
@@ -157,10 +164,10 @@ def render_coref_maps_wrapper(
 
 
 def sub_coreference(
-    map_subbable_to_chain: defaultdict[str, list[str]],
-    map_chain_to_most_specific: defaultdict[str, list[str]],
+    map_subbable_to_chain: defaultdict[TokenIndexT, list[TokenIndexT]],
+    map_chain_to_most_specific: defaultdict[TokenIndexT, list[TokenIndexT]],
     x,
-) -> list[str]:
+) -> list[TokenIndexT]:
     """
 
         from two maps
@@ -202,12 +209,11 @@ def sub_coreference(
 
 
 def coref_candidates(
-    candidate_depot: CandidatePile,
-    map_subbable_to_chain: defaultdict[str, list[str]],
-    map_chain_to_most_specific: defaultdict[str, list[str]],
-    token_dict: dict[str, Token],
-    unfold_conjunction=True,
-) -> dict[str, list[Candidate]]:
+    ext_candidate_list: ExtCandidateList,
+    map_subbable_to_chain: defaultdict[TokenIndexT, list[TokenIndexT]],
+    map_chain_to_most_specific: defaultdict[TokenIndexT, list[TokenIndexT]],
+    token_dict: dict[TokenIndexT, Token],
+) -> defaultdict[TokenIndexT, list[Candidate]]:
     map_token_specific_token = {
         i: sub_coreference(
             map_subbable_to_chain, map_chain_to_most_specific, i
@@ -221,18 +227,12 @@ def coref_candidates(
         i for subl in map_trunc.values() for i in subl
     }
 
-    map_icoref_source_target: dict[str, tuple[str, Candidate]] = {}
-
-    ncp: defaultdict[str, list] = defaultdict(list)
-    # unfold conjunction
-    for c in candidate_depot:
-        if unfold_conjunction:
-            ncp[c.root.s].extend(partition_conjunctive_wrapper(c))
-        else:
-            ncp[c.root.s] = [c]
+    map_icoref_source_target: dict[
+        TokenIndexT, tuple[TokenIndexT, Candidate]
+    ] = {}
 
     # stoken -> atomic candidate
-    for sroot, candidates in ncp.items():
+    for sroot, candidates in ext_candidate_list:
         for sigma_candidate in candidates:
             for k in all_coref_i:
                 if k in sigma_candidate.stokens:
@@ -246,12 +246,13 @@ def coref_candidates(
                     map_icoref_source_target[k] = k, ac
 
     # map (iroot, coref_index) -> clean atomic candidate
-    deq: deque[tuple[str, Candidate]] = deque()
-    for sroot, candidates in ncp.items():
+    deq: deque[tuple[TokenIndexT, Candidate]] = deque()
+    for sroot, candidates in ext_candidate_list:
         for sigma_candidate in candidates:
             deq.append((sroot, sigma_candidate))
 
-    ncp2: defaultdict[str, list] = defaultdict(list)
+    # ecl stands for extCandidateList
+    ecl_like: defaultdict[TokenIndexT, list[Candidate]] = defaultdict(list)
     cnt = 0
     max_cnt = max([len(map_icoref_source_target) ** 2, len(deq) ** 2])
     while deq and cnt < max_cnt:
@@ -259,7 +260,7 @@ def coref_candidates(
         sroot, sigma_candidate = deq.popleft()
         # indices that will be substituted using coreference
         candidate_ix_subs = set(map_trunc) & set(sigma_candidate.stokens)
-        map_trunc_local_uniq: dict[str, list[str]] = dict()
+        map_trunc_local_uniq: dict[TokenIndexT, list[TokenIndexT]] = dict()
         subs_to_remove = set()
         for sub in candidate_ix_subs:
             if map_trunc[sub] in map_trunc_local_uniq.values():
@@ -291,5 +292,5 @@ def coref_candidates(
                         )
                     deq.append((sroot, sigma_copy))
         else:
-            ncp2[sroot] += [sigma_candidate.normalize().sort_index()]
-    return ncp2
+            ecl_like[sroot] += [sigma_candidate.normalize().sort_index()]
+    return ecl_like

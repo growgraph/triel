@@ -240,11 +240,11 @@ class TestR(unittest.TestCase):
 
     def test_sort_index_tree(self):
         tokens = [
-            Token(**{"i": 2, "text": "a0", "successors": {1, 0}}),
-            Token(**{"i": 1, "text": "a1", "predecessors": {2}}),
+            Token(**{"s": 2, "text": "a0", "successors": {1, 0}}),
+            Token(**{"s": 1, "text": "a1", "predecessors": {2}}),
             Token(
                 **{
-                    "i": 0,
+                    "s": 0,
                     "text": "a2",
                     "predecessors": {2},
                     "successors": {15},
@@ -252,14 +252,14 @@ class TestR(unittest.TestCase):
             ),
             Token(
                 **{
-                    "i": 15,
+                    "s": 15,
                     "text": "b0",
                     "predecessors": {2},
                     "successors": {16, 17},
                 }
             ),
-            Token(**{"i": 16, "text": "b1", "predecessors": {15}}),
-            Token(**{"i": 17, "text": "b2", "predecessors": {15}}),
+            Token(**{"s": 16, "text": "b1", "predecessors": {15}}),
+            Token(**{"s": 17, "text": "b2", "predecessors": {15}}),
         ]
         ac = Candidate().from_tokens(tokens)
 

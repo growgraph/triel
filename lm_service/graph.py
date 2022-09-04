@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from itertools import product
+from typing import Any
 
 import networkx as nx
 from spacy import Language
@@ -24,7 +27,7 @@ def phrase_to_deptree(nlp: Language, document: str) -> tuple[Doc, nx.DiGraph]:
         (
             token.i,
             {
-                "i": token.i,
+                "s": token.i,
                 "dep_": token.dep_,
                 "tag_": token.tag_,
                 "lower": token.lower_,
@@ -94,12 +97,9 @@ def transform_advcl(nlp: Language, phrase, debug=False):
         if jstar is not None:
             next_ = succs[jstar]
 
-            subgraph_adv = nx.ego_graph(graph, advcl, radius=50)
-            subgraph_next = nx.ego_graph(graph, next_, radius=50)
-            subgraph_root = nx.ego_graph(graph, root, radius=150)
-            adv_nodes = sorted(subgraph_adv.nodes)
-            next_nodes = sorted(subgraph_next.nodes)
-            root_nodes = sorted(subgraph_root.nodes)
+            adv_nodes = sorted(get_subtree_wrapper(graph, advcl))
+            next_nodes = sorted(get_subtree_wrapper(graph, next_))
+            root_nodes = sorted(get_subtree_wrapper(graph, root))
 
             if (
                 list(range(adv_nodes[0], adv_nodes[0] + len(adv_nodes)))
@@ -132,3 +132,21 @@ def transform_advcl(nlp: Language, phrase, debug=False):
         return transformed_phrase, graph
     else:
         return transformed_phrase
+
+
+def get_subtree_wrapper(graph: nx.DiGraph, v):
+    acc: list[Any] = []
+    get_subtree(graph, v, acc)
+    return acc
+
+
+def get_subtree(graph: nx.DiGraph, v, acc):
+    acc += [v]
+    for w in graph.successors(v):
+        get_subtree(graph, w, acc)
+
+
+def relabel_nodes_and_key(g, map_tree_subtree_index, key="s"):
+    nx.set_node_attributes(g, map_tree_subtree_index, name=key)
+    graph_relabeled = nx.relabel_nodes(g, map_tree_subtree_index)
+    return graph_relabeled
