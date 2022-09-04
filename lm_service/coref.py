@@ -9,8 +9,13 @@ import networkx as nx
 from spacy.tokens import Doc
 
 from lm_service.graph import get_subtree_wrapper
-from lm_service.onto import Candidate, Token, TokenIndexT
-from lm_service.piles import CandidatePile, partition_conjunctive_wrapper
+from lm_service.onto import (
+    Candidate,
+    Token,
+    TokenIndexT,
+    partition_conjunctive_wrapper,
+)
+from lm_service.piles import CandidatePile, ExtCandidateList
 
 logger = logging.getLogger(__name__)
 
@@ -204,11 +209,10 @@ def sub_coreference(
 
 
 def coref_candidates(
-    candidate_depot: CandidatePile,
+    ext_candidate_list: ExtCandidateList,
     map_subbable_to_chain: defaultdict[TokenIndexT, list[TokenIndexT]],
     map_chain_to_most_specific: defaultdict[TokenIndexT, list[TokenIndexT]],
     token_dict: dict[TokenIndexT, Token],
-    unfold_conjunction=True,
 ) -> defaultdict[TokenIndexT, list[Candidate]]:
     map_token_specific_token = {
         i: sub_coreference(
@@ -227,16 +231,8 @@ def coref_candidates(
         TokenIndexT, tuple[TokenIndexT, Candidate]
     ] = {}
 
-    ncp: defaultdict[TokenIndexT, list[Candidate]] = defaultdict(list)
-    # unfold conjunction
-    for c in candidate_depot:
-        if unfold_conjunction:
-            ncp[c.root.s].extend(partition_conjunctive_wrapper(c))
-        else:
-            ncp[c.root.s] = [c]
-
     # stoken -> atomic candidate
-    for sroot, candidates in ncp.items():
+    for sroot, candidates in ext_candidate_list:
         for sigma_candidate in candidates:
             for k in all_coref_i:
                 if k in sigma_candidate.stokens:
@@ -251,11 +247,12 @@ def coref_candidates(
 
     # map (iroot, coref_index) -> clean atomic candidate
     deq: deque[tuple[TokenIndexT, Candidate]] = deque()
-    for sroot, candidates in ncp.items():
+    for sroot, candidates in ext_candidate_list:
         for sigma_candidate in candidates:
             deq.append((sroot, sigma_candidate))
 
-    ncp2: defaultdict[TokenIndexT, list[Candidate]] = defaultdict(list)
+    # ecl stands for extCandidateList
+    ecl_like: defaultdict[TokenIndexT, list[Candidate]] = defaultdict(list)
     cnt = 0
     max_cnt = max([len(map_icoref_source_target) ** 2, len(deq) ** 2])
     while deq and cnt < max_cnt:
@@ -295,5 +292,5 @@ def coref_candidates(
                         )
                     deq.append((sroot, sigma_copy))
         else:
-            ncp2[sroot] += [sigma_candidate.normalize().sort_index()]
-    return ncp2
+            ecl_like[sroot] += [sigma_candidate.normalize().sort_index()]
+    return ecl_like

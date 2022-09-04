@@ -9,7 +9,7 @@ import spacy
 import yaml
 
 from lm_service.graph import phrase_to_deptree
-from lm_service.piles import partition_conjunctive_wrapper
+from lm_service.onto import partition_conjunctive_wrapper
 from lm_service.relation import graph_to_candidate_pile
 
 logger = logging.getLogger(__name__)

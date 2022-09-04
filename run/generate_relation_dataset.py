@@ -10,9 +10,7 @@ import pandas as pd
 import spacy
 import yaml
 
-from lm_service.graph import transform_advcl
-from lm_service.preprocessing import normalize_input_text
-from lm_service.relation import phrase_to_triples
+from lm_service.text import text_to_triples
 from lm_service.util import plot_graph
 
 
@@ -20,58 +18,49 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    phrases = normalize_input_text(text, terminal_full_stop=True)
-    phrases = [transform_advcl(nlp, p) for p in phrases]
+    triples, phrases = text_to_triples(
+        text,
+        nlp,
+        rules,
+        window_size=window_size,
+        head=head,
+        return_phrases=True,
+    )
 
-    acc = []
+    triples_text = [tri.project_to_text() for tri in triples]
 
-    nmax = len(phrases) - window_size + 1
-    if head is not None:
-        nmax = min([nmax, head])
-    for i in range(nmax):
-        fragment = " ".join(phrases[i : i + window_size])
-        print(fragment)
-        (triples_expanded, triples_text, graph) = phrase_to_triples(
-            fragment, nlp, rules
-        )
-        acc += [(i, fragment, triples_expanded, triples_text)]
-        if plot:
-            plot_graph(graph, fig_path, f"fragment_{i}_full")
-
-    sources = [s for _, _, _, triples_text in acc for s, _, _ in triples_text]
-    relations = [
-        r for _, _, _, triples_text in acc for _, r, _ in triples_text
-    ]
-    targets = [t for _, _, _, triples_text in acc for _, _, t in triples_text]
+    sources = [s for s, _, _ in triples_text]
+    relations = [r for _, r, _ in triples_text]
+    targets = [t for _, _, t in triples_text]
 
     tokens = sorted(set(set(sources) | set(targets) | set(relations)))
     token_map = {t: ii for ii, t in enumerate(tokens)}
     g = nx.DiGraph()
 
-    for i, _, _, text_relations in acc:
-        for text_triplet in text_relations:
-            s, r, t = text_triplet
-            triplet = [token_map[x] for x in text_triplet]
-            si, ri, ti = triplet
-            g.add_node(si, label=s)
-            g.add_node(ti, label=t)
-            g.add_edge(si, ti, label=r)
+    for text_triplet in triples_text:
+        s, r, t = text_triplet
+        triplet = [token_map[x] for x in text_triplet]
+        si, ri, ti = triplet
+        g.add_node(si, label=s)
+        g.add_node(ti, label=t)
+        g.add_edge(si, ti, label=r)
     if plot:
         plot_graph(g, fig_path, f"doc", prog="sfdp")
 
     df_acc = []
-    for i, phrase, triples, text_triples in acc:
-        for triple, text_relation in zip(triples, text_triples):
-            df_acc += [
-                [i]
-                + [
-                    triple.source.stokens,
-                    triple.relation.stokens,
-                    triple.target.stokens,
-                ]
-                + list(text_relation)
-                + [phrase]
+    for tri, tri_txt in zip(triples, triples_text):
+        s, r, t = tri.source, tri.relation, tri.target
+        ix = r.sroot[0]
+        df_acc += [
+            [
+                ix,
+                tuple(s.stokens),
+                tuple(r.stokens),
+                tuple(t.stokens),
+                *tri_txt,
+                phrases[ix],
             ]
+        ]
     df = pd.DataFrame(
         df_acc,
         columns=[
@@ -84,7 +73,7 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot=True):
             "target_txt",
             "phrase",
         ],
-    )
+    ).sort_values(["phrase_ix", "relation_ix", "source_ix", "target_ix"])
     df.to_csv(os.path.join(fig_path, "relations.csv"))
 
 

@@ -33,7 +33,7 @@ from lm_service.onto import (
     TripleCandidate,
     apply_map,
 )
-from lm_service.piles import CandidatePile, SRTPile
+from lm_service.piles import CandidatePile, ExtCandidateList, SRTPile
 
 logger = logging.getLogger(__name__)
 
@@ -495,14 +495,15 @@ def graph_to_triples(
 
     token_dict = {t.s: t for t in tokens}
 
+    ecl = candidate_depot.unfold_conjunction()
+
     # ncp : dict[TokenIndexT, list[Candidate]]
     # for each root -> a list of relevant candidates
     ncp = coref_candidates(
-        candidate_depot,
+        ecl,
         map_subbable_to_chain_str,
         map_chain_to_most_specific_str,
         token_dict,
-        unfold_conjunction=True,
     )
 
     triples = []
@@ -728,13 +729,14 @@ def phrases_to_basis_triples(
 
 
 def text_to_coref_sourcetarget(
-    nlp, text, candidate_depot, initial_phrase_index
+    nlp, text, ext_candidate_list: ExtCandidateList, initial_phrase_index
 ) -> defaultdict[TokenIndexT, list[Candidate]]:
     """
 
     :param nlp:
     :param text:
-    :param candidate_depot:
+    :param  ext_candidate_list: ExtCandidateList
+    :param  initial_phrase_index
     :return:
     """
     (
@@ -768,11 +770,10 @@ def text_to_coref_sourcetarget(
     # ncp : dict[TokenIndexT, list[Candidate]]
     # for each root -> a list of relevant candidates
     ncp = coref_candidates(
-        candidate_depot,
+        ext_candidate_list,
         map_subbable_to_chain_str,
         map_chain_to_most_specific_str,
         token_dict,
-        unfold_conjunction=True,
     )
     return ncp
 
