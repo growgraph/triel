@@ -31,7 +31,7 @@ class TestFlag(unittest.TestCase):
     rules_v2 = yaml.load(fp, Loader=yaml.FullLoader)
 
     def test_flag(self):
-        t = Token(**{"i": 7, "text": "his", "dep_": "conj", "tag_": "VBG"})
+        t = Token(**{"s": 7, "text": "his", "dep_": "conj", "tag_": "VBG"})
         flag = get_flag(t.__dict__, self.rules_v2)
         self.assertEqual(flag, False)
 

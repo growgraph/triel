@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from collections import deque
+from collections import defaultdict, deque
 from copy import deepcopy
 from itertools import product
 from typing import List, Tuple
@@ -10,22 +10,30 @@ from typing import List, Tuple
 import networkx as nx
 import pandas as pd
 
-from lm_service.coref import coref_candidates, render_coref_maps_wrapper
+from lm_service.coref import (
+    coref_candidates,
+    graph_component_maps,
+    render_coref_maps_wrapper,
+)
 from lm_service.folding import get_flag
-from lm_service.graph import excise_node, phrase_to_deptree
+from lm_service.graph import (
+    excise_node,
+    phrase_to_deptree,
+    relabel_nodes_and_key,
+)
 from lm_service.onto import (
     ACandidateKind,
+    AToken,
+    Candidate,
     CandidateType,
     Relation,
-    Source,
     SourceOrTarget,
-    Target,
     Token,
+    TokenIndexT,
     TripleCandidate,
-    to_string,
-    to_string_keys,
+    apply_map,
 )
-from lm_service.piles import CandidatePile, SRTPile
+from lm_service.piles import CandidatePile, ExtCandidateList, SRTPile
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +46,6 @@ logger = logging.getLogger(__name__)
     4. choose closest / best sources/ target candidates for each relation to form (relation, source, target) triples    
 
 """
-
-
-class SimplifiedConjunctionHypothesisFailure(Exception):
-    pass
 
 
 def find_candidates_bfs(
@@ -77,15 +81,15 @@ def find_candidates_bfs(
         ACandidateKind.SOURCE_TARGET: SourceOrTarget,
     }
 
-    foo = foo_map[how]
+    foo_func = foo_map[how]
     if not deq:
         return
 
     current_vertex = deq.popleft()
     current_candidate = foo_map_class[how]()  # type: ignore
 
-    if Token.i2s(current_vertex) not in candidate_pile.tokens:
-        foo(graph, original_graph, deque([(current_vertex, 0)]), current_candidate, **kwargs)  # type: ignore
+    if current_vertex not in candidate_pile.tokens:
+        foo_func(graph, original_graph, deque([(current_vertex, 0)]), current_candidate, **kwargs)  # type: ignore
 
     if not current_candidate.empty:  # type: ignore
         candidate_pile.append(current_candidate.clean_dangling_edges(robust_mode).sort_index())  # type: ignore
@@ -320,22 +324,22 @@ def compute_distances(
     graph: nx.DiGraph,
     g_undirected: nx.Graph,
     g_weighted: nx.Graph,
-    indices_of_interest: list[int],
+    indices_of_interest: list[TokenIndexT],
 ) -> tuple[
-    dict[tuple[int, int], int],
-    dict[tuple[int, int], int],
-    dict[tuple[int, int], int],
+    dict[tuple[TokenIndexT, TokenIndexT], int],
+    dict[tuple[TokenIndexT, TokenIndexT], int],
+    dict[tuple[TokenIndexT, TokenIndexT], int],
 ]:
 
     # (u, v) : distance
-    distance_directed: dict[tuple[int, int], int] = {
+    distance_directed: dict[tuple[TokenIndexT, TokenIndexT], int] = {
         (i, v): ll
         for i in indices_of_interest
         for v, ll in nx.shortest_path_length(graph, i).items()
     }
 
     # (u, v) : distance
-    distance_undirected: dict[tuple[int, int], int] = {
+    distance_undirected: dict[tuple[TokenIndexT, TokenIndexT], int] = {
         (i, v): ll
         for i in indices_of_interest
         for v, ll in nx.shortest_path_length(g_undirected, i).items()
@@ -346,7 +350,7 @@ def compute_distances(
     paths = {i: nx.shortest_path(g_weighted, i) for i in indices_of_interest}
 
     # g_original | (root, vertex) : weight
-    distance_levels: dict[tuple[int, int], int] = {
+    distance_levels: dict[tuple[TokenIndexT, TokenIndexT], int] = {
         (r, v): nx.path_weight(g_weighted, pp, "weight")
         for r, batch in paths.items()
         for v, pp in batch.items()
@@ -356,12 +360,12 @@ def compute_distances(
 
 
 def derive_sources_per_relation(
-    relation_candidate_roots: list[str],
-    source_candidate_roots: list[str],
-    distance_undirected: dict[tuple[str, str], int],
-    distance_levels: dict[tuple[str, str], int],
+    relation_candidate_roots: list[TokenIndexT],
+    source_candidate_roots: list[TokenIndexT],
+    distance_undirected: dict[tuple[TokenIndexT, TokenIndexT], int],
+    distance_levels: dict[tuple[TokenIndexT, TokenIndexT], int],
     pile_sources_roots: list[Token],
-) -> dict[str, set[str]]:
+) -> dict[TokenIndexT, set[TokenIndexT]]:
     # find sources per relation; sources may be up the tree, using undirected graph
     # for each relation find source candidates
     # a. close to relation on the tree
@@ -417,13 +421,13 @@ def derive_sources_per_relation(
 
 
 def derive_targets_per_relaton(
-    relation_candidate_roots: list[str],
-    target_candidate_roots: list[str],
-    distance_directed: dict[tuple[str, str], int],
-) -> dict[str, set[str]]:
+    relation_candidate_roots: list[TokenIndexT],
+    target_candidate_roots: list[TokenIndexT],
+    distance_directed: dict[tuple[TokenIndexT, TokenIndexT], int],
+) -> dict[TokenIndexT, set[TokenIndexT]]:
 
     # find targets per relation; targets are down the tree
-    dist_to_targets: dict[str, dict[str, int]] = {
+    dist_to_targets: dict[TokenIndexT, dict[TokenIndexT, int]] = {
         r: {
             t: distance_directed[r, t]
             for t in target_candidate_roots
@@ -432,19 +436,24 @@ def derive_targets_per_relaton(
         for r in relation_candidate_roots
     }
 
-    min_dists: dict[str, int] = {
+    min_dists: dict[TokenIndexT, int] = {
         r: min(item.values()) if item else -1
         for r, item in dist_to_targets.items()
     }
 
-    targets_per_relation: dict[str, set[str]] = {
+    targets_per_relation: dict[TokenIndexT, set[TokenIndexT]] = {
         r: {t for t, d in item.items() if d == min_dists[r]} if item else set()
         for r, item in dist_to_targets.items()
     }
     return targets_per_relation
 
 
-def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
+def graph_to_triples(
+    graph,
+    map_subbable_to_chain_str,
+    map_chain_to_most_specific_str,
+    rules,
+) -> list[TripleCandidate]:
     """
     find triplets in a dep graph:
         a. find relation candidates
@@ -452,6 +461,8 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
         c. find target candidates
 
     :param graph: nx.Digraph
+    :param map_subbable_to_chain_str:
+    :param map_chain_to_most_specific_str:
     :param rules:
 
     :return:
@@ -462,6 +473,16 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
     # ii) depot of candidates (mixed)
     # iii) modified graph to use for distance computation
     pile, candidate_depot, mod_graph = graph_to_candidate_pile(graph, rules)
+
+    (
+        sources_per_relation,
+        targets_per_relation,
+        g_undirected,
+    ) = graph_to_maps(mod_graph=mod_graph, pile=pile)
+
+    itriples = form_triples(
+        pile, sources_per_relation, targets_per_relation, g_undirected
+    )
 
     tokens = [
         Token(
@@ -474,33 +495,15 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
 
     token_dict = {t.s: t for t in tokens}
 
-    (
-        sources_per_relation,
-        targets_per_relation,
-        g_undirected,
-    ) = graph_to_maps(mod_graph=mod_graph, pile=pile)
+    ecl = candidate_depot.unfold_conjunction()
 
-    itriples = form_triples(
-        pile, sources_per_relation, targets_per_relation, g_undirected
-    )
-
-    (
-        map_subbable_to_chain,
-        map_chain_to_most_specific,
-    ) = render_coref_maps_wrapper(rdoc, graph)
-
-    map_subbable_to_chain_str, map_chain_to_most_specific_str = to_string(
-        [map_subbable_to_chain, map_chain_to_most_specific]
-    )
-
-    # ncp : dict[str, list[Candidate]]
+    # ncp : dict[TokenIndexT, list[Candidate]]
     # for each root -> a list of relevant candidates
     ncp = coref_candidates(
-        candidate_depot,
+        ecl,
         map_subbable_to_chain_str,
         map_chain_to_most_specific_str,
         token_dict,
-        unfold_conjunction=True,
     )
 
     triples = []
@@ -524,7 +527,11 @@ def graph_to_triples(rdoc, graph, rules) -> list[TripleCandidate]:
 
 def graph_to_maps(
     mod_graph, pile
-) -> tuple[dict[str, set[str]], dict[str, set[str]], nx.Graph]:
+) -> tuple[
+    dict[TokenIndexT, set[TokenIndexT]],
+    dict[TokenIndexT, set[TokenIndexT]],
+    nx.Graph,
+]:
     """
 
     derive maps
@@ -540,7 +547,7 @@ def graph_to_maps(
     # create relevant graphs for distance calculations : undirected, reversed ...
     g_undirected, g_reversed, g_weighted = generate_extra_graphs(mod_graph)
 
-    relation_indices = [c.root.i for c in pile.relations]
+    relation_indices = [c.root.s for c in pile.relations]
 
     (
         distance_undirected,
@@ -553,23 +560,23 @@ def graph_to_maps(
         indices_of_interest=relation_indices,
     )
 
-    distance_undirected_str = to_string_keys(distance_undirected)
-    distance_directed_str = to_string_keys(distance_directed)
-    distance_levels_str = to_string_keys(distance_levels)
-
     target_candidate_roots = pile.targets.sroots
     source_candidate_roots = pile.sources.sroots
     relation_candidate_roots = pile.relations.sroots
 
-    targets_per_relation: dict[str, set[str]] = derive_targets_per_relaton(
-        relation_candidate_roots, target_candidate_roots, distance_directed_str
+    targets_per_relation: dict[
+        TokenIndexT, set[TokenIndexT]
+    ] = derive_targets_per_relaton(
+        relation_candidate_roots, target_candidate_roots, distance_directed
     )
 
-    sources_per_relation: dict[str, set[str]] = derive_sources_per_relation(
+    sources_per_relation: dict[
+        TokenIndexT, set[TokenIndexT]
+    ] = derive_sources_per_relation(
         relation_candidate_roots,
         source_candidate_roots,
-        distance_undirected_str,
-        distance_levels_str,
+        distance_undirected,
+        distance_levels,
         pile.sources.roots,
     )
     return (
@@ -581,11 +588,12 @@ def graph_to_maps(
 
 def form_triples(
     pile: SRTPile,
-    sources_per_relation: dict[str, set[str]],
-    targets_per_relation: dict[str, set[str]],
+    sources_per_relation: dict[TokenIndexT, set[TokenIndexT]],
+    targets_per_relation: dict[TokenIndexT, set[TokenIndexT]],
     g_undirected: nx.Graph,
     relaxed=False,
-) -> list:
+) -> list[tuple[TokenIndexT, TokenIndexT, TokenIndexT]]:
+    # TODO solve incomplete triples : extend TokenIndexT with None, but then sorting fails...
     triples = []
 
     for sroot in pile.relations.sroots:
@@ -594,29 +602,21 @@ def form_triples(
 
         if sources and targets:
             for s, t in product(sources, targets):
-                si, ti, srooti = map(int, (s, t, sroot))
-                path = nx.shortest_path(g_undirected, si, ti)
-                # to make sure relation is in dep tree path between the source and the target
-                if s != t and srooti in path:
+                path = nx.shortest_path(g_undirected, s, t)
+                # make sure relation is in dep tree path between the source and the target
+                if s != t and sroot in path:
                     triples += [(s, sroot, t)]
-        elif not sources and relaxed:
-            triples += [
-                TripleCandidate(
-                    source=Source(),
-                    relation=pile.relations[sroot],
-                    target=pile.targets[t],
-                )
-                for t in targets
-            ]
-        elif not targets and relaxed:
-            triples += [
-                TripleCandidate(
-                    source=pile.sources[s],
-                    relation=pile.relations[sroot],
-                    target=Target(),
-                )
-                for s in sources
-            ]
+        # elif not sources and relaxed:
+        #     triples += [
+        #         (
+        #             None,
+        #             sroot,
+        #             t,
+        #         )
+        #         for t in targets
+        #     ]
+        # elif not targets and relaxed:
+        #     triples += [(s, sroot, None) for s in sources]
 
     return triples
 
@@ -636,17 +636,146 @@ def sieve_sources_targets(
 def phrase_to_triples(
     phrase, nlp, rules, filter_pronouns=True
 ) -> Tuple[List[TripleCandidate], List[Tuple[str, str, str]], nx.DiGraph]:
+
     logger.info(f"{phrase}")
 
     rdoc, graph = phrase_to_deptree(nlp, phrase)
 
-    triples = graph_to_triples(rdoc, graph, rules)
+    map_tree_subtree_index = graph_component_maps(graph)
+
+    graph_relabeled = relabel_nodes_and_key(graph, map_tree_subtree_index, "s")
+
+    # coref maps
+    (
+        map_subbable_to_chain,
+        map_chain_to_most_specific,
+    ) = render_coref_maps_wrapper(rdoc)
+
+    (map_subbable_to_chain_str, map_chain_to_most_specific_str,) = apply_map(
+        [map_subbable_to_chain, map_chain_to_most_specific],
+        map_tree_subtree_index,
+    )
+
+    triples = graph_to_triples(
+        graph_relabeled,
+        map_subbable_to_chain_str,
+        map_chain_to_most_specific_str,
+        rules,
+    )
 
     triples = [tri.normalize_relation() for tri in triples]
     if filter_pronouns:
         triples = [tri for tri in triples if not tri.has_pronouns()]
     triples_proj = [tri.project_to_text() for tri in triples]
     return triples, triples_proj, graph
+
+
+def text_to_compound_index_graph(nlp, text, initial_phrase_index):
+    rdoc, graph = phrase_to_deptree(nlp, text)
+
+    # cast index to compound index
+    map_tree_subtree_index = graph_component_maps(graph, initial_phrase_index)
+
+    map_tree_subtree_index = {
+        k: AToken.ituple2stuple(v) for k, v in map_tree_subtree_index.items()
+    }
+    graph_relabeled = relabel_nodes_and_key(graph, map_tree_subtree_index, "s")
+    return graph_relabeled, rdoc, map_tree_subtree_index
+
+
+def phrases_to_basis_triples(
+    nlp, rules, phrases
+) -> tuple[
+    list[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
+    CandidatePile,
+    CandidatePile,
+]:
+    """
+    accumulate prospective triples
+    :param nlp:
+    :param rules:
+    :param phrases:
+    :return:
+    """
+
+    striples = []
+    candidate_depot = CandidatePile()
+    relations = CandidatePile()
+    for k, phrase in enumerate(phrases):
+        (
+            graph_relabeled,
+            rdoc,
+            map_tree_subtree_index,
+        ) = text_to_compound_index_graph(nlp, phrase, initial_phrase_index=k)
+
+        pile, candidate_depot0, mod_graph = graph_to_candidate_pile(
+            graph_relabeled, rules
+        )
+
+        (
+            sources_per_relation,
+            targets_per_relation,
+            g_undirected,
+        ) = graph_to_maps(mod_graph=mod_graph, pile=pile)
+
+        striples0 = form_triples(
+            pile, sources_per_relation, targets_per_relation, g_undirected
+        )
+
+        relations += pile.relations
+        striples += striples0
+        candidate_depot += candidate_depot0
+    return striples, candidate_depot, relations
+
+
+def text_to_coref_sourcetarget(
+    nlp, text, ext_candidate_list: ExtCandidateList, initial_phrase_index
+) -> defaultdict[TokenIndexT, list[Candidate]]:
+    """
+
+    :param nlp:
+    :param text:
+    :param  ext_candidate_list: ExtCandidateList
+    :param  initial_phrase_index
+    :return:
+    """
+    (
+        graph_relabeled,
+        rdoc,
+        map_tree_subtree_index,
+    ) = text_to_compound_index_graph(nlp, text, initial_phrase_index)
+
+    # coref maps
+    (
+        map_subbable_to_chain,
+        map_chain_to_most_specific,
+    ) = render_coref_maps_wrapper(rdoc)
+
+    (map_subbable_to_chain_str, map_chain_to_most_specific_str,) = apply_map(
+        [map_subbable_to_chain, map_chain_to_most_specific],
+        map_tree_subtree_index,
+    )
+
+    tokens = [
+        Token(
+            **graph_relabeled.nodes[i],
+            successors=graph_relabeled.successors(i),
+            predecessors=graph_relabeled.predecessors(i),
+        )
+        for i in graph_relabeled.nodes()
+    ]
+
+    token_dict = {t.s: t for t in tokens}
+
+    # ncp : dict[TokenIndexT, list[Candidate]]
+    # for each root -> a list of relevant candidates
+    ncp = coref_candidates(
+        ext_candidate_list,
+        map_subbable_to_chain_str,
+        map_chain_to_most_specific_str,
+        token_dict,
+    )
+    return ncp
 
 
 def add_hash(triples_expanded):

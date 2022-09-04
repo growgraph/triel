@@ -8,9 +8,8 @@ from pathlib import Path
 import spacy
 import yaml
 
-from lm_service.graph import phrase_to_deptree, transform_advcl
-from lm_service.onto import Candidate, Token
-from lm_service.piles import CandidatePile, partition_conjunctive_wrapper
+from lm_service.graph import phrase_to_deptree
+from lm_service.onto import partition_conjunctive_wrapper
 from lm_service.relation import graph_to_candidate_pile
 
 logger = logging.getLogger(__name__)
@@ -33,7 +32,7 @@ class TestR(unittest.TestCase):
         "r0": 4,
         "_tokens": {
             24: {
-                "i": 24,
+                "s": 24,
                 "text": "estimation",
                 "dep_": "dobj",
                 "tag_": "NN",
@@ -44,7 +43,7 @@ class TestR(unittest.TestCase):
                 "label": "24-estimation-dobj-NN",
             },
             25: {
-                "i": 25,
+                "s": 25,
                 "text": "of",
                 "dep_": "prep",
                 "tag_": "IN",
@@ -55,7 +54,7 @@ class TestR(unittest.TestCase):
                 "label": "25-of-prep-IN",
             },
             27: {
-                "i": 27,
+                "s": 27,
                 "text": "mass",
                 "dep_": "pobj",
                 "tag_": "NN",
@@ -66,7 +65,7 @@ class TestR(unittest.TestCase):
                 "label": "27-mass-pobj-NN",
             },
             26: {
-                "i": 26,
+                "s": 26,
                 "text": "their",
                 "dep_": "poss",
                 "tag_": "PRP$",
@@ -77,7 +76,7 @@ class TestR(unittest.TestCase):
                 "label": "26-their-poss-PRP$",
             },
             28: {
-                "i": 28,
+                "s": 28,
                 "text": ",",
                 "dep_": "punct",
                 "tag_": ",",
@@ -88,7 +87,7 @@ class TestR(unittest.TestCase):
                 "label": "28-,-punct-,",
             },
             29: {
-                "i": 29,
+                "s": 29,
                 "text": "density",
                 "dep_": "conj",
                 "tag_": "NN",
@@ -99,7 +98,7 @@ class TestR(unittest.TestCase):
                 "label": "29-density-conj-NN",
             },
             30: {
-                "i": 30,
+                "s": 30,
                 "text": ",",
                 "dep_": "punct",
                 "tag_": ",",
@@ -110,7 +109,7 @@ class TestR(unittest.TestCase):
                 "label": "30-,-punct-,",
             },
             31: {
-                "i": 31,
+                "s": 31,
                 "text": "composition",
                 "dep_": "conj",
                 "tag_": "NN",
@@ -121,7 +120,7 @@ class TestR(unittest.TestCase):
                 "label": "31-composition-conj-NN",
             },
             32: {
-                "i": 32,
+                "s": 32,
                 "text": "and",
                 "dep_": "cc",
                 "tag_": "CC",
@@ -132,7 +131,7 @@ class TestR(unittest.TestCase):
                 "label": "32-and-cc-CC",
             },
             34: {
-                "i": 34,
+                "s": 34,
                 "text": "formation",
                 "dep_": "conj",
                 "tag_": "NN",
@@ -143,7 +142,7 @@ class TestR(unittest.TestCase):
                 "label": "34-formation-conj-NN",
             },
             33: {
-                "i": 33,
+                "s": 33,
                 "text": "their",
                 "dep_": "poss",
                 "tag_": "PRP$",
@@ -159,13 +158,18 @@ class TestR(unittest.TestCase):
     }
 
     documents = {
-        "cheops0": "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
-        " telescope to determine the size of known extrasolar planets,"
-        " which will allow the estimation of their mass, density,"
-        " composition and their formation.",
-        "coref": "Although he was very busy with his work, Peter Brown had had enough of it. "
-        "He and his wife decided they needed a holiday. "
-        "They travelled to Spain because they loved the country very much.",
+        "cheops0": (
+            "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+            " telescope to determine the size of known extrasolar planets,"
+            " which will allow the estimation of their mass, density,"
+            " composition and their formation."
+        ),
+        "coref": (
+            "Although he was very busy with his work, Peter Brown had had"
+            " enough of it. He and his wife decided they needed a holiday."
+            " They travelled to Spain because they loved the country very"
+            " much."
+        ),
     }
 
     def test_conjunctive(self):

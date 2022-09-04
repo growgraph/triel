@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+from abc import ABC
+from collections import deque
 from copy import deepcopy
 from enum import Enum
-from typing import TypeVar
+from typing import TypeVar, Union
 
 import networkx as nx
 from dataclass_wizard import JSONWizard
@@ -27,6 +29,8 @@ class RequestedIndexDoesNotExist(Exception):
     pass
 
 
+TokenIndexT = Union[str, tuple[int, str]]
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,6 +43,7 @@ def is_int(s):
 
 
 CandidateType = TypeVar("CandidateType", bound="Candidate")
+TokenType = TypeVar("TokenType", bound="AToken")
 
 
 class ConfigToken:
@@ -46,7 +51,7 @@ class ConfigToken:
 
 
 @dataclasses.dataclass(repr=False)
-class Token(JSONWizard):
+class AToken(JSONWizard, ABC):
     """
     represents a token in dep tree
     """
@@ -54,9 +59,7 @@ class Token(JSONWizard):
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
 
-    i: int
-    text: str
-    s: str = None  # type: ignore
+    text: str = ""
     dep_: str = ""
     tag_: str = ""
     lower: str = ""
@@ -64,14 +67,8 @@ class Token(JSONWizard):
     ent_iob: str = ""
     _level: int = 0
     label: str = ""
-    predecessors: set[str] = dataclasses.field(default_factory=set)
-    successors: set[str] = dataclasses.field(default_factory=set)
 
     def __post_init__(self):
-        if self.s is None:
-            self.s = self.i2s(self.i)
-        self.predecessors = set(self.i2s(i) for i in self.predecessors)
-        self.successors = set(self.i2s(i) for i in self.successors)
         if not self.lemma and self.text:
             self.lemma = self.text
         if not self.lower and self.text:
@@ -91,12 +88,81 @@ class Token(JSONWizard):
 
         if isinstance(i, int):
             return f"{i:0{ConfigToken.representation_leading_zero}}"
-        elif not isinstance(i, str):
-            raise TypeError(
-                f" Token.i2s received i={i} of type {type(i)}, type in expected."
-            )
-        else:
+        elif isinstance(i, str):
             return i
+        raise TypeError(
+            f" Token.i2s received i={i} of type {type(i)}, int expected."
+        )
+
+    @classmethod
+    def ituple2stuple(cls, i) -> tuple[int, str]:
+        """
+        cast integer index `i` to string index s used in Token
+        :param i:
+        :return:
+        """
+
+        if isinstance(i, tuple):
+            if len(i) == 2:
+                return i[0], cls.i2s(i[1])
+            raise ValueError(f"expected tuple of len 2, {i} received")
+        raise TypeError(
+            f" Token.ituple2stuple received i={i} of type {type(i)}, tuple"
+            " expected."
+        )
+
+
+@dataclasses.dataclass(repr=False)
+class Token(AToken):
+    """
+    represents a token in dep tree
+    """
+
+    class _(JSONWizard.Meta):
+        key_transform_with_dump = "SNAKE"
+
+    s: TokenIndexT = (0, "")
+    predecessors: set[TokenIndexT] = dataclasses.field(default_factory=set)
+    successors: set[TokenIndexT] = dataclasses.field(default_factory=set)
+
+    def __post_init__(self):
+        if isinstance(self.s, int):
+            self.s = self.i2s(self.s)
+            self.predecessors = (
+                set(self.i2s(i) for i in self.predecessors)
+                if self.predecessors
+                else set()
+            )
+            self.successors = (
+                set(self.i2s(i) for i in self.successors)
+                if self.successors
+                else set()
+            )
+        elif isinstance(self.s, tuple):
+            if not self.s[1]:
+                self.s = self.ituple2stuple(self.s)
+            self.predecessors = (
+                set(self.ituple2stuple(i) for i in self.predecessors)
+                if self.predecessors
+                else set()
+            )
+            self.successors = (
+                set(self.ituple2stuple(i) for i in self.successors)
+                if self.successors
+                else set()
+            )
+
+    def __repr__(self):
+        content = [f" {k} : {v}" for k, v in self.__dict__.items()]
+        return f"Token fields:" + " |".join(content)
+
+    def prior_s(self):
+        if isinstance(self.s, tuple):
+            return self.s[0], "/"
+        elif isinstance(self.s, str):
+            return "/"
+        else:
+            raise TypeError(f"Unexpected TokenIndexT subtype: {type(self.s)}")
 
 
 @dataclasses.dataclass(repr=False)
@@ -104,9 +170,9 @@ class Candidate(JSONWizard):
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
 
-    _tokens: dict[str, Token] = dataclasses.field(default_factory=dict)
-    _index_vec: list[str] = dataclasses.field(default_factory=list)
-    _root: str | None = None
+    _tokens: dict[TokenIndexT, Token] = dataclasses.field(default_factory=dict)
+    _index_vec: list[TokenIndexT] = dataclasses.field(default_factory=list)
+    _root: TokenIndexT | None = None
 
     def __add__(self, other: Candidate):
         new = deepcopy(self)
@@ -124,11 +190,14 @@ class Candidate(JSONWizard):
             str_succ = ", ".join([f"{s}" for s in t.successors])
             str_pred = ", ".join([f"{s}" for s in t.predecessors])
             content += [
-                f" {t.s} : {t.lower} : {t.tag_} : {t.dep_} : pred < {str_pred} : succ > {str_succ}"
+                f" \t {t.s} : {t.lower} : {t.tag_} : {t.dep_} : pred <"
+                f" {str_pred} : succ > {str_succ}"
             ]
 
         return (
-            f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
+            f"{self.__class__.__name__} tokens : (\n\t"
+            + "|\n\t".join(content)
+            + ")"
         )
 
     def from_tokens(self, tokens: list[Token]):
@@ -194,14 +263,16 @@ class Candidate(JSONWizard):
                 return self._tokens[self._index_vec[i]]
             else:
                 raise RequestedIndexDoesNotExist(
-                    f" size of {self.__class__.__name__} obj {len(self)}, requesting index {i}"
+                    f" size of {self.__class__.__name__} obj {len(self)},"
+                    f" requesting index {i}"
                 )
         else:
             if i in self._index_vec:
                 return self._tokens[i]
             else:
                 raise MissingTokenInACandidate(
-                    f"token {i} not present in {self.__class__.__name__} containing {self.stokens}"
+                    f"token {i} not present in"
+                    f" {self.__class__.__name__} containing {self.stokens}"
                 )
 
     def view_tokens(self, ifrom=None, ito=None):
@@ -215,8 +286,8 @@ class Candidate(JSONWizard):
             iito = None
         return [self.token(s) for s in self.stokens[iifrom:iito]]
 
-    def from_subtree(self, i: str):
-        acc: list[str] = []
+    def from_subtree(self, i: TokenIndexT):
+        acc: list[TokenIndexT] = []
         self._pick_successors(i, acc)
         return (
             Candidate()
@@ -280,7 +351,10 @@ class Candidate(JSONWizard):
     def _sort_wrt_tree(
         self,
         j: str,
-        sorter: dict[str | None, tuple[float, str | None, str | None]],
+        sorter: dict[
+            TokenIndexT | None,
+            tuple[float, TokenIndexT | None, TokenIndexT | None],
+        ],
     ):
         succs = self.token(j).successors
 
@@ -319,7 +393,7 @@ class Candidate(JSONWizard):
         self._index_vec = sorted(proposed_sorter, key=proposed_sorter.get)
         return self
 
-    def insert_before(self, ac: Candidate, s: str):
+    def insert_before(self, ac: Candidate, s: TokenIndexT):
         """
             extend self with ac candidate
             such that jpred -> j becomes jpred -> ac.root -> j
@@ -351,7 +425,7 @@ class Candidate(JSONWizard):
         for t in ac.tokens:
             self._tokens[t.s] = t
 
-        # update upward edges (NB: should be only one predecessors) : maybe check for that?
+        # update upward edges (NB: should be only one predecessor) : maybe check for that?
         for pred in self.token(s).predecessors:
             self.token(pred).successors |= {ac_root}
             self.token(pred).successors -= {s}
@@ -361,7 +435,7 @@ class Candidate(JSONWizard):
         self.token(s).predecessors = {ac.sroot}
         self._recompute_root()
 
-    def replace_token_with_acandidate(self, i: str, ac: Candidate):
+    def replace_token_with_acandidate(self, i: TokenIndexT, ac: Candidate):
         """
         replace is a combination of remove and insert
         :param i:
@@ -376,9 +450,13 @@ class Candidate(JSONWizard):
             except StopIteration:
                 of_index = i
 
+            if isinstance(i, tuple):
+                s0 = (of_index[0], of_index[1][:] + "a")
+            else:
+                s0 = of_index[:] + "a"
+
             of_token = Token(
-                i=-1,
-                s=of_index[:] + "a",
+                s=s0,
                 lower="of",
                 text="of",
                 lemma="of",
@@ -393,7 +471,7 @@ class Candidate(JSONWizard):
         self.remove(i)
         self.clean_dangling_edges().sort_index()
 
-    def remove(self, i: str):
+    def remove(self, i: TokenIndexT):
         # edges
         for pred in self.token(i).predecessors:
             self.token(pred).successors |= self.token(i).successors
@@ -492,6 +570,9 @@ class Candidate(JSONWizard):
             for j in es
         )
         return g
+
+    def unfold_conjuction(self) -> list[Candidate]:
+        return partition_conjunctive_wrapper(self)
 
 
 class ACandidateKind(Enum):
@@ -608,19 +689,125 @@ class TripleCandidate(JSONWizard):
         return s
 
 
-def to_string(obj):
+def to_string(obj, func):
     if isinstance(obj, dict):
-        return {Token.i2s(k): to_string(item) for k, item in obj.items()}
-    if isinstance(obj, (list, tuple)):
-        return [to_string(item) for item in obj]
+        return {func(k): to_string(item, func) for k, item in obj.items()}
+    if isinstance(obj, list):
+        return [to_string(item, func) for item in obj]
     else:
-        return Token.i2s(obj)
+        return func(obj)
 
 
-def to_string_keys(obj):
+def to_string_keys(obj, func):
     if isinstance(obj, dict):
-        return {to_string_keys(k): item for k, item in obj.items()}
+        return {to_string_keys(k, func): item for k, item in obj.items()}
     if isinstance(obj, (list, tuple)):
-        return tuple(to_string(item) for item in obj)
+        return tuple(to_string_keys(item, func) for item in obj)
     else:
-        return Token.i2s(obj)
+        return func(obj)
+
+
+def apply_map(obj, mapper):
+    if isinstance(obj, dict):
+        return {
+            apply_map(k, mapper): apply_map(item, mapper)
+            for k, item in obj.items()
+        }
+    if isinstance(obj, list):
+        return tuple(apply_map(item, mapper) for item in obj)
+    else:
+        return mapper[obj] if obj in mapper else obj
+
+
+def partition_conjunctive_dfs(
+    c: CandidateType,
+    deq: deque[tuple[TokenIndexT, TokenIndexT]],
+    current_cand,
+    accumulist: list[tuple[TokenIndexT, Candidate]],
+    sparent0: TokenIndexT,
+):
+    """
+    partition candidate into conjunctive pieces used DFS (depth first search)
+
+    :param c: the original candidate that potentially contains multiple conj pieces
+    :param deq: (!) the initial call should have only a single vertex in q
+    :param current_cand: candidate to accumulate the conjunctive piece
+    :param accumulist: list that accumulates [(iparent0, transformed Candidate)]
+    :param sparent0: for each Candidate sparent0 is the index of parent graph vertex (NB : "/" < "[0,9]")
+
+    :return:
+    """
+
+    if not deq:
+        return
+    stoken, sparent = deq.pop()
+
+    if c.token(stoken).dep_ == "conj":
+        current_cand = SourceOrTarget()
+        sparent0 = sparent
+    current_cand.append(c.token(stoken))
+
+    if len(current_cand) == 1:
+        accumulist.append((sparent0, current_cand))
+
+    successors = [s for s in c.token(stoken).successors]
+
+    for v in successors:
+        deq.append((v, stoken))
+        partition_conjunctive_dfs(
+            c,
+            deq,
+            current_cand,
+            accumulist,
+            sparent0,
+        )
+
+
+def partition_conjunctive_wrapper(
+    candidate: CandidateType,
+) -> list[Candidate]:
+    """
+
+    :param candidate:
+    :return:
+    """
+
+    # init partition_conjunctive_dfs parameters
+    deq: deque[tuple[TokenIndexT, TokenIndexT]] = deque()
+
+    # queue starts with a root
+    deq.append((candidate.root.s, candidate.root.prior_s()))
+
+    cand: SourceOrTarget = SourceOrTarget()
+    accumulist: list[tuple[TokenIndexT, Candidate]] = []
+
+    partition_conjunctive_dfs(
+        c=candidate,
+        deq=deq,
+        current_cand=cand,
+        accumulist=accumulist,
+        sparent0=candidate.root.prior_s(),
+    )
+
+    # dangling edges appear during partition
+    accumulist = [(x, y.clean_dangling_edges()) for x, y in accumulist]
+
+    accumulist = sorted(accumulist, key=lambda x: x[0])
+    acc: list[Candidate] = []
+
+    (_, root_candidate), clauses = accumulist[0], accumulist[1:]
+
+    acc.append(root_candidate)
+
+    for _, candidate in clauses:
+        sparent, _ = clauses[0]
+        c_prime = deepcopy(root_candidate)
+        c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
+        acc.append(
+            c_prime.drop_cc()
+            .drop_punct()
+            .drop_articles()
+            .clean_dangling_edges()
+            .sort_index()
+        )
+    return acc

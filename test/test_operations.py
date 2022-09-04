@@ -26,7 +26,7 @@ class TestOps(unittest.TestCase):
         tokens = [
             Token(
                 **{
-                    "i": 7,
+                    "s": 7,
                     "lower": "his",
                     "text": "his",
                     "dep_": "poss",
@@ -34,13 +34,13 @@ class TestOps(unittest.TestCase):
                 }
             ),
             Token(
-                **{"i": 8, "lower": "dog", "text": "dog", "successors": {7}}
+                **{"s": 8, "lower": "dog", "text": "dog", "successors": {7}}
             ),
         ]
         ac = Candidate().from_tokens(tokens)
 
         tokens_b = [
-            Token(**{"i": 15, "lower": "john", "text": "John"}),
+            Token(**{"s": 15, "lower": "john", "text": "John"}),
         ]
         bc = Candidate().from_tokens(tokens_b)
 
@@ -53,7 +53,7 @@ class TestOps(unittest.TestCase):
         tokens = [
             Token(
                 **{
-                    "i": 7,
+                    "s": 7,
                     "lower": "he",
                     "text": "he",
                 }
@@ -62,7 +62,7 @@ class TestOps(unittest.TestCase):
         ac = Candidate().from_tokens(tokens)
 
         tokens_b = [
-            Token(**{"i": 15, "lower": "john", "text": "John"}),
+            Token(**{"s": 15, "lower": "john", "text": "John"}),
         ]
         bc = Candidate().from_tokens(tokens_b)
 
@@ -71,11 +71,11 @@ class TestOps(unittest.TestCase):
 
     def test_from_subtree(self):
         tokens = [
-            Token(**{"i": 0, "text": "a0", "successors": {1, 2}}),
-            Token(**{"i": 1, "text": "a1", "predecessors": {0}}),
+            Token(**{"s": 0, "text": "a0", "successors": {1, 2}}),
+            Token(**{"s": 1, "text": "a1", "predecessors": {0}}),
             Token(
                 **{
-                    "i": 2,
+                    "s": 2,
                     "text": "a2",
                     "predecessors": {0},
                     "successors": {15},
@@ -83,14 +83,14 @@ class TestOps(unittest.TestCase):
             ),
             Token(
                 **{
-                    "i": 15,
+                    "s": 15,
                     "text": "b0",
                     "predecessors": {2},
                     "successors": {16, 17},
                 }
             ),
-            Token(**{"i": 16, "text": "b1", "predecessors": {15}}),
-            Token(**{"i": 17, "text": "b2", "predecessors": {15}}),
+            Token(**{"s": 16, "text": "b1", "predecessors": {15}}),
+            Token(**{"s": 17, "text": "b2", "predecessors": {15}}),
         ]
         ac = Candidate().from_tokens(tokens)
 
