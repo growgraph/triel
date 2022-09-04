@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import logging
 from abc import ABC
+from collections import deque
 from copy import deepcopy
 from enum import Enum
 from typing import TypeVar, Union
@@ -570,6 +571,9 @@ class Candidate(JSONWizard):
         )
         return g
 
+    def unfold_conjuction(self) -> list[Candidate]:
+        return partition_conjunctive_wrapper(self)
+
 
 class ACandidateKind(Enum):
     RELATION = 1
@@ -713,3 +717,97 @@ def apply_map(obj, mapper):
         return tuple(apply_map(item, mapper) for item in obj)
     else:
         return mapper[obj] if obj in mapper else obj
+
+
+def partition_conjunctive_dfs(
+    c: CandidateType,
+    deq: deque[tuple[TokenIndexT, TokenIndexT]],
+    current_cand,
+    accumulist: list[tuple[TokenIndexT, Candidate]],
+    sparent0: TokenIndexT,
+):
+    """
+    partition candidate into conjunctive pieces used DFS (depth first search)
+
+    :param c: the original candidate that potentially contains multiple conj pieces
+    :param deq: (!) the initial call should have only a single vertex in q
+    :param current_cand: candidate to accumulate the conjunctive piece
+    :param accumulist: list that accumulates [(iparent0, transformed Candidate)]
+    :param sparent0: for each Candidate sparent0 is the index of parent graph vertex (NB : "/" < "[0,9]")
+
+    :return:
+    """
+
+    if not deq:
+        return
+    stoken, sparent = deq.pop()
+
+    if c.token(stoken).dep_ == "conj":
+        current_cand = SourceOrTarget()
+        sparent0 = sparent
+    current_cand.append(c.token(stoken))
+
+    if len(current_cand) == 1:
+        accumulist.append((sparent0, current_cand))
+
+    successors = [s for s in c.token(stoken).successors]
+
+    for v in successors:
+        deq.append((v, stoken))
+        partition_conjunctive_dfs(
+            c,
+            deq,
+            current_cand,
+            accumulist,
+            sparent0,
+        )
+
+
+def partition_conjunctive_wrapper(
+    candidate: CandidateType,
+) -> list[Candidate]:
+    """
+
+    :param candidate:
+    :return:
+    """
+
+    # init partition_conjunctive_dfs parameters
+    deq: deque[tuple[TokenIndexT, TokenIndexT]] = deque()
+
+    # queue starts with a root
+    deq.append((candidate.root.s, candidate.root.prior_s()))
+
+    cand: SourceOrTarget = SourceOrTarget()
+    accumulist: list[tuple[TokenIndexT, Candidate]] = []
+
+    partition_conjunctive_dfs(
+        c=candidate,
+        deq=deq,
+        current_cand=cand,
+        accumulist=accumulist,
+        sparent0=candidate.root.prior_s(),
+    )
+
+    # dangling edges appear during partition
+    accumulist = [(x, y.clean_dangling_edges()) for x, y in accumulist]
+
+    accumulist = sorted(accumulist, key=lambda x: x[0])
+    acc: list[Candidate] = []
+
+    (_, root_candidate), clauses = accumulist[0], accumulist[1:]
+
+    acc.append(root_candidate)
+
+    for _, candidate in clauses:
+        sparent, _ = clauses[0]
+        c_prime = deepcopy(root_candidate)
+        c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
+        acc.append(
+            c_prime.drop_cc()
+            .drop_punct()
+            .drop_articles()
+            .clean_dangling_edges()
+            .sort_index()
+        )
+    return acc

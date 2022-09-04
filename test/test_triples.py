@@ -1617,6 +1617,8 @@ class TestR(unittest.TestCase):
             self.assertEqual(triples_projected[k], reference[k])
 
     def test_text_to_relations(self):
+        from lm_service.text import text_to_triples
+
         text = (
             "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
             " telescope to determine the size of known extrasolar planets,"
@@ -1626,67 +1628,82 @@ class TestR(unittest.TestCase):
             " science programme.The small satellite features an optical"
             " Ritchey-Chrétien telescope with an aperture of 30 cm, mounted on"
             " a standard small satellite platform. It was placed into a"
-            " Sun-synchronous orbit of about 700 km altitude.    Thousands of"
+            " Sun-synchronous orbit of about 700 km altitude. Thousands of"
             " exoplanets have been discovered by the end of the 2010s; some"
             " have minimum mass measurements from the radial velocity method"
             " while others that are seen to transit their parent stars have"
             " measures of their physical size."
         )
 
-        phrases = normalize_input_text(text, terminal_full_stop=True)
-        phrases = [transform_advcl(self.nlp, p) for p in phrases]
-
-        from collections import defaultdict
-        from itertools import product
-
-        from lm_service.onto import TripleCandidate
-        from lm_service.relation import (
-            phrases_to_basis_triples,
-            text_to_coref_sourcetarget,
+        global_triples = text_to_triples(
+            text, self.nlp, self.rules, window_size=2
         )
 
-        striples, candidate_depot, relations = phrases_to_basis_triples(
-            self.nlp, self.rules, phrases
-        )
-
-        from lm_service.piles import CandidatePile
-
-        global_ncp = defaultdict(CandidatePile)
-        window_size = 2
-        nmax = len(phrases) - window_size + 1
-        for i in range(nmax):
-            fragment = " ".join(phrases[i : i + window_size])
-            ncp = text_to_coref_sourcetarget(
-                self.nlp, fragment, candidate_depot, initial_phrase_index=i
-            )
-
-            for key, candidate_list in ncp.items():
-                if key not in global_ncp:
-                    for c in candidate_list:
-                        global_ncp[key].append(c)
-                # else:
-                #     for c in candidate_list:
-                #         global_ncp[key].append(c)
-
-        global_triples = []
-
-        # expand using coref and conj maps
-        for tri in striples:
-            s, r, t = tri
-            for sprime, tprime in product(global_ncp[s], global_ncp[t]):
-                global_triples += [
-                    TripleCandidate(
-                        source=sprime, target=tprime, relation=relations[r]
-                    )
-                ]
-
-        global_triples = [tri.normalize_relation() for tri in global_triples]
-        global_triples = sorted(
-            global_triples,
-            key=lambda x: (x.source.sroot, x.relation.sroot, x.target.sroot),
-        )
         global_triples_txt = [tri.project_to_text() for tri in global_triples]
-        print(global_triples_txt)
+        reference = [
+            ("CHEOPS", "is", "europeanSpaceTelescope"),
+            (
+                "CHEOPS",
+                "is",
+                "firstSmallClassMissionInEsaCosmicVisionScienceProgramme",
+            ),
+            (
+                "europeanSpaceTelescope",
+                "determines",
+                "sizeOfKnownExtrasolarPlanets",
+            ),
+            (
+                "europeanSpaceTelescope",
+                "allows",
+                "estimationOfMassOfKnownExtrasolarPlanets",
+            ),
+            (
+                "europeanSpaceTelescope",
+                "allows",
+                "estimationOfDensityOfKnownExtrasolarPlanets",
+            ),
+            (
+                "europeanSpaceTelescope",
+                "allows",
+                "estimationOfCompositionOfKnownExtrasolarPlanets",
+            ),
+            (
+                "europeanSpaceTelescope",
+                "allows",
+                "estimationOfFormationOfKnownExtrasolarPlanets",
+            ),
+            (
+                "firstSmallClassMissionInEsaCosmicVisionScienceProgramme",
+                "launchesOn",
+                "18December2019",
+            ),
+            (
+                "smallSatellite",
+                "features",
+                "opticalRitcheyChretienTelescopeWithApertureOf30Cm",
+            ),
+            (
+                "smallSatellite",
+                "wasPlacedInto",
+                "synchronousOrbitOf700KmAltitude",
+            ),
+            (
+                "opticalRitcheyChretienTelescopeWithApertureOf30Cm",
+                "mountsOn",
+                "standardSmallSatellitePlatform",
+            ),
+            (
+                "discovered",
+                "has",
+                "minimumMassMeasurementsFromRadialVelocityMethod",
+            ),
+            ("discovered", "has", "measuresOfPhysicalSizeOfOthers"),
+            ("others", "wasSeen", "parentStarsOfOthers"),
+            ("others", "transits", "parentStarsOfOthers"),
+            ("others", "has", "measuresOfPhysicalSizeOfOthers"),
+        ]
+
+        self.assertEqual(global_triples_txt, reference)
 
 
 if __name__ == "__main__":

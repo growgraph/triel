@@ -1,16 +1,10 @@
 from __future__ import annotations
 
 import dataclasses
-from collections import deque
+from collections import defaultdict
 from copy import deepcopy
 
-from lm_service.onto import (
-    Candidate,
-    CandidateType,
-    SourceOrTarget,
-    Token,
-    TokenIndexT,
-)
+from lm_service.onto import CandidateType, Token, TokenIndexT
 
 
 @dataclasses.dataclass(repr=False)
@@ -137,14 +131,56 @@ class CandidatePile:
         :return:
         """
 
-    # TODO move conj here
-    # def unfold_conjunction(self, graph):
-    #     apile = CandidatePile()
-    #     for c in self._candidates:
-    #         accum = partition_conjunctive_wrapper(c, graph)
-    #         accum = accum.drop_punct().drop_cc().sort_index()
-    #         apile += accum
-    #     return apile
+    def unfold_conjunction(self) -> ExtCandidateList:
+        dd_pile: ExtCandidateList = ExtCandidateList()
+        for sroot, c in self._root_to_candidate.items():
+            for c_unfolded in c.unfold_conjuction():  # type: ignore
+                dd_pile[sroot] += [c_unfolded]
+        return dd_pile
+
+
+class ExtCandidateList:
+    """
+    ext list of candidates
+    """
+
+    def __init__(self):
+        self._filter = None
+        self._root_to_lists: defaultdict[TokenIndexT, list[CandidateType]] = defaultdict(list)  # type: ignore
+
+    def __len__(self) -> int:
+        return sum(len(x) for x in self._root_to_lists.values())
+
+    def set_filter(self, key):
+        self._filter = key
+
+    def __setitem__(self, key, value):
+        self._root_to_lists[key] = value
+
+    def __getitem__(self, item):
+        return self._root_to_lists[item]
+
+    def append(self, key, value: CandidateType):
+        if tuple(value.stokens) not in {
+            tuple(x.stokens) for x in self._root_to_lists[key]  # type: ignore
+        }:
+            self._root_to_lists[key] += [value]
+
+    def __iter__(self):
+        if self._filter is None:
+            return ((k, v) for k, v in self._root_to_lists.items())
+        else:
+            return (
+                (k, v)
+                for k, v in self._root_to_lists.items()
+                if self._filter(k)
+            )
+
+    def filter_out_pronouns(self):
+        for k, vlist in self._root_to_lists.items():
+            self._root_to_lists[k] = [
+                item for item in vlist if not item.has_pronoun()
+            ]
 
 
 @dataclasses.dataclass
@@ -152,97 +188,3 @@ class SRTPile:
     sources: CandidatePile
     targets: CandidatePile
     relations: CandidatePile
-
-
-def partition_conjunctive_dfs(
-    c: CandidateType,
-    deq: deque[tuple[TokenIndexT, TokenIndexT]],
-    current_cand,
-    accumulist: list[tuple[TokenIndexT, Candidate]],
-    sparent0: TokenIndexT,
-):
-    """
-    partition candidate into conjunctive pieces used DFS (depth first search)
-
-    :param c: the original candidate that potentially contains multiple conj pieces
-    :param deq: (!) the initial call should have only a single vertex in q
-    :param current_cand: candidate to accumulate the conjunctive piece
-    :param accumulist: list that accumulates [(iparent0, transformed Candidate)]
-    :param sparent0: for each Candidate sparent0 is the index of parent graph vertex (NB : "/" < "[0,9]")
-
-    :return:
-    """
-
-    if not deq:
-        return
-    stoken, sparent = deq.pop()
-
-    if c.token(stoken).dep_ == "conj":
-        current_cand = SourceOrTarget()
-        sparent0 = sparent
-    current_cand.append(c.token(stoken))
-
-    if len(current_cand) == 1:
-        accumulist.append((sparent0, current_cand))
-
-    successors = [s for s in c.token(stoken).successors]
-
-    for v in successors:
-        deq.append((v, stoken))
-        partition_conjunctive_dfs(
-            c,
-            deq,
-            current_cand,
-            accumulist,
-            sparent0,
-        )
-
-
-def partition_conjunctive_wrapper(
-    candidate: CandidateType,
-) -> list[Candidate]:
-    """
-
-    :param candidate:
-    :return:
-    """
-
-    # init partition_conjunctive_dfs parameters
-    deq: deque[tuple[TokenIndexT, TokenIndexT]] = deque()
-
-    # queue starts with a root
-    deq.append((candidate.root.s, candidate.root.prior_s()))
-
-    cand: SourceOrTarget = SourceOrTarget()
-    accumulist: list[tuple[TokenIndexT, Candidate]] = []
-
-    partition_conjunctive_dfs(
-        c=candidate,
-        deq=deq,
-        current_cand=cand,
-        accumulist=accumulist,
-        sparent0=candidate.root.prior_s(),
-    )
-
-    # dangling edges appear during partition
-    accumulist = [(x, y.clean_dangling_edges()) for x, y in accumulist]
-
-    accumulist = sorted(accumulist, key=lambda x: x[0])
-    acc: list[Candidate] = []
-
-    (_, root_candidate), clauses = accumulist[0], accumulist[1:]
-
-    acc.append(root_candidate)
-
-    for _, candidate in clauses:
-        sparent, _ = clauses[0]
-        c_prime = deepcopy(root_candidate)
-        c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
-        acc.append(
-            c_prime.drop_cc()
-            .drop_punct()
-            .drop_articles()
-            .clean_dangling_edges()
-            .sort_index()
-        )
-    return acc
