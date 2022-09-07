@@ -27,7 +27,7 @@ def text_to_triples(
     ecl = candidate_depot.unfold_conjunction()
 
     global_ecl = ExtCandidateList()
-    window_size = 2
+    window_size = min([window_size, len(phrases)])
     nmax = len(phrases) - window_size + 1
     for i in range(nmax):
         fragment = " ".join(phrases[i : i + window_size])
