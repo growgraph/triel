@@ -589,6 +589,10 @@ class Relation(Candidate):
         return any([t.dep_ == "auxpass" for t in self._tokens.values()])
 
     def normalize(self):
+        """
+        TODO exteand to perfect tense
+        :return:
+        """
         if self.passive:
             # find auxpass, inflect it to was
             for s in self.stokens:

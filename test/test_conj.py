@@ -189,12 +189,12 @@ class TestR(unittest.TestCase):
                 ]
                 apile += accum
             text = [x.project_to_text() for x in apile]
-            lens[key]["became"] = len(apile)
             print(text)
+            lens[key]["became"] = len(apile)
         self.assertEqual(
             lens,
             {
-                "coref": {"was": 9, "became": 10},
+                "coref": {"was": 8, "became": 9},
                 "cheops0": {"was": 5, "became": 8},
             },
         )

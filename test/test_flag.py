@@ -24,15 +24,15 @@ class TestFlag(unittest.TestCase):
 
     nlp = spacy.load("en_core_web_trf")
 
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
-    rules = yaml.load(fp, Loader=yaml.FullLoader)
+    # fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
+    # rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules_v2 = yaml.load(fp, Loader=yaml.FullLoader)
 
     def test_flag(self):
         t = Token(**{"s": 7, "text": "his", "dep_": "conj", "tag_": "VBG"})
-        flag = get_flag(t.__dict__, self.rules_v2)
+        flag = get_flag(t.__dict__, self.rules_v2["secondary"])
         self.assertEqual(flag, False)
 
 

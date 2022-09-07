@@ -80,6 +80,12 @@ class TestR(unittest.TestCase):
             " orbiting a star of 0 . 9 R in 60 days  detected with a S"
             " Ntransit > 10 ( 100 ppm transit depth )"
         ),
+        "thousands": (
+            "Thousands of exoplanets have been discovered by the end of the"
+            " 2010s; some have minimum mass measurements from the radial"
+            " velocity method while others that are seen to transit their"
+            " parent stars have measures of their physical size."
+        ),
     }
 
     reference_distance = {
@@ -1496,6 +1502,7 @@ class TestR(unittest.TestCase):
                 "cheops0_trunc",
                 "cheops_ext",
                 "photometric",
+                "thousands",
             ]
         }
         acc_triples = []

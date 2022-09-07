@@ -197,18 +197,12 @@ def find_sourcetarget_subtree_dfs(
     if not deq:
         return
     current_vertex, level = deq.pop()
-    if (
-        source_target_cand.empty
-        and level > 0
-        or (
-            not source_target_cand.empty
-            and (
-                (level - source_target_cand.max_level() > 1)
-                or (source_target_cand.root.dep_ == "ccomp")
-            )
-        )
-    ):
-        return
+    if source_target_cand.empty:
+        if level > 0:
+            return
+    else:
+        if level - source_target_cand.max_level() > 1:
+            return
 
     vtoken = Token(
         **graph.nodes[current_vertex],
@@ -220,12 +214,10 @@ def find_sourcetarget_subtree_dfs(
     len_current_relation = len(source_target_cand)
 
     if level == 0 and source_target_cand.empty:
-        if (("NN" in vtoken.tag_) or (vtoken.tag_ == "PRP")) or (
-            vtoken.dep_ == "ccomp"
-        ):
+        if get_flag(vtoken.__dict__, rules["primary"]):
             source_target_cand.append(vtoken)
     elif level > 0 and not source_target_cand.empty:
-        if get_flag(vtoken.__dict__, rules):
+        if get_flag(vtoken.__dict__, rules["secondary"]):
             source_target_cand.append(vtoken)
 
     successors = list(graph.successors(current_vertex))
@@ -255,19 +247,10 @@ def graph_to_candidate_pile(
     """
     roots = [n for n, d in graph.in_degree() if d == 0]
     relation_pile = CandidatePile()
+    candidate_pile = CandidatePile()
 
     mgraph = deepcopy(graph)
 
-    find_candidates_bfs(
-        mgraph,
-        graph,
-        deque(roots),
-        relation_pile,
-        ACandidateKind.RELATION,
-        robust_mode=True,
-    )
-
-    candidate_pile = CandidatePile()
     find_candidates_bfs(
         mgraph,
         graph,
@@ -276,6 +259,15 @@ def graph_to_candidate_pile(
         ACandidateKind.SOURCE_TARGET,
         rules=rules,
         robust_mode=robust_mode,
+    )
+
+    find_candidates_bfs(
+        mgraph,
+        graph,
+        deque(roots),
+        relation_pile,
+        ACandidateKind.RELATION,
+        robust_mode=True,
     )
 
     source_candidates, target_candidates = sieve_sources_targets(
@@ -511,9 +503,11 @@ def graph_to_triples(
     for tri in itriples:
         s, r, t = tri
         for sprime, tprime in product(ncp[s], ncp[t]):
+            relation = realign_prepositions(pile.relations[r], tprime, graph)
+            # relation = pile.relations[r]
             triples += [
                 TripleCandidate(
-                    source=sprime, target=tprime, relation=pile.relations[r]
+                    source=sprime, target=tprime, relation=relation
                 )
             ]
 
@@ -523,6 +517,25 @@ def graph_to_triples(
     )
 
     return triples
+
+
+def realign_prepositions(r: Relation, t: SourceOrTarget, graph: nx.DiGraph):
+    """
+    remove prepositions that on the path from relation to target
+    :param r:
+    :param t:
+    :param graph:
+    :return:
+    """
+    r = deepcopy(r)
+    preposition_tokens = [
+        t.s for t in r.tokens if t.dep_ == "prep" and t.tag_ == "IN"
+    ]
+    for prep in preposition_tokens:
+        path = nx.shortest_path(graph, r.sroot, t.sroot)
+        if prep not in path:
+            r.drop_tokens([prep])
+    return r
 
 
 def graph_to_maps(
@@ -596,15 +609,35 @@ def form_triples(
     # TODO solve incomplete triples : extend TokenIndexT with None, but then sorting fails...
     triples = []
 
+    relation_sroots = set(pile.relations.sroots)
+
     for sroot in pile.relations.sroots:
-        sources = sources_per_relation[sroot]
+        # there should be only one source; in general we prefer the first one
+        # TODO : in Thousands of exoplanets have been discovered by the end of the 2010s;"
+        #         " some have minimum mass measurements from the radial velocity method"
+        #         " while others that are seen to transit their parent stars have"
+        #         " measures of their physical size.
+        #
+        # sources_per_relation[(0, "034")] {(0, '014'), (0, '025')} have -> (some), (others)
+        # it is insuffiecient to take sorted(sources_per_relation[sroot])[:1]
+        # (should be the closest wrt to distance on undirected graph)
+        # or maybe there are several?
+
+        sources = sorted(sources_per_relation[sroot])[:1]
         targets = list(targets_per_relation[sroot] - set(sources))
 
         if sources and targets:
             for s, t in product(sources, targets):
                 path = nx.shortest_path(g_undirected, s, t)
-                # make sure relation is in dep tree path between the source and the target
-                if s != t and sroot in path:
+                # make sure relation is the only relation in dep tree path between the source and the target
+                flag_only_relation_in_path = (
+                    (set(path) - {s, t}) & relation_sroots
+                ) == {sroot}
+                flag_only_relation_in_path = (set(path) & relation_sroots) == {
+                    sroot
+                }
+
+                if s != t and flag_only_relation_in_path:
                     triples += [(s, sroot, t)]
         # elif not sources and relaxed:
         #     triples += [
@@ -626,7 +659,8 @@ def sieve_sources_targets(
 ) -> tuple[CandidatePile, CandidatePile]:
     sources, targets = CandidatePile(), CandidatePile()
     for c in pile:
-        if not c.root.dep_ == "pobj":
+        if True:
+            # if not c.root.dep_ == "pobj":
             sources.append(c)
         if True:
             targets.append(c)

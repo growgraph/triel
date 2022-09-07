@@ -1,44 +1,68 @@
-- - key: dep_
-    value: punct
-#  - key: tag_
-#    value: ","
-- - key: dep_
-    value: cc
-- - key: dep_
-    value: aux
-- - key: dep_
-    value: amod
-- - key: dep_
-    value: det
-- - key: dep_
-    value: poss
-- - how: startswith
-    key: tag_
-    value: NN
-  - key: dep_
-    value: conj
-- - how: startswith
-    key: tag_
-    value: NN
-  - key: dep_
-    value: compound
-- - key: tag_
-    value: CD
-- - key: tag_
-    value: IN
-  - key: dep_
-    value: prep
-- - how: startswith
-    key: tag_
-    value: NN
-  - key: dep_
-    value: pobj
-#- - key: dep_
-#    value: acl
-#  - how: ne
-#    key: tag_
-#    value: VBN
-- - key: tag_
-    value: CD
-  - key: dep_
-    value: nummod
+primary:
+  - - how: startswith
+      key: tag_
+      value: NN
+  - - key: tag_
+      value: PRP
+  - - key: tag_
+      value: DT
+    - key: dep_
+      value: nsubj
+  - - key: tag_
+      value: VB
+    - key: dep_
+      value: xcomp
+secondary:
+  - - key: dep_
+      value: punct
+  - - key: dep_
+      value: cc
+  - - key: dep_
+      value: aux
+  - - key: dep_
+      value: amod
+  - - key: dep_
+      value: det
+  - - key: dep_
+      value: poss
+  - - how: startswith
+      key: tag_
+      value: NN
+    - key: dep_
+      value: conj
+  - - how: startswith
+      key: tag_
+      value: NN
+    - key: dep_
+      value: dobj
+  - - how: startswith
+      key: tag_
+      value: NN
+    - key: dep_
+      value: npadvmod
+  - - how: startswith
+      key: tag_
+      value: NN
+    - key: dep_
+      value: compound
+  - - key: tag_
+      value: CD
+  - - key: tag_
+      value: IN
+    - key: dep_
+      value: prep
+  - - how: startswith
+      key: tag_
+      value: NN
+    - key: dep_
+      value: pobj
+  - - key: tag_
+      value: CD
+    - key: dep_
+      value: nummod
+#  - - how: startswith
+#      key: tag_
+#      value: VB
+#    - key: dep_
+#      value: acl
+
