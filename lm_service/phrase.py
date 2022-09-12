@@ -92,7 +92,7 @@ def graph_to_triples(
         g_undirected,
     ) = graph_to_maps(mod_graph=mod_graph, pile=pile)
 
-    itriples = form_triples(
+    itriples, striples_meta = form_triples(
         pile,
         sources_per_relation,
         targets_per_relation,

@@ -637,32 +637,64 @@ def form_triples(
     rel_targets_per_relation: dict[TokenIndexT, set[TokenIndexT]],
     g_undirected: nx.Graph,
     relaxed=False,
-) -> list[tuple[TokenIndexT, TokenIndexT, TokenIndexT]]:
+) -> tuple[
+    list[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
+    list[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
+]:
     triples = []
-
+    meta_triples = []
     relation_sroots = set(pile.relations.sroots)
 
     for sroot in pile.relations.sroots:
         sources = sources_per_relation[sroot]
         targets = targets_per_relation[sroot]
+        if not sources:
+            sources = rel_sources_per_relation[sroot]
+        if not targets:
+            targets = rel_targets_per_relation[sroot]
 
         if sources and targets:
             for s, t in product(sources, targets):
                 path = nx.shortest_path(g_undirected, s, t)
-                # make sure relation is the only relation in dep tree path between the source and the target
-                # and perhaps target might also be a relation
+                # current relation is the only relation in dep tree path between the source and the target
                 flag_only_relation_in_path = (
                     (set(path) - {s, t}) & relation_sroots
                 ) == {sroot}
 
-                # flag_only_relation_in_path = (set(path) & relation_sroots) == {
-                #     sroot
-                # }
-
-                if s != t and flag_only_relation_in_path:
-                    triples += [(s, sroot, t)]
-        else:
-            pass
+                if s != t:
+                    if flag_only_relation_in_path:
+                        if (
+                            s not in relation_sroots
+                            and t not in relation_sroots
+                        ):
+                            triples += [(s, sroot, t)]
+                        else:
+                            # case when source or target was empty, subbed from rel_****ts_per_relation
+                            meta_triples += [(s, sroot, t)]
+                    else:
+                        # there is another relation in path
+                        # decide whether it replaces source or target
+                        # options : path ~ [s, rA, r0, rB, t]
+                        if sroot in path:
+                            index_sroot = path.index(sroot)
+                            if set(path[:index_sroot]) & relation_sroots:
+                                if rel_sources_per_relation[sroot]:
+                                    # TODO clear up next-iter hack
+                                    # currently only first element is used (in practice there should be only one)
+                                    s = next(
+                                        iter(rel_sources_per_relation[sroot])
+                                    )
+                                else:
+                                    s = "nil"
+                            if set(path[index_sroot + 1 :]) & relation_sroots:
+                                if rel_targets_per_relation[sroot]:
+                                    t = next(
+                                        iter(rel_targets_per_relation[sroot])
+                                    )
+                                else:
+                                    t = "nil"
+                            if s != "nil" and t != "nil":
+                                meta_triples += [(s, sroot, t)]
         # elif not sources and relaxed:
         #     triples += [
         #         (
@@ -675,7 +707,7 @@ def form_triples(
         # elif not targets and relaxed:
         #     triples += [(s, sroot, None) for s in sources]
 
-    return triples
+    return triples, meta_triples
 
 
 def sieve_sources_targets(
