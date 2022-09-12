@@ -23,9 +23,12 @@ def text_to_triples(
         phrases_original = phrases_original[:head]
     phrases = [transform_advcl(nlp, p) for p in phrases_original]
 
-    striples, candidate_depot, relations = phrases_to_basis_triples(
-        nlp, rules, phrases
-    )
+    (
+        striples,
+        striples_meta,
+        candidate_depot,
+        relations,
+    ) = phrases_to_basis_triples(nlp, rules, phrases)
 
     ecl = candidate_depot.unfold_conjunction()
 
@@ -71,6 +74,7 @@ def phrases_to_basis_triples(
     nlp, rules, phrases
 ) -> tuple[
     list[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
+    list[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
     CandidatePile,
     CandidatePile,
 ]:
@@ -83,6 +87,7 @@ def phrases_to_basis_triples(
     """
 
     striples = []
+    striples_meta = []
     candidate_depot = CandidatePile()
     relations = CandidatePile()
     for k, phrase in enumerate(phrases):
@@ -104,7 +109,7 @@ def phrases_to_basis_triples(
             g_undirected,
         ) = graph_to_maps(mod_graph=mod_graph, pile=pile)
 
-        striples0 = form_triples(
+        striples0, striples0_meta = form_triples(
             pile,
             sources_per_relation,
             targets_per_relation,
@@ -115,5 +120,6 @@ def phrases_to_basis_triples(
 
         relations += pile.relations
         striples += striples0
+        striples_meta += striples0_meta
         candidate_depot += candidate_depot0
-    return striples, candidate_depot, relations
+    return striples, striples_meta, candidate_depot, relations
