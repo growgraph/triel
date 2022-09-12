@@ -17,6 +17,7 @@ from lm_service.graph import (
     transform_advcl,
 )
 from lm_service.onto import AToken, apply_map
+from lm_service.phrase import graph_to_triples
 from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
     compute_distances,
@@ -24,7 +25,6 @@ from lm_service.relation import (
     generate_extra_graphs,
     graph_to_candidate_pile,
     graph_to_maps,
-    graph_to_triples,
 )
 
 logger = logging.getLogger(__name__)
@@ -1474,11 +1474,13 @@ class TestR(unittest.TestCase):
             (
                 distance_undirected,
                 distance_directed,
+                distance_reversed,
                 distance_levels,
             ) = compute_distances(
                 mod_graph,
                 g_undirected=g_undirected,
                 g_weighted=g_weighted,
+                g_reversed=g_reversed,
                 indices_of_interest=relation_indices,
             )
 

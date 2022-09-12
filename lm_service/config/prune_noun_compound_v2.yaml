@@ -60,9 +60,3 @@ secondary:
       value: CD
     - key: dep_
       value: nummod
-#  - - how: startswith
-#      key: tag_
-#      value: VB
-#    - key: dep_
-#      value: acl
-
