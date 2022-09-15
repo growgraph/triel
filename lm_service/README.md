@@ -11,4 +11,6 @@ ordered triples of tokens comprise triple space: $\tau \in T(\mathcal{K})$, in s
 
 Define an extension of triple space by adding itself to candidate space: $\mathcal{K}^* = \mathcal{K} \bigcup T$. Then define $T^* = T(\mathcal{K}^*)$
 
+We call $\mathcal{K}$ fundamental candidates and $T$ - metacandidates.
+
 

@@ -685,15 +685,15 @@ def form_triples(
                                         iter(rel_sources_per_relation[sroot])
                                     )
                                 else:
-                                    s = "nil"
+                                    s = (0, "nil")
                             if set(path[index_sroot + 1 :]) & relation_sroots:
                                 if rel_targets_per_relation[sroot]:
                                     t = next(
                                         iter(rel_targets_per_relation[sroot])
                                     )
                                 else:
-                                    t = "nil"
-                            if s != "nil" and t != "nil":
+                                    t = (0, "nil")
+                            if s != (0, "nil") and t != (0, "nil"):
                                 meta_triples += [(s, sroot, t)]
         # elif not sources and relaxed:
         #     triples += [

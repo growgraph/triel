@@ -6,7 +6,7 @@ from abc import ABC
 from collections import deque
 from copy import deepcopy
 from enum import Enum
-from typing import TypeVar, Union
+from typing import TypeVar
 
 import networkx as nx
 from dataclass_wizard import JSONWizard
@@ -29,7 +29,9 @@ class RequestedIndexDoesNotExist(Exception):
     pass
 
 
-TokenIndexT = Union[str, tuple[int, str]]
+# TokenIndexT = Union[str, tuple[int, str]]
+TokenIndexT = tuple[int, str]
+
 
 logger = logging.getLogger(__name__)
 
@@ -165,8 +167,43 @@ class Token(AToken):
             raise TypeError(f"Unexpected TokenIndexT subtype: {type(self.s)}")
 
 
+from abc import ABC
+
+
 @dataclasses.dataclass(repr=False)
-class Candidate(JSONWizard):
+class AbsCandidate(ABC):
+    def project_to_text_str(self):
+        pass
+
+    def drop_amod_vbn(self):
+        return self
+
+    def drop_cc(self):
+        return self
+
+    def drop_punct(self):
+        return self
+
+    def drop_articles(self):
+        return self
+
+    def normalize(self):
+        return self
+
+    def has_pronoun(self):
+        return self
+
+
+@dataclasses.dataclass(repr=False)
+class CandidateReference(AbsCandidate, JSONWizard):
+    sroot: tuple[int, int]
+
+    def project_to_text_str(self):
+        return f"{self.sroot}"
+
+
+@dataclasses.dataclass(repr=False)
+class Candidate(AbsCandidate, JSONWizard):
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
 
@@ -350,7 +387,7 @@ class Candidate(JSONWizard):
 
     def _sort_wrt_tree(
         self,
-        j: str,
+        j: TokenIndexT,
         sorter: dict[
             TokenIndexT | None,
             tuple[float, TokenIndexT | None, TokenIndexT | None],
@@ -646,9 +683,9 @@ class Target(SourceOrTarget):
 
 @dataclasses.dataclass(repr=False)
 class TripleCandidate(JSONWizard):
-    source: Source
+    source: Source | CandidateReference
     relation: Relation
-    target: Target
+    target: Target | CandidateReference
 
     def project_to_text(self):
         return (
@@ -815,3 +852,18 @@ def partition_conjunctive_wrapper(
             .sort_index()
         )
     return acc
+
+
+@dataclasses.dataclass(eq=True, frozen=True, order=True)
+class MuIndex(JSONWizard):
+    """
+    meta - flag, true if MuIndex points to a triple
+    phrase - phrase number
+    token - token index within phrase
+    running -
+    """
+
+    meta: bool
+    phrase: int
+    token: str
+    running: int
