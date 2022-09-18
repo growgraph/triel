@@ -23,11 +23,7 @@ from lm_service.onto import (
 )
 from lm_service.piles import CandidatePile
 from lm_service.preprocessing import normalize_input_text
-from lm_service.relation import (
-    find_candidates_bfs,
-    find_relation_subtree_dfs,
-    find_sourcetarget_subtree_dfs,
-)
+from lm_service.relation import find_candidates_bfs, find_subtree_dfs
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +60,12 @@ class TestR(unittest.TestCase):
             roots = [n for n, d in graph.in_degree() if d == 0]
             rp = CandidatePile()
             find_candidates_bfs(
-                graph, ograph, deque(roots), rp, ACandidateKind.RELATION
+                graph,
+                ograph,
+                deque(roots),
+                rp,
+                ACandidateKind.RELATION,
+                rules=self.rules,
             )
             piles += [rp]
 
@@ -145,7 +146,9 @@ class TestR(unittest.TestCase):
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             ograph = graph.copy()
             cr = Relation()
-            find_relation_subtree_dfs(graph, ograph, deq, cr)
+            find_subtree_dfs(
+                graph, ograph, deq, cr, rules=self.rules["relation"]
+            )
             cr.clean_dangling_edges().sort_index()
             piles += [cr]
 
@@ -167,8 +170,12 @@ class TestR(unittest.TestCase):
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             original_graph = graph.copy()
             st = SourceOrTarget()
-            find_sourcetarget_subtree_dfs(
-                graph, original_graph, deq, st, rules=self.rules
+            find_subtree_dfs(
+                graph,
+                original_graph,
+                deq,
+                st,
+                rules=self.rules["sourcetarget"],
             )
             st.sort_index()
             piles += [st]
@@ -221,6 +228,7 @@ class TestR(unittest.TestCase):
                 deque(roots),
                 relation_pile,
                 ACandidateKind.RELATION,
+                rules=self.rules,
             )
             sb = len(graph.nodes)
             find_candidates_bfs(
