@@ -53,7 +53,7 @@ def find_candidates_bfs(
     candidate_pile: CandidatePile,
     how: ACandidateKind,
     robust_mode=False,
-    **kwargs,
+    rules=None,
 ):
     """
 
@@ -63,23 +63,23 @@ def find_candidates_bfs(
     :param candidate_pile: pile to accumulate candidates
     :param how:
     :param robust_mode: if True, try to resolve errors
+    :param rules: if True, try to resolve errors
     :return:
     """
     # VB, VBP, VBZ, VBD, VBG, VBN
     # auxiliary verb uses of be, have, do, and get: AUX
     # the infinitive to is PART
 
-    foo_map = {
-        ACandidateKind.RELATION: find_relation_subtree_dfs,
-        ACandidateKind.SOURCE_TARGET: find_sourcetarget_subtree_dfs,
-    }
-
     foo_map_class = {
         ACandidateKind.RELATION: Relation,
         ACandidateKind.SOURCE_TARGET: SourceOrTarget,
     }
 
-    foo_func = foo_map[how]
+    rules_current = (
+        rules["sourcetarget"]
+        if how == ACandidateKind.SOURCE_TARGET
+        else rules["relation"]
+    )
     if not deq:
         return
 
@@ -87,7 +87,7 @@ def find_candidates_bfs(
     current_candidate = foo_map_class[how]()  # type: ignore
 
     if current_vertex not in candidate_pile.tokens:
-        foo_func(graph, original_graph, deque([(current_vertex, 0)]), current_candidate, **kwargs)  # type: ignore
+        find_subtree_dfs(graph, original_graph, deque([(current_vertex, 0)]), current_candidate, rules_current)  # type: ignore
 
     if not current_candidate.empty:  # type: ignore
         candidate_pile.append(current_candidate.clean_dangling_edges(robust_mode).sort_index())  # type: ignore
@@ -100,86 +100,15 @@ def find_candidates_bfs(
         candidate_pile,
         how,
         robust_mode=robust_mode,
-        **kwargs,
+        rules=rules,
     )
 
 
-def find_relation_subtree_dfs(
+def find_subtree_dfs(
     graph: nx.DiGraph,
     original_graph: nx.DiGraph,
     deq: deque[tuple[int, int]],
-    current_relation: CandidateType,
-):
-    """
-
-    :param graph:
-    :param original_graph:
-    :param deq: (!) the initial call should have only a single vertex in q
-    :param current_relation:
-    :return:
-    """
-
-    if not deq:
-        return
-    current_vertex, level = deq.pop()
-    if (
-        current_relation.empty
-        and level > 0
-        or (
-            not current_relation.empty
-            and level - current_relation.max_level() > 1
-        )
-    ):
-        return
-
-    vtoken = Token(
-        **graph.nodes[current_vertex],
-        _level=level,
-        successors=original_graph.successors(current_vertex),
-        predecessors=original_graph.predecessors(current_vertex),
-    )
-
-    len_current_relation = len(current_relation)
-
-    # TODO externalize logic using get_flag_advanced()
-
-    if level == 0 and current_relation.empty:
-        if vtoken.tag_.startswith("VB") and (
-            vtoken.dep_ != "amod"
-            or (vtoken.tag_ == "VBN" and vtoken.dep_ == "acl")
-        ):
-            current_relation.append(vtoken)
-    elif level > 0 and not current_relation.empty:
-        # auxpass or aux
-        if (vtoken.tag_.startswith("VB") or (vtoken.tag_ == "MD")) and (
-            "aux" in vtoken.dep_
-        ):
-            current_relation.append(vtoken)
-        # elif vtoken.tag_.startswith("VB") and vtoken.dep_ == "advcl":
-        #     current_relation.append(vtoken)
-        elif (vtoken.tag_ == "IN" and vtoken.dep_ == "prep") or (
-            vtoken.tag_ == "IN" and vtoken.dep_ == "agent"
-        ):
-            if current_relation.sroot < vtoken.s:
-                current_relation.append(vtoken)
-
-    successors = list(graph.successors(current_vertex))
-
-    if len(current_relation) > len_current_relation:
-        if level > 0:
-            excise_node(graph, current_vertex)
-        for v in successors:
-            deq.append((v, level + 1))
-            find_relation_subtree_dfs(
-                graph, original_graph, deq, current_relation
-            )
-
-
-def find_sourcetarget_subtree_dfs(
-    graph: nx.DiGraph,
-    original_graph: nx.DiGraph,
-    deq: deque[tuple[int, int]],
-    source_target_cand: CandidateType,
+    current_candidate: CandidateType,
     rules=None,
 ):
     """
@@ -187,7 +116,7 @@ def find_sourcetarget_subtree_dfs(
     :param graph:
     :param original_graph:
     :param deq: (!) the initial call should have only a single vertex in q
-    :param source_target_cand: source or target
+    :param current_candidate:
     :param rules:
     :return:
     """
@@ -195,11 +124,11 @@ def find_sourcetarget_subtree_dfs(
     if not deq:
         return
     current_vertex, level = deq.pop()
-    if source_target_cand.empty:
+    if current_candidate.empty:
         if level > 0:
             return
     else:
-        if level - source_target_cand.max_level() > 1:
+        if level - current_candidate.max_level() > 1:
             return
 
     vtoken = Token(
@@ -209,24 +138,29 @@ def find_sourcetarget_subtree_dfs(
         predecessors=original_graph.predecessors(current_vertex),
     )
 
-    len_current_relation = len(source_target_cand)
+    len_current_relation = len(current_candidate)
 
-    if level == 0 and source_target_cand.empty:
+    if level == 0 and current_candidate.empty:
         if get_flag(vtoken.__dict__, rules["primary"]):
-            source_target_cand.append(vtoken)
-    elif level > 0 and not source_target_cand.empty:
+            current_candidate.append(vtoken)
+    elif level > 0 and not current_candidate.empty:
         if get_flag(vtoken.__dict__, rules["secondary"]):
-            source_target_cand.append(vtoken)
+            current_candidate.append(vtoken)
+        elif "secondary_preceding" in rules and get_flag(
+            vtoken.__dict__, rules["secondary_preceding"]
+        ):
+            if current_candidate.sroot < vtoken.s:
+                current_candidate.append(vtoken)
 
     successors = list(graph.successors(current_vertex))
 
-    if len(source_target_cand) > len_current_relation:
+    if len(current_candidate) > len_current_relation:
         if level > 0:
             excise_node(graph, current_vertex)
         for v in successors:
             deq.append((v, level + 1))
-            find_sourcetarget_subtree_dfs(
-                graph, original_graph, deq, source_target_cand, rules
+            find_subtree_dfs(
+                graph, original_graph, deq, current_candidate, rules
             )
 
 
@@ -265,6 +199,7 @@ def graph_to_candidate_pile(
         deque(roots),
         relation_pile,
         ACandidateKind.RELATION,
+        rules=rules,
         robust_mode=True,
     )
 
@@ -639,10 +574,10 @@ def form_triples(
     relaxed=False,
 ) -> tuple[
     list[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
-    list[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
+    set[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
 ]:
     triples = []
-    meta_triples = []
+    meta_triples = set()
     relation_sroots = set(pile.relations.sroots)
 
     for sroot in pile.relations.sroots:
@@ -672,7 +607,7 @@ def form_triples(
                             triples += [(s, sroot, t)]
                         else:
                             # case when source or target was empty, subbed from rel_****ts_per_relation
-                            meta_triples += [(s, sroot, t)]
+                            meta_triples |= {(s, sroot, t)}
                     else:
                         # there is another relation in path
                         # decide whether it replaces source or target
@@ -696,7 +631,7 @@ def form_triples(
                                 else:
                                     t = (0, "nil")
                             if s != (0, "nil") and t != (0, "nil"):
-                                meta_triples += [(s, sroot, t)]
+                                meta_triples |= {(s, sroot, t)}
         # elif not sources and relaxed:
         #     triples += [
         #         (

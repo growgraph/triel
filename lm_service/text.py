@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections import defaultdict, deque
 from itertools import product
 
@@ -13,10 +14,19 @@ from lm_service.relation import (
     text_to_compound_index_graph,
     text_to_coref_sourcetarget,
 )
+from lm_service.util import plot_graph
+
+logger = logging.getLogger(__name__)
 
 
 def text_to_triples(
-    text, nlp, rules, window_size, head=None, return_phrases=False
+    text,
+    nlp,
+    rules,
+    window_size,
+    head=None,
+    return_phrases=False,
+    plot_path=None,
 ) -> tuple[
     dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]], dict[MuIndex, Candidate]
 ]:
@@ -30,7 +40,7 @@ def text_to_triples(
         striples_meta,
         candidate_depot,
         relations,
-    ) = phrases_to_basis_triples(nlp, rules, phrases)
+    ) = phrases_to_basis_triples(nlp, rules, phrases, plot_path)
 
     ecl = candidate_depot.unfold_conjunction()
 
@@ -105,16 +115,31 @@ def text_to_triples(
     cnt = 0
 
     while deq_striples_meta:
-        # TODO implement a check for eternal loop
         if len(deq_striples_meta) < deq_len:
             cnt = 0
             deq_len_original = len(deq_striples_meta)
         else:
             cnt += 1
         deq_len = len(deq_striples_meta)
+        print(
+            cnt,
+            deq_len,
+            deq_len_original,
+            len(deq_striples_meta),
+            len(set(deq_striples_meta)),
+        )
 
         if cnt > deq_len_original:
-            raise ValueError("Deq is stuck in a loop")
+            failing_deq = list(deq_striples_meta)
+            failing_phrases = sorted(set([r[0] for _, r, _ in failing_deq]))
+            logger.error(
+                "Following meta-triples could not be resolved :"
+                f" {failing_phrases}"
+            )
+            logger.error(f" Dangling metatriples : {failing_deq}")
+            for ip in failing_phrases:  # type: ignore
+                logger.error(f" failing phrase : <B>{phrases[ip]}<E>")
+            raise ValueError(f"Deq is stuck in a loop: {deq_striples_meta}")
 
         s, r, t = deq_striples_meta.pop()
 
@@ -144,7 +169,7 @@ def text_to_triples(
         elif isinstance(r, tuple):
             ip = r[0]
         else:
-            raise TypeError("")
+            raise TypeError("Unexpected TokenIndexT composition")
         current_phrase_index = ip
         k_tri_offset_meta = len(meta_triples_aux[current_phrase_index])
 
@@ -193,10 +218,10 @@ def text_to_triples(
 
 
 def phrases_to_basis_triples(
-    nlp, rules, phrases
+    nlp, rules, phrases, plot_path=None
 ) -> tuple[
     list[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
-    list[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
+    set[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
     CandidatePile,
     CandidatePile,
 ]:
@@ -209,7 +234,7 @@ def phrases_to_basis_triples(
     """
 
     striples = []
-    striples_meta = []
+    striples_meta = set()
     candidate_depot = CandidatePile()
     relations = CandidatePile()
     for k, phrase in enumerate(phrases):
@@ -242,8 +267,11 @@ def phrases_to_basis_triples(
 
         relations += pile.relations
         striples += striples0
-        striples_meta += striples0_meta
+        striples_meta |= striples0_meta
         candidate_depot += candidate_depot0
+
+        if plot_path is not None:
+            plot_graph(graph_relabeled, plot_path, f"phrase_{k}_full")
     return striples, striples_meta, candidate_depot, relations
 
 

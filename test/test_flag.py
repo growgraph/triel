@@ -23,8 +23,8 @@ class TestFlag(unittest.TestCase):
 
     def test_flag(self):
         t = Token(**{"s": 7, "text": "his", "dep_": "conj", "tag_": "VBG"})
-        flag = get_flag(t.__dict__, self.rules_v2["secondary"])
-        self.assertEqual(flag, False)
+        flag = get_flag(t.__dict__, self.rules_v2["sourcetarget"]["secondary"])
+        self.assertEqual(flag, True)
 
 
 if __name__ == "__main__":
