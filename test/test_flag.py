@@ -6,10 +6,9 @@ from pathlib import Path
 
 import spacy
 import yaml
-from graph_cast.util import ResourceHandler
 
 from lm_service.folding import get_flag
-from lm_service.onto import Candidate, Token
+from lm_service.onto import Token
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +17,6 @@ class TestFlag(unittest.TestCase):
 
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     path = Path(__file__).parent
-
-    cand_json = ResourceHandler.load("test.data", "candidate_conj.json")
-    c = Candidate.from_dict(cand_json)
-
-    nlp = spacy.load("en_core_web_trf")
-
-    # fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
-    # rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules_v2 = yaml.load(fp, Loader=yaml.FullLoader)

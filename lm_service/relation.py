@@ -664,8 +664,10 @@ def form_triples(
                 if s != t:
                     if flag_only_relation_in_path:
                         if (
-                            s not in relation_sroots
-                            and t not in relation_sroots
+                            s in pile.sources.sroots
+                            and t in pile.targets.sroots
+                            # s not in relation_sroots
+                            # and t not in relation_sroots
                         ):
                             triples += [(s, sroot, t)]
                         else:
