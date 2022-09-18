@@ -194,7 +194,7 @@ class TestR(unittest.TestCase):
         self.assertEqual(
             lens,
             {
-                "coref": {"was": 8, "became": 9},
+                "coref": {"was": 11, "became": 12},
                 "cheops0": {"was": 5, "became": 8},
             },
         )

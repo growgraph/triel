@@ -7,8 +7,7 @@ import coreferee
 import spacy
 
 from lm_service.coref import render_coref_graph
-from lm_service.graph import transform_advcl
-from lm_service.preprocessing import normalize_input_text
+from lm_service.preprocessing import normalize_input_text, transform_advcl
 from lm_service.relation import text_to_compound_index_graph
 from lm_service.util import plot_graph
 

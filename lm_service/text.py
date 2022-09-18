@@ -3,10 +3,9 @@ from __future__ import annotations
 from collections import defaultdict, deque
 from itertools import product
 
-from lm_service.graph import transform_advcl
 from lm_service.onto import Candidate, MuIndex, TokenIndexT
 from lm_service.piles import CandidatePile, ExtCandidateList
-from lm_service.preprocessing import normalize_input_text
+from lm_service.preprocessing import normalize_input_text, transform_advcl
 from lm_service.relation import (
     form_triples,
     graph_to_candidate_pile,
@@ -78,7 +77,13 @@ def text_to_triples(
         for srunning, trunning in product(
             range(len(global_ecl[s])), range(len(global_ecl[t]))
         ):
-            fundamental_triples_aux[r[0]] += [
+            if isinstance(r, str):
+                ip = 0
+            elif isinstance(r, tuple):
+                ip = r[0]
+            else:
+                raise TypeError("Unknown TokenIndexT subtype")
+            fundamental_triples_aux[ip] += [
                 (
                     MuIndex(False, *s, srunning),
                     MuIndex(False, *r, 0),
@@ -95,9 +100,22 @@ def text_to_triples(
         relation_triple_map[r] = mu_tri
 
     deq_striples_meta = deque(striples_meta)
+    deq_len = len(deq_striples_meta)
+    deq_len_original = deq_len
+    cnt = 0
 
     while deq_striples_meta:
         # TODO implement a check for eternal loop
+        if len(deq_striples_meta) < deq_len:
+            cnt = 0
+            deq_len_original = len(deq_striples_meta)
+        else:
+            cnt += 1
+        deq_len = len(deq_striples_meta)
+
+        if cnt > deq_len_original:
+            raise ValueError("Deq is stuck in a loop")
+
         s, r, t = deq_striples_meta.pop()
 
         if s in relations.sroots:
@@ -121,7 +139,13 @@ def text_to_triples(
                 MuIndex(False, *t, j) for j in range(len(global_ecl[t]))
             ]
 
-        current_phrase_index = r[0]
+        if isinstance(r, str):
+            ip = 0
+        elif isinstance(r, tuple):
+            ip = r[0]
+        else:
+            raise TypeError("")
+        current_phrase_index = ip
         k_tri_offset_meta = len(meta_triples_aux[current_phrase_index])
 
         for sprime, tprime in product(sources_mu, targets_mu):
@@ -156,7 +180,7 @@ def text_to_triples(
     for candlike_like in candidate_likes:
         basic_index = (candlike_like.phrase, candlike_like.token)
         if basic_index in global_ecl:
-            mu_index_candidate_map[candlike_like] = ecl[basic_index][
+            mu_index_candidate_map[candlike_like] = global_ecl[basic_index][
                 candlike_like.running
             ]
         elif basic_index in relations.sroots:
@@ -238,6 +262,6 @@ def cast_simplified_triples_table(global_triples, map_mu_index_triple):
             else:
                 return map_mu_index_triple[mu].project_to_text_str()
 
-        tri_txt = [foo(mu) for mu in tri]
+        tri_txt = tuple([foo(mu) for mu in tri])
         global_triples_txt += [tri_txt]
     return global_triples_txt

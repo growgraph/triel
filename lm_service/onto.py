@@ -29,8 +29,9 @@ class RequestedIndexDoesNotExist(Exception):
     pass
 
 
-# TokenIndexT = Union[str, tuple[int, str]]
-TokenIndexT = tuple[int, str]
+from typing import Union
+
+TokenIndexT = Union[str, tuple[int, str]]
 
 
 logger = logging.getLogger(__name__)
