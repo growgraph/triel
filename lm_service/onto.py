@@ -898,3 +898,6 @@ class MuIndex(JSONWizard):
     phrase: int
     token: str
     running: int
+
+    def to_tuple(self):
+        return self.meta, self.phrase, self.token, self.running
