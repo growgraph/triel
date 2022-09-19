@@ -9,20 +9,19 @@ from pprint import pprint
 import coreferee
 import spacy
 import yaml
-from reference.distances import ref_distance
+from reference.distances import reference_distance
 
 from lm_service.coref import graph_component_maps, render_coref_maps_wrapper
 from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
-from lm_service.onto import AToken, apply_map
+from lm_service.onto import AToken, MuIndex, apply_map
 from lm_service.phrase import graph_to_triples
-from lm_service.preprocessing import normalize_input_text, transform_advcl
+from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
     compute_distances,
-    form_triples,
     generate_extra_graphs,
     graph_to_candidate_pile,
-    graph_to_maps,
 )
+from lm_service.text import cast_simplified_triples_table, text_to_triples
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +84,6 @@ class TestR(unittest.TestCase):
         ),
     }
 
-    reference_distance = ref_distance
-
     def test_distances(self):
         distance_check = {}
         for key, document in self.documents.items():
@@ -134,7 +131,7 @@ class TestR(unittest.TestCase):
                 }
             )
 
-        self.assertEqual(distance_check, self.reference_distance)
+        self.assertEqual(distance_check, reference_distance)
 
     def test_relation(self):
         documents = {
@@ -187,10 +184,6 @@ class TestR(unittest.TestCase):
             acc_triples += triples
 
             triples_projected[key] = [tri.project_to_text() for tri in triples]
-
-        # tri = acc_triples[0]
-        # tt = tri.target
-        # tt.sort_index()
 
         reference = {
             "near-field": [("medium", "wasAffectedBy", "nearFieldRadiation")],
@@ -256,8 +249,6 @@ class TestR(unittest.TestCase):
             self.assertEqual(triples_projected[k], reference[k])
 
     def test_text_to_relations(self):
-        from lm_service.text import text_to_triples
-
         text = (
             "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
             " telescope to determine the size of known extrasolar planets,"
@@ -278,65 +269,87 @@ class TestR(unittest.TestCase):
             text, self.nlp, self.rules, window_size=2
         )
 
-        from lm_service.text import cast_simplified_triples_table
-
         global_triples_txt = cast_simplified_triples_table(
             global_triples, map_mu_index_triple
         )
 
-        reference = [
-            ("CHEOPS", "is", "europeanSpaceTelescope"),
-            (
+        reference = {
+            MuIndex(meta=True, phrase=0, token="000", running=0): (
+                "CHEOPS",
+                "is",
+                "europeanSpaceTelescope",
+            ),
+            MuIndex(meta=True, phrase=0, token="000", running=1): (
                 "europeanSpaceTelescope",
                 "determine",
                 "sizeOfKnownExtrasolarPlanets",
             ),
-            (
+            MuIndex(meta=True, phrase=1, token="000", running=0): (
                 "CHEOPS",
                 "is",
                 "firstSmallClassMissionInEsaCosmicVisionScienceProgramme",
             ),
-            (
+            MuIndex(meta=True, phrase=1, token="000", running=1): (
                 "firstSmallClassMissionInEsaCosmicVisionScienceProgramme",
                 "launchedOn",
                 "18December2019",
             ),
-            (
+            MuIndex(meta=True, phrase=2, token="000", running=0): (
                 "smallSatellite",
                 "features",
                 "opticalRitcheyChretienTelescopeWithApertureOf30Cm",
             ),
-            (
+            MuIndex(meta=True, phrase=2, token="000", running=1): (
                 "opticalRitcheyChretienTelescopeWithApertureOf30Cm",
                 "mountedOn",
                 "standardSmallSatellitePlatform",
             ),
-            (
+            MuIndex(meta=True, phrase=3, token="000", running=0): (
                 "smallSatellite",
                 "wasPlacedInto",
                 "SunSynchronousOrbitOf700KmAltitude",
             ),
-            (
+            MuIndex(meta=True, phrase=4, token="000", running=0): (
                 "some",
                 "have",
                 "minimumMassMeasurementsFromRadialVelocityMethod",
             ),
-            ("thousandOfExoplanets", "haveBeenDiscoveredBy", "endOf2010S"),
-            ("others", "have", "measuresOfPhysicalSizeOfOthers"),
-            ("others", "areSeen", "toTransitParentStarsOfOthers"),
-            ("(meta)determine", "willAllow", "estimationOfDensity"),
-            ("(meta)determine", "willAllow", "estimationOfComposition"),
-            (
+            MuIndex(meta=True, phrase=4, token="000", running=1): (
+                "thousandOfExoplanets",
+                "haveBeenDiscoveredBy",
+                "endOf2010S",
+            ),
+            MuIndex(meta=True, phrase=4, token="000", running=2): (
+                "others",
+                "have",
+                "measuresOfPhysicalSizeOfOthers",
+            ),
+            MuIndex(meta=True, phrase=4, token="000", running=3): (
+                "others",
+                "areSeen",
+                "toTransitParentStarsOfOthers",
+            ),
+            MuIndex(meta=True, phrase=0, token="000", running=2): (
+                "(meta)determine",
+                "willAllow",
+                "estimationOfDensity",
+            ),
+            MuIndex(meta=True, phrase=0, token="000", running=3): (
+                "(meta)determine",
+                "willAllow",
+                "estimationOfComposition",
+            ),
+            MuIndex(meta=True, phrase=0, token="000", running=4): (
                 "(meta)determine",
                 "willAllow",
                 "estimationOfMassOfKnownExtrasolarPlanets",
             ),
-            (
+            MuIndex(meta=True, phrase=0, token="000", running=5): (
                 "(meta)determine",
                 "willAllow",
                 "estimationOfFormationOfKnownExtrasolarPlanets",
             ),
-        ]
+        }
 
         self.assertEqual(global_triples_txt, reference)
 

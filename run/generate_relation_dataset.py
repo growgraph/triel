@@ -30,15 +30,15 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
 
     triples_text = cast_simplified_triples_table(triples, map_mu_index_triple)
 
-    sources = [s for s, _, _ in triples_text]
-    relations = [r for _, r, _ in triples_text]
-    targets = [t for _, _, t in triples_text]
+    sources = [s for s, _, _ in triples_text.values()]
+    relations = [r for _, r, _ in triples_text.values()]
+    targets = [t for _, _, t in triples_text.values()]
 
     tokens = sorted(set(set(sources) | set(targets) | set(relations)))
     token_map = {t: ii for ii, t in enumerate(tokens)}
     g = nx.DiGraph()
 
-    for text_triplet in triples_text:
+    for text_triplet in triples_text.values():
         s, r, t = text_triplet
         triplet = [token_map[x] for x in text_triplet]
         si, ri, ti = triplet
@@ -49,17 +49,23 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
         plot_graph(g, fig_path, f"doc", prog="sfdp")
 
     df_acc = []
-    for tri, tri_txt in zip(triples, triples_text):
-        s, r, t = tri
-        ix = r.phrase
+    for mu_key in triples:
+        ix = mu_key.phrase
+        s, r, t = triples[mu_key]
+        s_txt, r_txt, t_txt = triples_text[mu_key]
         df_acc += [
             [
                 ix,
-                tuple(s.stokens),
-                tuple(r.stokens),
-                tuple(t.stokens),
-                *tri_txt,
-                # phrases[ix],
+                tuple(map_mu_index_triple[s].stokens)
+                if s in map_mu_index_triple
+                else tuple(s.to_tuple()),
+                tuple(map_mu_index_triple[r].stokens)
+                if r in map_mu_index_triple
+                else tuple(r.to_tuple()),
+                tuple(map_mu_index_triple[t].stokens)
+                if t in map_mu_index_triple
+                else tuple(t.to_tuple()),
+                *triples_text[mu_key],
             ]
         ]
     df = pd.DataFrame(
@@ -74,8 +80,9 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
             "target_txt",
             # "phrase",
         ],
-    ).sort_values(["phrase_ix", "relation_ix", "source_ix", "target_ix"])
-    df.to_csv(os.path.join(fig_path, "relations.csv"))
+    )
+    df = df.sort_values(["phrase_ix"]).reset_index(drop=True)
+    df.to_csv(os.path.join(fig_path, "triples.csv"))
 
 
 if __name__ == "__main__":

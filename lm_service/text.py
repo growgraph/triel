@@ -121,13 +121,6 @@ def text_to_triples(
         else:
             cnt += 1
         deq_len = len(deq_striples_meta)
-        print(
-            cnt,
-            deq_len,
-            deq_len_original,
-            len(deq_striples_meta),
-            len(set(deq_striples_meta)),
-        )
 
         if cnt > deq_len_original:
             failing_deq = list(deq_striples_meta)
@@ -139,7 +132,7 @@ def text_to_triples(
             logger.error(f" Dangling metatriples : {failing_deq}")
             for ip in failing_phrases:  # type: ignore
                 logger.error(f" failing phrase : <B>{phrases[ip]}<E>")
-            raise ValueError(f"Deq is stuck in a loop: {deq_striples_meta}")
+            # raise ValueError(f"Deq is stuck in a loop: {deq_striples_meta}")
 
         s, r, t = deq_striples_meta.pop()
 
@@ -276,8 +269,8 @@ def phrases_to_basis_triples(
 
 
 def cast_simplified_triples_table(global_triples, map_mu_index_triple):
-    global_triples_txt = []
-    for tri in global_triples.values():
+    global_triples_txt = {}
+    for mu_key, tri in global_triples.items():
 
         def foo(mu: MuIndex):
             if mu.meta:
@@ -291,5 +284,5 @@ def cast_simplified_triples_table(global_triples, map_mu_index_triple):
                 return map_mu_index_triple[mu].project_to_text_str()
 
         tri_txt = tuple([foo(mu) for mu in tri])
-        global_triples_txt += [tri_txt]
+        global_triples_txt[mu_key] = tri_txt
     return global_triples_txt
