@@ -324,20 +324,12 @@ class TestR(unittest.TestCase):
             ("thousandOfExoplanets", "haveBeenDiscoveredBy", "endOf2010S"),
             ("others", "have", "measuresOfPhysicalSizeOfOthers"),
             ("others", "areSeen", "toTransitParentStarsOfOthers"),
+            ("(meta)determine", "willAllow", "estimationOfDensity"),
+            ("(meta)determine", "willAllow", "estimationOfComposition"),
             (
                 "(meta)determine",
                 "willAllow",
                 "estimationOfMassOfKnownExtrasolarPlanets",
-            ),
-            (
-                "(meta)determine",
-                "willAllow",
-                "estimationOfDensityOfKnownExtrasolarPlanets",
-            ),
-            (
-                "(meta)determine",
-                "willAllow",
-                "estimationOfCompositionOfKnownExtrasolarPlanets",
             ),
             (
                 "(meta)determine",

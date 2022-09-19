@@ -509,6 +509,34 @@ class Candidate(AbsCandidate, JSONWizard):
         self.remove(i)
         self.clean_dangling_edges().sort_index()
 
+    def remove_subtree_keeping_root(self, i: TokenIndexT):
+        subtree_ix: list[TokenIndexT] = []
+        self._pick_successors(i, subtree_ix)
+
+        # exclude root
+        subtree_ix = subtree_ix[1:]
+
+        for ix in subtree_ix:
+            del self._tokens[ix]
+        self._index_vec = list(self._tokens)
+
+        set_subtree_ix = set(subtree_ix)
+        for t in self.tokens:
+            t.successors -= set_subtree_ix
+            t.predecessors -= set_subtree_ix
+
+    def replace_subtree_with_acandidate(self, i: TokenIndexT, ac: Candidate):
+        """
+        replace is a combination of remove and insert
+        :param i:
+        :param ac:
+        :return:
+        """
+
+        # TODO check for non overlapping TokenIndexT
+        self.remove_subtree_keeping_root(i)
+        self.replace_token_with_acandidate(i, ac)
+
     def remove(self, i: TokenIndexT):
         # edges
         for pred in self.token(i).predecessors:
@@ -844,7 +872,9 @@ def partition_conjunctive_wrapper(
     for _, candidate in clauses:
         sparent, _ = clauses[0]
         c_prime = deepcopy(root_candidate)
-        c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
+        # it's a choice to remove subtree rather than a token
+        # c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
+        c_prime.replace_subtree_with_acandidate(i=sparent, ac=candidate)
         acc.append(
             c_prime.drop_cc()
             .drop_punct()
