@@ -151,6 +151,9 @@ class ExtCandidateList:
     def __len__(self) -> int:
         return sum(len(x) for x in self._root_to_lists.values())
 
+    def __contains__(self, item):
+        return item in self._root_to_lists
+
     def set_filter(self, key):
         self._filter = key
 

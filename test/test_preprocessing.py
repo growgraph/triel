@@ -2,10 +2,7 @@ import logging
 import sys
 import unittest
 
-from lm_service.preprocessing import (
-    normalize_input_text,
-    split_tokens_into_phrases,
-)
+from lm_service.preprocessing import normalize_input_text, transform_advcl
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +22,6 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_consecutive_candidates(self):
         out = normalize_input_text(self.phrase)
-        print(out)
         self.assertEqual(
             out,
             [
@@ -38,6 +34,36 @@ class TestPreprocessing(unittest.TestCase):
                 " pointings .",
                 "Assuming 1 hour per pointing the mission duration is"
                 " estimated at 1175 days or 3.2 years .",
+            ],
+        )
+
+    def test_dash(self):
+        phrase = (
+            "Launched on 18 December 2019, "
+            "it is the first Small-class mission in "
+            "ESA's Cosmic Vision science programme."
+        )
+        out = normalize_input_text(phrase)
+        self.assertEqual(
+            out,
+            [
+                "Launched on 18 December 2019 , it is the first Small-class"
+                " mission in ESA's Cosmic Vision science programme .",
+            ],
+        )
+
+    @unittest.skip("for now")
+    def test_transform_advcl(self):
+        phrase = (
+            "Launched on 18 December 2019, "
+            "it is the first Small-class mission in "
+            "ESA's Cosmic Vision science programme."
+        )
+        out = transform_advcl(phrase)
+        self.assertEqual(
+            out,
+            [
+                "=",
             ],
         )
 
