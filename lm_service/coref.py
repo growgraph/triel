@@ -110,7 +110,14 @@ def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
             es_coref.append((coref_chain, coref_blank))
             vertex_counter += 1
             for y in x.token_indexes:
-                vs_coref += [(y, {})]
+                vs_coref += [
+                    (
+                        y,
+                        {
+                            "label": f"{y}-{rdoc[y].text}-{rdoc[y].tag_}-{rdoc[y].dep_}"
+                        },
+                    )
+                ]
                 es_coref.append((coref_blank, y))
 
     coref_graph = nx.DiGraph()

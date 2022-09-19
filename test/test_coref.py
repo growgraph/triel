@@ -13,9 +13,10 @@ from lm_service.coref import (
     render_coref_maps_wrapper,
     sub_coreference,
 )
-from lm_service.graph import phrase_to_deptree, transform_advcl
-from lm_service.onto import AToken, Candidate, Token, apply_map, to_string
-from lm_service.relation import graph_to_candidate_pile
+from lm_service.graph import phrase_to_deptree
+from lm_service.onto import Token, apply_map
+from lm_service.relation import text_to_compound_index_graph
+from lm_service.text import phrases_to_basis_triples
 
 logger = logging.getLogger(__name__)
 
@@ -94,62 +95,112 @@ class TestCoref(unittest.TestCase):
             },
         )
 
-    @unittest.skip("")
+    # @unittest.skip("")
     def test_substitution_in_depot(self):
-        rdoc, graph = phrase_to_deptree(self.nlp, self.phrase)
+        (
+            striples,
+            striples_meta,
+            candidate_depot,
+            relations,
+        ) = phrases_to_basis_triples(self.nlp, self.rules, [self.phrase])
 
-        pile, candidate_depot, mod_graph = graph_to_candidate_pile(
-            graph, self.rules
+        (
+            graph_relabeled,
+            rdoc,
+            map_tree_subtree_index,
+        ) = text_to_compound_index_graph(
+            self.nlp, self.phrase, initial_phrase_index=0
         )
 
-        tokens = [
-            Token(
-                **graph.nodes[i],
-                successors=graph.successors(i),
-                predecessors=graph.predecessors(i),
-            )
-            for i in graph.nodes()
-        ]
-
-        token_dict = {t.s: t for t in tokens}
-
+        # coref maps
         (
             map_subbable_to_chain,
             map_chain_to_most_specific,
         ) = render_coref_maps_wrapper(rdoc)
 
-        map_subbable_to_chain_str = to_string(
-            map_subbable_to_chain, AToken.i2s
-        )
-        map_chain_to_most_specific_str = to_string(
-            map_chain_to_most_specific, AToken.i2s
+        (
+            map_subbable_to_chain_str,
+            map_chain_to_most_specific_str,
+        ) = apply_map(
+            [map_subbable_to_chain, map_chain_to_most_specific],
+            map_tree_subtree_index,
         )
 
+        ecl = candidate_depot.unfold_conjunction()
+
+        tokens = [
+            Token(
+                **graph_relabeled.nodes[i],
+                successors=graph_relabeled.successors(i),
+                predecessors=graph_relabeled.predecessors(i),
+            )
+            for i in graph_relabeled.nodes()
+        ]
+
+        token_dict = {t.s: t for t in tokens}
+
         ncp = coref_candidates(
-            candidate_depot,
+            ecl,
             map_subbable_to_chain_str,
             map_chain_to_most_specific_str,
             token_dict,
-            unfold_conjunction=True,
         )
 
-        ncp_test = {k: [vv.stokens for vv in v] for k, v in ncp.items()}
+        ncp_test = [(k, [vv.stokens for vv in ncp[k]]) for k in sorted(ncp)]
         self.assertEqual(
             ncp_test,
-            {
-                "010": [["009", "010"]],
-                "023": [["023"]],
-                "030": [["030"]],
-                "025": [["025"]],
-                "017": [["009", "010"], ["020", "020a", "009", "010"]],
-                "027": [["009", "010"], ["020", "020a", "009", "010"]],
-                "001": [["009", "010"]],
-                "022": [["009", "010"], ["020", "020a", "009", "010"]],
-                "032": [["009", "010"], ["020", "020a", "009", "010"]],
-                "035": [["030"]],
-                "007": [["007", "007a", "009", "010"]],
-                "015": [["007", "007a", "009", "010"]],
-            },
+            [
+                ((0, "001"), [[(0, "009"), (0, "010")]]),
+                (
+                    (0, "004"),
+                    [
+                        [
+                            (0, "004"),
+                            (0, "005"),
+                            (0, "007"),
+                            (0, "007a"),
+                            (0, "009"),
+                            (0, "010"),
+                        ]
+                    ],
+                ),
+                ((0, "010"), [[(0, "009"), (0, "010")]]),
+                (
+                    (0, "015"),
+                    [[(0, "007"), (0, "007a"), (0, "009"), (0, "010")]],
+                ),
+                (
+                    (1, "000"),
+                    [
+                        [(0, "009"), (0, "010")],
+                        [(1, "003"), (1, "003a"), (0, "009"), (0, "010")],
+                    ],
+                ),
+                (
+                    (1, "005"),
+                    [
+                        [(0, "009"), (0, "010")],
+                        [(1, "003"), (1, "003a"), (0, "009"), (0, "010")],
+                    ],
+                ),
+                ((1, "008"), [[(1, "008")]]),
+                (
+                    (2, "000"),
+                    [
+                        [(0, "009"), (0, "010")],
+                        [(1, "003"), (1, "003a"), (0, "009"), (0, "010")],
+                    ],
+                ),
+                ((2, "003"), [[(2, "003")]]),
+                (
+                    (2, "005"),
+                    [
+                        [(0, "009"), (0, "010")],
+                        [(1, "003"), (1, "003a"), (0, "009"), (0, "010")],
+                    ],
+                ),
+                ((2, "008"), [[(2, "003")]]),
+            ],
         )
 
 

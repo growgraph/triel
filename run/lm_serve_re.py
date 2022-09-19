@@ -10,9 +10,9 @@ from flask_restful import Api, reqparse
 from graph_cast.db.factory import ConfigFactory
 from graph_cast.util import ResourceHandler
 
-from lm_service.graph import transform_advcl
-from lm_service.preprocessing import normalize_input_text
-from lm_service.relation import add_hash, phrase_to_triples
+from lm_service.phrase import phrase_to_triples
+from lm_service.preprocessing import normalize_input_text, transform_advcl
+from lm_service.relation import add_hash
 
 app = Flask(__name__)
 api = Api(app)

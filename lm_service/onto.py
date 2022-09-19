@@ -6,7 +6,7 @@ from abc import ABC
 from collections import deque
 from copy import deepcopy
 from enum import Enum
-from typing import TypeVar, Union
+from typing import TypeVar
 
 import networkx as nx
 from dataclass_wizard import JSONWizard
@@ -29,7 +29,10 @@ class RequestedIndexDoesNotExist(Exception):
     pass
 
 
+from typing import Union
+
 TokenIndexT = Union[str, tuple[int, str]]
+
 
 logger = logging.getLogger(__name__)
 
@@ -165,8 +168,43 @@ class Token(AToken):
             raise TypeError(f"Unexpected TokenIndexT subtype: {type(self.s)}")
 
 
+from abc import ABC
+
+
 @dataclasses.dataclass(repr=False)
-class Candidate(JSONWizard):
+class AbsCandidate(ABC):
+    def project_to_text_str(self):
+        pass
+
+    def drop_amod_vbn(self):
+        return self
+
+    def drop_cc(self):
+        return self
+
+    def drop_punct(self):
+        return self
+
+    def drop_articles(self):
+        return self
+
+    def normalize(self):
+        return self
+
+    def has_pronoun(self):
+        return self
+
+
+@dataclasses.dataclass(repr=False)
+class CandidateReference(AbsCandidate, JSONWizard):
+    sroot: tuple[int, int]
+
+    def project_to_text_str(self):
+        return f"{self.sroot}"
+
+
+@dataclasses.dataclass(repr=False)
+class Candidate(AbsCandidate, JSONWizard):
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
 
@@ -350,7 +388,7 @@ class Candidate(JSONWizard):
 
     def _sort_wrt_tree(
         self,
-        j: str,
+        j: TokenIndexT,
         sorter: dict[
             TokenIndexT | None,
             tuple[float, TokenIndexT | None, TokenIndexT | None],
@@ -471,6 +509,34 @@ class Candidate(JSONWizard):
         self.remove(i)
         self.clean_dangling_edges().sort_index()
 
+    def remove_subtree_keeping_root(self, i: TokenIndexT):
+        subtree_ix: list[TokenIndexT] = []
+        self._pick_successors(i, subtree_ix)
+
+        # exclude root
+        subtree_ix = subtree_ix[1:]
+
+        for ix in subtree_ix:
+            del self._tokens[ix]
+        self._index_vec = list(self._tokens)
+
+        set_subtree_ix = set(subtree_ix)
+        for t in self.tokens:
+            t.successors -= set_subtree_ix
+            t.predecessors -= set_subtree_ix
+
+    def replace_subtree_with_acandidate(self, i: TokenIndexT, ac: Candidate):
+        """
+        replace is a combination of remove and insert
+        :param i:
+        :param ac:
+        :return:
+        """
+
+        # TODO check for non overlapping TokenIndexT
+        self.remove_subtree_keeping_root(i)
+        self.replace_token_with_acandidate(i, ac)
+
     def remove(self, i: TokenIndexT):
         # edges
         for pred in self.token(i).predecessors:
@@ -589,6 +655,10 @@ class Relation(Candidate):
         return any([t.dep_ == "auxpass" for t in self._tokens.values()])
 
     def normalize(self):
+        """
+        TODO exteand to perfect tense
+        :return:
+        """
         if self.passive:
             # find auxpass, inflect it to was
             for s in self.stokens:
@@ -642,9 +712,9 @@ class Target(SourceOrTarget):
 
 @dataclasses.dataclass(repr=False)
 class TripleCandidate(JSONWizard):
-    source: Source
+    source: Source | CandidateReference
     relation: Relation
-    target: Target
+    target: Target | CandidateReference
 
     def project_to_text(self):
         return (
@@ -802,7 +872,9 @@ def partition_conjunctive_wrapper(
     for _, candidate in clauses:
         sparent, _ = clauses[0]
         c_prime = deepcopy(root_candidate)
-        c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
+        # it's a choice to remove subtree rather than a token
+        # c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
+        c_prime.replace_subtree_with_acandidate(i=sparent, ac=candidate)
         acc.append(
             c_prime.drop_cc()
             .drop_punct()
@@ -811,3 +883,21 @@ def partition_conjunctive_wrapper(
             .sort_index()
         )
     return acc
+
+
+@dataclasses.dataclass(eq=True, frozen=True, order=True)
+class MuIndex(JSONWizard):
+    """
+    meta - flag, true if MuIndex points to a triple
+    phrase - phrase number
+    token - token index within phrase
+    running -
+    """
+
+    meta: bool
+    phrase: int
+    token: str
+    running: int
+
+    def to_tuple(self):
+        return self.meta, self.phrase, self.token, self.running

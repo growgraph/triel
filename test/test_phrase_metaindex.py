@@ -15,12 +15,8 @@ from lm_service.coref import (
     render_coref_graph,
     render_coref_maps_wrapper,
 )
-from lm_service.graph import (
-    phrase_to_deptree,
-    relabel_nodes_and_key,
-    transform_advcl,
-)
-from lm_service.preprocessing import normalize_input_text
+from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
+from lm_service.preprocessing import normalize_input_text, transform_advcl
 from lm_service.relation import graph_to_candidate_pile
 
 logger = logging.getLogger(__name__)

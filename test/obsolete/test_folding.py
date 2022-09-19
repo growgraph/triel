@@ -349,6 +349,7 @@ class TestMetagraph(unittest.TestCase):
     )
     pathlib.Path(current_path).mkdir(parents=True, exist_ok=True)
 
+    @unittest.skip("obsolete")
     def test_fold_graph(self):
         fp = pkgutil.get_data(
             "lm_service.config", "prune_noun_compound_v2.yaml"
@@ -359,7 +360,9 @@ class TestMetagraph(unittest.TestCase):
 
         roots = [n for n in graph.nodes() if graph.in_degree(n) == 0]
 
-        metagraph = fold_graph(graph, metagraph, None, roots[0], None, rules)
+        metagraph = fold_graph(
+            graph, metagraph, None, roots[0], None, rules["secondary"]
+        )
 
         metagraph_name = "test_fold_graph"
         plot_graph(

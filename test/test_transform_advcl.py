@@ -13,8 +13,8 @@ from pathlib import Path
 import spacy
 import yaml
 
-from lm_service.graph import phrase_to_deptree, transform_advcl
-from lm_service.preprocessing import normalize_input_text
+from lm_service.graph import phrase_to_deptree
+from lm_service.preprocessing import normalize_input_text, transform_advcl
 from lm_service.util import plot_graph
 
 logger = logging.getLogger(__name__)
