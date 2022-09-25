@@ -29,6 +29,7 @@ isort = "^5.10.1"
 pyinflect = "^0.5.1"
 lemminflect = "^0.2.2"
 dataclass-wizard = "^0.22.1"
+spacy-entity-linker = "^1.0.2"
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
@@ -55,3 +56,6 @@ profile = "black"
 #python -m spacy download en_core_web_trf
 #python -m coreferee install en
 #sudo apt install graphviz
+
+### entity linking
+#python -m spacy_entity_linker "download_knowledge_base"

@@ -865,6 +865,18 @@ th = ["pythainlp (>=2.0)"]
 transformers = ["spacy-transformers (>=1.1.2,<1.2.0)"]
 
 [[package]]
+name = "spacy-entity-linker"
+version = "1.0.2"
+description = "Linked Entity Pipeline for spaCy"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+numpy = ">=1.0.0"
+spacy = ">=3.0.0"
+
+[[package]]
 name = "spacy-legacy"
 version = "3.0.9"
 description = "Legacy registered functions for spaCy backwards compatibility"
@@ -1124,7 +1136,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "a77bd3a45ebb63a9264a0605448f6c777dd939eaab24d71b0433cfc157ce7897"
+content-hash = "089d919d1814d88ff138bcfb5f4aee38c922862f9e974ba2fd6db50657e92741"
 
 [metadata.files]
 aniso8601 = [
@@ -1571,6 +1583,7 @@ spacy = [
     {file = "spacy-3.3.1-cp39-cp39-win_amd64.whl", hash = "sha256:787bd8546ae4feed088fb712f3baf5239197cedfe9e1ce9d8906b3e3ef2f10bc"},
     {file = "spacy-3.3.1.tar.gz", hash = "sha256:7f87dbdb104d851ae6ba5fd3a76a2e14e22e048135903e98baf08571a3aa81c0"},
 ]
+spacy-entity-linker = []
 spacy-legacy = [
     {file = "spacy-legacy-3.0.9.tar.gz", hash = "sha256:4f7dcbc4e6c8e8cb4eadbb009f9c0a1a2a67442e0032c8d6776c9470c3759903"},
     {file = "spacy_legacy-3.0.9-py2.py3-none-any.whl", hash = "sha256:dfd58b0cc65b3596cb06f7b95e7bf4fff34668297c59eb179eb050db07b199df"},

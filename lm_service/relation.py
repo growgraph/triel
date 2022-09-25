@@ -21,8 +21,8 @@ from lm_service.graph import (
     relabel_nodes_and_key,
 )
 from lm_service.onto import (
+    AbsToken,
     ACandidateKind,
-    AToken,
     Candidate,
     CandidateType,
     Relation,
@@ -667,7 +667,7 @@ def text_to_compound_index_graph(nlp, text, initial_phrase_index):
     map_tree_subtree_index = graph_component_maps(graph, initial_phrase_index)
 
     map_tree_subtree_index = {
-        k: AToken.ituple2stuple(v) for k, v in map_tree_subtree_index.items()
+        k: AbsToken.ituple2stuple(v) for k, v in map_tree_subtree_index.items()
     }
     graph_relabeled = relabel_nodes_and_key(graph, map_tree_subtree_index, "s")
     return graph_relabeled, rdoc, map_tree_subtree_index
