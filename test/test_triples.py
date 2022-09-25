@@ -13,7 +13,7 @@ from reference.distances import reference_distance
 
 from lm_service.coref import graph_component_maps, render_coref_maps_wrapper
 from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
-from lm_service.onto import AToken, MuIndex, apply_map
+from lm_service.onto import AbsToken, MuIndex, apply_map
 from lm_service.phrase import graph_to_triples
 from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
@@ -92,7 +92,7 @@ class TestR(unittest.TestCase):
             # cast index to compound index
             map_tree_subtree_index = graph_component_maps(graph0)
             map_tree_subtree_index = {
-                k: AToken.ituple2stuple(v)
+                k: AbsToken.ituple2stuple(v)
                 for k, v in map_tree_subtree_index.items()
             }
 
@@ -153,7 +153,7 @@ class TestR(unittest.TestCase):
             # cast index to compound index
             map_tree_subtree_index = graph_component_maps(graph)
             map_tree_subtree_index = {
-                k: AToken.ituple2stuple(v)
+                k: AbsToken.ituple2stuple(v)
                 for k, v in map_tree_subtree_index.items()
             }
             graph_relabeled = relabel_nodes_and_key(

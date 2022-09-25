@@ -52,7 +52,6 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
     for mu_key in triples:
         ix = mu_key.phrase
         s, r, t = triples[mu_key]
-        s_txt, r_txt, t_txt = triples_text[mu_key]
         df_acc += [
             [
                 ix,

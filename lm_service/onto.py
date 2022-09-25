@@ -6,7 +6,7 @@ from abc import ABC
 from collections import deque
 from copy import deepcopy
 from enum import Enum
-from typing import TypeVar
+from typing import TypeVar, Union
 
 import networkx as nx
 from dataclass_wizard import JSONWizard
@@ -29,8 +29,6 @@ class RequestedIndexDoesNotExist(Exception):
     pass
 
 
-from typing import Union
-
 TokenIndexT = Union[str, tuple[int, str]]
 
 
@@ -46,7 +44,7 @@ def is_int(s):
 
 
 CandidateType = TypeVar("CandidateType", bound="Candidate")
-TokenType = TypeVar("TokenType", bound="AToken")
+TokenType = TypeVar("TokenType", bound="AbsToken")
 
 
 class ConfigToken:
@@ -54,7 +52,7 @@ class ConfigToken:
 
 
 @dataclasses.dataclass(repr=False)
-class AToken(JSONWizard, ABC):
+class AbsToken(JSONWizard, ABC):
     """
     represents a token in dep tree
     """
@@ -67,9 +65,10 @@ class AToken(JSONWizard, ABC):
     tag_: str = ""
     lower: str = ""
     lemma: str = ""
-    ent_iob: str = ""
+    ent_iob: int = 0
     _level: int = 0
     label: str = ""
+    idx: int = 0
 
     def __post_init__(self):
         if not self.lemma and self.text:
@@ -116,7 +115,7 @@ class AToken(JSONWizard, ABC):
 
 
 @dataclasses.dataclass(repr=False)
-class Token(AToken):
+class Token(AbsToken):
     """
     represents a token in dep tree
     """
@@ -166,9 +165,6 @@ class Token(AToken):
             return "/"
         else:
             raise TypeError(f"Unexpected TokenIndexT subtype: {type(self.s)}")
-
-
-from abc import ABC
 
 
 @dataclasses.dataclass(repr=False)

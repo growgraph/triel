@@ -23,22 +23,35 @@ def phrase_to_deptree(nlp: Language, document: str) -> tuple[Doc, nx.DiGraph]:
     graph = nx.DiGraph()
 
     rdoc = nlp(document)
+
+    keys_to_pick = [
+        "i",
+        "dep_",
+        "tag_",
+        "lower_",
+        "lemma_",
+        "text",
+        "ent_iob",
+        "idx",
+    ]
+
+    map_keys = {"i": "s", "lower_": "lower", "lemma_": "lemma"}
+
     vs = [
         (
             token.i,
             {
-                "s": token.i,
-                "dep_": token.dep_,
-                "tag_": token.tag_,
-                "lower": token.lower_,
-                "lemma": token.lemma_,
-                "ent_iob": token.ent_iob,
-                "text": token.text,
-                "label": f"{token.i}-{token.lower_}-{token.dep_}-{token.tag_}",
+                map_keys[k] if k in map_keys else k: token.__getattribute__(k)
+                for k in keys_to_pick
             },
         )
         for token in rdoc
     ]
+
+    # add label
+    for i, v in vs:
+        v["label"] = f"{v['s']}-{v['lower']}-{v['dep_']}-{v['tag_']}"
+
     # root = [v[0] for v in vs if v[1]["dep_"] == "ROOT"][0]
     # FYI https://www.spacy.io/docs/api/token
     # https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html

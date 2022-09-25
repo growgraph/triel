@@ -14,9 +14,7 @@ def plot_graph(graph, path, name, plot_png=False, plot_pdf=True, prog="dot"):
     :param prog: prog=[‘neato’|’dot’|’twopi’|’circo’|’fdp’|’nop’]
     :return:
     """
-    # for n in graph.nodes:
-    #     label = graph.nodes[n]["label"] if "label" in graph.nodes[n] else ""
-    #     graph.nodes[n]["label"] = f"{n}#{label}"
+
     dot = to_agraph(graph)
     dot.layout("dot")
     if plot_png:
