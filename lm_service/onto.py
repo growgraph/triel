@@ -69,6 +69,13 @@ class AbsToken(JSONWizard, ABC):
     _level: int = 0
     label: str = ""
     idx: int = 0
+    idx_eot: int = 0
+    ent_id: int = 0
+    ent_kb_id: int = 0
+    ent_type: int = 0
+    ent_id_: str = ""
+    ent_kb_id_: str = ""
+    ent_type_: str = ""
 
     def __post_init__(self):
         if not self.lemma and self.text:

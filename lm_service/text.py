@@ -19,22 +19,23 @@ from lm_service.util import plot_graph
 logger = logging.getLogger(__name__)
 
 
-def text_to_triples(
-    text,
-    nlp,
-    rules,
-    window_size,
-    head=None,
-    return_phrases=False,
-    plot_path=None,
-) -> tuple[
-    dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]], dict[MuIndex, Candidate]
-]:
+def normalize_text(text, nlp, head=None):
     phrases_original = normalize_input_text(text, terminal_full_stop=True)
     if head is not None:
         phrases_original = phrases_original[:head]
     phrases = [transform_advcl(nlp, p) for p in phrases_original]
+    return phrases
 
+
+def phph_to_triples(
+    phrases,
+    nlp,
+    rules,
+    window_size,
+    plot_path=None,
+) -> tuple[
+    dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]], dict[MuIndex, Candidate]
+]:
     (
         striples,
         striples_meta,
