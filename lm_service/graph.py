@@ -33,6 +33,12 @@ def phrase_to_deptree(nlp: Language, document: str) -> tuple[Doc, nx.DiGraph]:
         "text",
         "ent_iob",
         "idx",
+        "ent_id",
+        "ent_kb_id",
+        "ent_type",
+        "ent_id_",
+        "ent_kb_id_",
+        "ent_type_",
     ]
 
     map_keys = {"i": "s", "lower_": "lower", "lemma_": "lemma"}
@@ -51,6 +57,10 @@ def phrase_to_deptree(nlp: Language, document: str) -> tuple[Doc, nx.DiGraph]:
     # add label
     for i, v in vs:
         v["label"] = f"{v['s']}-{v['lower']}-{v['dep_']}-{v['tag_']}"
+
+    # add end of token index
+    for i, v in vs:
+        v["idx_eot"] = v["idx"] + len(v["text"])
 
     # root = [v[0] for v in vs if v[1]["dep_"] == "ROOT"][0]
     # FYI https://www.spacy.io/docs/api/token

@@ -21,7 +21,11 @@ from lm_service.relation import (
     generate_extra_graphs,
     graph_to_candidate_pile,
 )
-from lm_service.text import cast_simplified_triples_table, text_to_triples
+from lm_service.text import (
+    cast_simplified_triples_table,
+    normalize_text,
+    phph_to_triples,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -265,8 +269,10 @@ class TestR(unittest.TestCase):
             " measures of their physical size."
         )
 
-        global_triples, map_mu_index_triple = text_to_triples(
-            text, self.nlp, self.rules, window_size=2
+        phs = normalize_text(text, self.nlp)
+
+        global_triples, map_mu_index_triple = phph_to_triples(
+            phs, self.nlp, self.rules, window_size=2
         )
 
         global_triples_txt = cast_simplified_triples_table(

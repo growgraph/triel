@@ -10,7 +10,11 @@ import pandas as pd
 import spacy
 import yaml
 
-from lm_service.text import cast_simplified_triples_table, text_to_triples
+from lm_service.text import (
+    cast_simplified_triples_table,
+    normalize_text,
+    phph_to_triples,
+)
 from lm_service.util import plot_graph
 
 
@@ -18,13 +22,12 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    triples, map_mu_index_triple = text_to_triples(
-        text,
+    phs = normalize_text(text, nlp, head)
+    triples, map_mu_index_triple = phph_to_triples(
+        phs,
         nlp,
         rules,
         window_size=window_size,
-        head=head,
-        return_phrases=True,
         plot_path=plot_path,
     )
 
