@@ -19,7 +19,7 @@ from lm_service.util import plot_graph
 logger = logging.getLogger(__name__)
 
 
-def normalize_text(text, nlp, head=None):
+def normalize_text(text, nlp, head=None) -> list[str]:
     phrases_original = normalize_input_text(text, terminal_full_stop=True)
     if head is not None:
         phrases_original = phrases_original[:head]
@@ -27,7 +27,7 @@ def normalize_text(text, nlp, head=None):
     return phrases
 
 
-def phph_to_triples(
+def phrases_to_triples(
     phrases,
     nlp,
     rules,
@@ -43,9 +43,11 @@ def phph_to_triples(
         relations,
     ) = phrases_to_basis_triples(nlp, rules, phrases, plot_path)
 
+    # mnemonics : ecl ~ ExtCandidateList()
     ecl = candidate_depot.unfold_conjunction()
 
     global_ecl = ExtCandidateList()
+
     window_size = min([window_size, len(phrases)])
     nmax = len(phrases) - window_size + 1
     for i in range(nmax):
@@ -61,6 +63,7 @@ def phph_to_triples(
 
     global_ecl.filter_out_pronouns()
 
+    # mnemonics : fun ~ fundamental
     fun_candidates: dict[MuIndex, Candidate] = dict()
     for key, item_list in global_ecl:
         for j, item in enumerate(item_list):
@@ -224,6 +227,7 @@ def phrases_to_basis_triples(
     :param nlp:
     :param rules:
     :param phrases:
+    :param plot_path:
     :return:
     """
 
@@ -266,6 +270,8 @@ def phrases_to_basis_triples(
 
         if plot_path is not None:
             plot_graph(graph_relabeled, plot_path, f"phrase_{k}_full")
+
+    # mnemonics : prefix `s` stands for str or compound index
     return striples, striples_meta, candidate_depot, relations
 
 
