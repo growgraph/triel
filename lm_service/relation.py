@@ -187,20 +187,20 @@ def graph_to_candidate_pile(
         mgraph,
         graph,
         deque(roots),
-        candidate_pile,
-        ACandidateKind.SOURCE_TARGET,
+        relation_pile,
+        ACandidateKind.RELATION,
         rules=rules,
-        robust_mode=robust_mode,
+        robust_mode=True,
     )
 
     find_candidates_bfs(
         mgraph,
         graph,
         deque(roots),
-        relation_pile,
-        ACandidateKind.RELATION,
+        candidate_pile,
+        ACandidateKind.SOURCE_TARGET,
         rules=rules,
-        robust_mode=True,
+        robust_mode=robust_mode,
     )
 
     source_candidates, target_candidates = sieve_sources_targets(

@@ -24,13 +24,13 @@ from lm_service.relation import (
 from lm_service.text import (
     cast_simplified_triples_table,
     normalize_text,
-    phph_to_triples,
+    phrases_to_triples,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class TestR(unittest.TestCase):
+class TestTriples(unittest.TestCase):
 
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     path = Path(__file__).parent
@@ -271,7 +271,7 @@ class TestR(unittest.TestCase):
 
         phs = normalize_text(text, self.nlp)
 
-        global_triples, map_mu_index_triple = phph_to_triples(
+        global_triples, map_mu_index_triple = phrases_to_triples(
             phs, self.nlp, self.rules, window_size=2
         )
 

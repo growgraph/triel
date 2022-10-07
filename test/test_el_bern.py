@@ -1,11 +1,11 @@
 import pkgutil
 import unittest
 
-import coreferee
 import spacy
 import yaml
 
-from lm_service.text import normalize_text, phph_to_triples
+from lm_service.linking import link_candidate_entity, normalize_bern_entity
+from lm_service.text import normalize_text, phrases_to_basis_triples
 
 
 class MyTestCase(unittest.TestCase):
@@ -15,13 +15,18 @@ class MyTestCase(unittest.TestCase):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    def test_something(self):
+    def test_bern(self):
         text = "Diabetic ulcers are related to burns."
         phs = normalize_text(text, self.nlp)
 
-        global_triples, map_mu_index_triple = phph_to_triples(
-            phs, self.nlp, self.rules, window_size=2
-        )
+        (
+            striples,
+            striples_meta,
+            candidate_depot,
+            relations,
+        ) = phrases_to_basis_triples(self.nlp, self.rules, phs)
+
+        ecl = candidate_depot.unfold_conjunction()
 
         r_bern = {
             "annotations": [
@@ -46,7 +51,20 @@ class MyTestCase(unittest.TestCase):
             "timestamp": "Tue Sep 20 16:11:48 +0000 2022",
         }
 
-        print(global_triples.items())
+        print(ecl)
+
+        # phrase index set
+        ix_current_phrase = 0
+
+        bern_normalized = [
+            normalize_bern_entity(item) for item in r_bern["annotations"]
+        ]
+        map_c2e = link_candidate_entity(
+            bern_normalized, ecl, ix_current_phrase
+        )
+
+        print(map_c2e)
+
         # r = query_bern(phrase, "v2")
         # print(r)
         # print(len(r["entities"]))
