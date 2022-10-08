@@ -891,10 +891,13 @@ def partition_conjunctive_wrapper(
 @dataclasses.dataclass(eq=True, frozen=True, order=True)
 class MuIndex(JSONWizard):
     """
+    Candidate index in a collections of phrases.
+
     meta - flag, true if MuIndex points to a triple
     phrase - phrase number
     token - token index within phrase
-    running -
+    running - in case there are several `candidates` (conjunction),
+            that exist under the same token root
     """
 
     meta: bool
