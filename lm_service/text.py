@@ -27,15 +27,20 @@ def normalize_text(text, nlp, head=None) -> list[str]:
     return phrases
 
 
-def phrases_to_triples(
+def phrases_to_triples_stage_a(
     phrases,
     nlp,
     rules,
-    window_size,
     plot_path=None,
-) -> tuple[
-    dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]], dict[MuIndex, Candidate]
-]:
+):
+    """
+    stage a : basis triples
+    :param phrases:
+    :param nlp:
+    :param rules:
+    :param plot_path:
+    :return:
+    """
     (
         striples,
         striples_meta,
@@ -45,6 +50,23 @@ def phrases_to_triples(
 
     # mnemonics : ecl ~ ExtCandidateList()
     ecl = candidate_depot.unfold_conjunction()
+    return striples, striples_meta, relations, ecl
+
+
+def phrases_to_triples(
+    phrases,
+    nlp,
+    rules,
+    window_size,
+    plot_path=None,
+) -> tuple[
+    dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]],
+    dict[MuIndex, Candidate],
+    ExtCandidateList,
+]:
+    striples, striples_meta, relations, ecl = phrases_to_triples_stage_a(
+        phrases, nlp, rules, plot_path
+    )
 
     global_ecl = ExtCandidateList()
 
@@ -211,7 +233,7 @@ def phrases_to_triples(
             raise ValueError(
                 "Fundamental MuIndex not in ExtCandPile and not in relations"
             )
-    return global_triples, mu_index_candidate_map
+    return global_triples, mu_index_candidate_map, ecl
 
 
 def phrases_to_basis_triples(

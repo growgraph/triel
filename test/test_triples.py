@@ -13,6 +13,7 @@ from reference.distances import reference_distance
 
 from lm_service.coref import graph_component_maps, render_coref_maps_wrapper
 from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
+from lm_service.linking import iterate_linking_over_phrases
 from lm_service.onto import AbsToken, MuIndex, apply_map
 from lm_service.phrase import graph_to_triples
 from lm_service.preprocessing import normalize_input_text
@@ -25,13 +26,13 @@ from lm_service.text import (
     cast_simplified_triples_table,
     normalize_text,
     phrases_to_triples,
+    phrases_to_triples_stage_a,
 )
 
 logger = logging.getLogger(__name__)
 
 
 class TestTriples(unittest.TestCase):
-
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     path = Path(__file__).parent
 
@@ -269,10 +270,10 @@ class TestTriples(unittest.TestCase):
             " measures of their physical size."
         )
 
-        phs = normalize_text(text, self.nlp)
+        phrases = normalize_text(text, self.nlp)
 
-        global_triples, map_mu_index_triple = phrases_to_triples(
-            phs, self.nlp, self.rules, window_size=2
+        global_triples, map_mu_index_triple, _ = phrases_to_triples(
+            phrases, self.nlp, self.rules, window_size=2
         )
 
         global_triples_txt = cast_simplified_triples_table(
@@ -358,6 +359,107 @@ class TestTriples(unittest.TestCase):
         }
 
         self.assertEqual(global_triples_txt, reference)
+
+    def test_text_linking(self):
+        text = "Diabetic ulcers are related to burns."
+
+        response_bern = {
+            "annotations": [
+                {
+                    "id": ["mesh:D017719"],
+                    "is_neural_normalized": True,
+                    "mention": "Diabetic ulcers",
+                    "obj": "disease",
+                    "prob": 0.9999968409538269,
+                    "span": {"begin": 0, "end": 15},
+                },
+                {
+                    "id": ["mesh:D002056"],
+                    "is_neural_normalized": False,
+                    "mention": "burns",
+                    "obj": "disease",
+                    "prob": 0.9982181191444397,
+                    "span": {"begin": 31, "end": 36},
+                },
+            ],
+            "text": "Diabetic ulcers are related to burns.",
+            "timestamp": "Tue Sep 20 16:11:48 +0000 2022",
+        }
+
+        phrases = normalize_text(text, self.nlp)
+
+        global_triples, map_mu_index_map, ecl = phrases_to_triples(
+            phrases, self.nlp, self.rules, window_size=2
+        )
+
+        foo_link = lambda p: response_bern["annotations"]
+
+        entities_index_e_map = {}
+        map_c2e = {}
+        entities_index_e_map, map_c2e = iterate_linking_over_phrases(
+            phrases=phrases,
+            ecl=ecl,
+            entities_index_e_map=entities_index_e_map,
+            map_c2e=map_c2e,
+            foo=foo_link,
+        )
+
+        # create missing entities (for some candidates entities were not found)
+        mentions_not_in_entities = set(map_mu_index_map) - set(map_c2e)
+        for i_mu in mentions_not_in_entities:
+            c = map_mu_index_map[i_mu]
+            s = " ".join(c.project_to_text())
+            new_entity = {
+                "linker_type": "local",
+                "ent_type": "",
+                "ent_db_type": "gg",
+                "id": s,
+                "mention": s,
+                "confidence": 0.0,
+            }
+            max_ent = max(
+                y for x, y in entities_index_e_map if x == i_mu.phrase
+            )
+            i_ent = (i_mu.phrase, max_ent + 1)
+            map_c2e[i_mu] = i_ent
+            entities_index_e_map[i_ent] = new_entity
+
+        entities_index_e_map_ref, map_c2e_ref = (
+            {
+                (0, 0): {
+                    "linker_type": "bern",
+                    "ent_type": "disease",
+                    "ent_db_type": "mesh",
+                    "id": "D017719",
+                    "confidence": 0.9999968409538269,
+                    "mention": "Diabetic ulcers",
+                },
+                (0, 1): {
+                    "linker_type": "bern",
+                    "ent_type": "disease",
+                    "ent_db_type": "mesh",
+                    "id": "D002056",
+                    "confidence": 0.9982181191444397,
+                    "mention": "burns",
+                },
+                (0, 2): {
+                    "linker_type": "local",
+                    "ent_type": "",
+                    "ent_db_type": "gg",
+                    "id": "are related to",
+                    "mention": "are related to",
+                    "confidence": 0.0,
+                },
+            },
+            {
+                MuIndex(meta=False, phrase=0, token="001", running=0): (0, 0),
+                MuIndex(meta=False, phrase=0, token="005", running=0): (0, 1),
+                MuIndex(meta=False, phrase=0, token="002", running=0): (0, 2),
+            },
+        )
+
+        self.assertEqual(entities_index_e_map, entities_index_e_map_ref)
+        self.assertEqual(map_c2e, map_c2e_ref)
 
 
 if __name__ == "__main__":
