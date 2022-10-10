@@ -65,13 +65,15 @@ class MyTestCase(unittest.TestCase):
             for item in self.response_bern["annotations"]
         ]
 
-        bern_normalized = [x for x in bern_normalized if x]
-
-        map_c2e = link_candidate_entity(
-            bern_normalized, ecl, ix_current_phrase
+        bern_normalized = dict(
+            zip(
+                [(ix_current_phrase, j) for j in range(len(bern_normalized))],
+                [x for _, x in bern_normalized if x],
+            )
         )
 
-        print(map_c2e)
+        map_c2e = link_candidate_entity(bern_normalized, ecl)
+
         self.assertEqual(
             map_c2e,
             {
@@ -83,44 +85,54 @@ class MyTestCase(unittest.TestCase):
     def test_iterate_linking_over_phrases(self):
         foo_link = lambda p: self.response_bern["annotations"]
         text = "Diabetic ulcers are related to burns."
-        phs = normalize_text(text, self.nlp)
+        phrases = normalize_text(text, self.nlp)
 
         (
             striples,
             striples_meta,
             candidate_depot,
             relations,
-        ) = phrases_to_basis_triples(self.nlp, self.rules, phs)
+        ) = phrases_to_basis_triples(self.nlp, self.rules, phrases)
 
         ecl = candidate_depot.unfold_conjunction()
 
-        r = iterate_linking_over_phrases(phrases=phs, ecl=ecl, foo=foo_link)
-        reference = (
-            [
-                {
+        entities_index_e_map = {}
+        map_c2e = {}
+        entities_index_e_map, map_c2e = iterate_linking_over_phrases(
+            phrases=phrases,
+            ecl=ecl,
+            entities_index_e_map=entities_index_e_map,
+            map_c2e=map_c2e,
+            foo=foo_link,
+        )
+
+        entities_index_e_map_ref, map_c2e_ref = (
+            {
+                (0, 0): {
                     "linker_type": "bern",
                     "ent_type": "disease",
                     "ent_db_type": "mesh",
                     "id": "D017719",
                     "confidence": 0.9999968409538269,
-                    "span": (0, 15),
+                    "mention": "Diabetic ulcers",
                 },
-                {
+                (0, 1): {
                     "linker_type": "bern",
                     "ent_type": "disease",
                     "ent_db_type": "mesh",
                     "id": "D002056",
                     "confidence": 0.9982181191444397,
-                    "span": (31, 36),
+                    "mention": "burns",
                 },
-            ],
+            },
             {
                 MuIndex(meta=False, phrase=0, token="001", running=0): (0, 0),
                 MuIndex(meta=False, phrase=0, token="005", running=0): (0, 1),
             },
         )
 
-        self.assertEqual(r, reference)
+        self.assertEqual(entities_index_e_map, entities_index_e_map_ref)
+        self.assertEqual(map_c2e, map_c2e_ref)
 
 
 if __name__ == "__main__":

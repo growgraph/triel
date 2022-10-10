@@ -23,7 +23,7 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     phs = normalize_text(text, nlp, head)
-    triples, map_mu_index_triple = phrases_to_triples(
+    triples, map_mu_index_triple, _ = phrases_to_triples(
         phs,
         nlp,
         rules,
