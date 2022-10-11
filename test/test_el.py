@@ -6,12 +6,18 @@ import spacy
 import yaml
 
 from lm_service.linking import (
+    EntityLinker,
     iterate_linking_over_phrases,
+    iterate_over_linkers,
     link_candidate_entity,
     normalize_bern_entity,
 )
 from lm_service.onto import MuIndex
-from lm_service.text import normalize_text, phrases_to_basis_triples
+from lm_service.text import (
+    normalize_text,
+    phrases_to_basis_triples,
+    phrases_to_triples,
+)
 
 
 class MyTestCase(unittest.TestCase):
@@ -74,15 +80,13 @@ class MyTestCase(unittest.TestCase):
 
         self.assertEqual(
             map_c2e,
-            {
-                MuIndex(False, 0, "001", 0): (0, 0),
-                MuIndex(False, 0, "005", 0): (0, 1),
-            },
+            [
+                (MuIndex(False, 0, "001", 0), (0, 0)),
+                (MuIndex(False, 0, "005", 0), (0, 1)),
+            ],
         )
 
     def test_iterate_linking_over_phrases(self):
-        from lm_service.linking import EntLinking
-
         foo_link = lambda p: self.response_bern["annotations"]
         text = "Diabetic ulcers are related to burns."
         phrases = normalize_text(text, self.nlp)
@@ -97,52 +101,57 @@ class MyTestCase(unittest.TestCase):
         ecl = candidate_depot.unfold_conjunction()
 
         map_eindex_entity = {}
-        map_c2e = {}
+        map_c2e = []
         map_eindex_entity, map_c2e = iterate_linking_over_phrases(
             phrases=phrases,
             ecl=ecl,
             map_eindex_entity=map_eindex_entity,
             map_c2e=map_c2e,
-            foo=foo_link,
+            link_foo=foo_link,
         )
 
         entities_index_e_map_ref, map_c2e_ref = (
             {
                 (0, 0): {
-                    "linker_type": EntLinking.BERN_V2,
+                    "linker_type": EntityLinker.BERN_V2,
                     "ent_type": "disease",
                     "ent_db_type": "mesh",
                     "id": "D017719",
                     "confidence": 0.9999968409538269,
                 },
                 (0, 1): {
-                    "linker_type": EntLinking.BERN_V2,
+                    "linker_type": EntityLinker.BERN_V2,
                     "ent_type": "disease",
                     "ent_db_type": "mesh",
                     "id": "D002056",
                     "confidence": 0.9982181191444397,
                 },
             },
-            {
-                MuIndex(meta=False, phrase=0, token="001", running=0): (0, 0),
-                MuIndex(meta=False, phrase=0, token="005", running=0): (0, 1),
-            },
+            [
+                (
+                    MuIndex(meta=False, phrase=0, token="001", running=0),
+                    (0, 0),
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="005", running=0),
+                    (0, 1),
+                ),
+            ],
         )
 
         self.assertEqual(map_eindex_entity, entities_index_e_map_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
     def test_iterate_naive_linking(self):
-        from lm_service.linking import EntLinking
 
         text = "Diabetic ulcers are related to burns."
 
         phrases = normalize_text(text, self.nlp)
 
-        nlp = self.nlp
-        nlp.add_pipe("entityLinker", last=True)
+        if "entityLinker" not in self.nlp.pipe_names:
+            self.nlp.add_pipe("entityLinker", last=True)
 
-        foo_link = lambda p: nlp(p)._.linkedEntities
+        foo_link = lambda p: self.nlp(p)._.linkedEntities
 
         (
             striples,
@@ -154,20 +163,20 @@ class MyTestCase(unittest.TestCase):
         ecl = candidate_depot.unfold_conjunction()
 
         entities_index_e_map = {}
-        map_c2e = {}
+        map_c2e = []
         entities_index_e_map, map_c2e = iterate_linking_over_phrases(
             phrases=phrases,
             ecl=ecl,
             map_eindex_entity=entities_index_e_map,
             map_c2e=map_c2e,
-            foo=foo_link,
-            etype=EntLinking.SPACY_NAIVE_EL,
+            link_foo=foo_link,
+            etype=EntityLinker.SPACY_NAIVE_EL,
         )
 
         entities_index_e_map_ref, map_c2e_ref = (
             {
                 (0, 0): {
-                    "linker_type": EntLinking.SPACY_NAIVE_EL,
+                    "linker_type": EntityLinker.SPACY_NAIVE_EL,
                     "ent_db_type": "wikidata",
                     "id": "Q6452285",
                     "original": "ulcer",
@@ -175,7 +184,7 @@ class MyTestCase(unittest.TestCase):
                     "desc": "type of cutaneous condition",
                 },
                 (0, 1): {
-                    "linker_type": EntLinking.SPACY_NAIVE_EL,
+                    "linker_type": EntityLinker.SPACY_NAIVE_EL,
                     "ent_db_type": "wikidata",
                     "id": "Q170518",
                     "original": "burns",
@@ -186,10 +195,112 @@ class MyTestCase(unittest.TestCase):
                     ),
                 },
             },
+            [
+                (
+                    MuIndex(meta=False, phrase=0, token="001", running=0),
+                    (0, 0),
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="005", running=0),
+                    (0, 1),
+                ),
+            ],
+        )
+
+        self.assertEqual(entities_index_e_map, entities_index_e_map_ref)
+        self.assertEqual(map_c2e, map_c2e_ref)
+
+    def test_iterate_over_linkers(self):
+
+        text = "Diabetic ulcers are related to burns."
+
+        phrases = normalize_text(text, self.nlp)
+
+        if "entityLinker" not in self.nlp.pipe_names:
+            self.nlp.add_pipe("entityLinker", last=True)
+
+        global_triples, map_muindex_candidate, ecl = phrases_to_triples(
+            phrases, self.nlp, self.rules, window_size=2
+        )
+
+        phrase_entities_foos: dict = {
+            EntityLinker.BERN_V2: lambda p: self.response_bern["annotations"],
+            EntityLinker.SPACY_NAIVE_EL: lambda p: self.nlp(
+                p
+            )._.linkedEntities,
+        }
+
+        entities_index_e_map, map_c2e = iterate_over_linkers(
+            phrases=phrases,
+            ecl=ecl,
+            map_muindex_candidate=map_muindex_candidate,
+            phrase_entities_foos=phrase_entities_foos,
+        )
+
+        entities_index_e_map_ref, map_c2e_ref = (
             {
-                MuIndex(meta=False, phrase=0, token="001", running=0): (0, 0),
-                MuIndex(meta=False, phrase=0, token="005", running=0): (0, 1),
+                (0, 0): {
+                    "linker_type": "BERN_V2",
+                    "ent_type": "disease",
+                    "ent_db_type": "mesh",
+                    "id": "D017719",
+                    "confidence": 0.9999968409538269,
+                },
+                (0, 1): {
+                    "linker_type": "BERN_V2",
+                    "ent_type": "disease",
+                    "ent_db_type": "mesh",
+                    "id": "D002056",
+                    "confidence": 0.9982181191444397,
+                },
+                (0, 2): {
+                    "linker_type": "SPACY_NAIVE_EL",
+                    "ent_db_type": "wikidata",
+                    "id": "Q6452285",
+                    "original": "ulcer",
+                    "ent_type": None,
+                    "desc": "type of cutaneous condition",
+                },
+                (0, 3): {
+                    "linker_type": "SPACY_NAIVE_EL",
+                    "ent_db_type": "wikidata",
+                    "id": "Q170518",
+                    "original": "burns",
+                    "ent_type": None,
+                    "desc": (
+                        "injury to flesh or skin, often caused by excessive"
+                        " heat"
+                    ),
+                },
+                (0, 4): {
+                    "linker_type": "LOCAL_NON_EL",
+                    "ent_db_type": "ent_db_type_local_gg",
+                    "id": "is related to",
+                    "confidence": 0.0,
+                },
             },
+            [
+                (
+                    MuIndex(meta=False, phrase=0, token="001", running=0),
+                    (0, 0),
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="005", running=0),
+                    (0, 1),
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="001", running=0),
+                    (0, 2),
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="005", running=0),
+                    (0, 3),
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="002", running=0),
+                    (0, 4),
+                ),
+            ],
         )
 
         self.assertEqual(entities_index_e_map, entities_index_e_map_ref)

@@ -12,7 +12,7 @@ class EntityCandidateAlignmentError(Exception):
     pass
 
 
-class EntLinking(str, Enum):
+class EntityLinker(str, Enum):
     BERN_V2 = "BERN_V2"
     SPACY_NAIVE_EL = "SPACY_NAIVE_EL"
     LOCAL_NON_EL = "LOCAL_NON_EL"
@@ -35,7 +35,7 @@ def normalize_bern_entity(item) -> tuple[dict | None, tuple | None]:
         item_spec = item["id"][0].split(":")
         db_type, item_id = item_spec
         return {
-            "linker_type": EntLinking.BERN_V2,
+            "linker_type": EntityLinker.BERN_V2,
             "ent_type": item["obj"],
             "ent_db_type": db_type,
             "id": item_id,
@@ -56,7 +56,7 @@ def normalize_naive_entityLinker(item) -> tuple[dict | None, tuple | None]:
         except:
             ent_type = None
         return {
-            "linker_type": EntLinking.SPACY_NAIVE_EL,
+            "linker_type": EntityLinker.SPACY_NAIVE_EL,
             "ent_db_type": "wikidata",
             "id": item_id,
             "original": item.get_original_alias(),
@@ -69,9 +69,9 @@ def normalize_naive_entityLinker(item) -> tuple[dict | None, tuple | None]:
 
 def link_unlinked_entities(
     map_eindex_entity: dict[tuple[int, int], dict],
-    map_c2e: dict[MuIndex, tuple[int, int]],
+    map_c2e: list[tuple[MuIndex, tuple[int, int]]],
     map_muindex_candidate: dict[MuIndex, Candidate],
-) -> tuple[dict[tuple[int, int], dict], dict[MuIndex, tuple[int, int]]]:
+) -> tuple[dict[tuple[int, int], dict], list[tuple[MuIndex, tuple[int, int]]]]:
     """
 
     :param map_eindex_entity:
@@ -84,20 +84,22 @@ def link_unlinked_entities(
 
     # create entities for unlinked candidates (for some candidates entities were not found)
 
-    mentions_not_in_entities = set(map_muindex_candidate) - set(map_c2e)
+    mentions_not_in_entities = set(map_muindex_candidate) - set(
+        c for c, e in map_c2e
+    )
 
     for i_mu in mentions_not_in_entities:
         c = map_muindex_candidate[i_mu]
         s = " ".join(c.project_to_text())
         new_entity = {
-            "linker_type": EntLinking.LOCAL_NON_EL,
+            "linker_type": EntityLinker.LOCAL_NON_EL,
             "ent_db_type": ent_db_type_local_gg,
             "id": s,
             "confidence": 0.0,
         }
         max_ent = max(y for x, y in map_eindex_entity if x == i_mu.phrase)
         i_ent = (i_mu.phrase, max_ent + 1)
-        map_c2e[i_mu] = i_ent
+        map_c2e += [(i_mu, i_ent)]
         map_eindex_entity[i_ent] = new_entity
 
     return map_eindex_entity, map_c2e
@@ -105,7 +107,7 @@ def link_unlinked_entities(
 
 def link_candidate_entity(ec_spans: dict, ecl: ExtCandidateList):
     """
-        NB: in futere (iphrase, i_ent): ent
+        NB: in future (iphrase, i_ent): ent
             will also be used for linking used
     :param ec_spans: (iphrase, i_ent): (span_beg, span_end)
     :param ecl:
@@ -117,7 +119,7 @@ def link_candidate_entity(ec_spans: dict, ecl: ExtCandidateList):
     ix_phrases = set(k[0] for k in i_e)
     # c_index : (iphrase, sindex, cand_subindex, token_index) : [spans]
 
-    cand_entity = []
+    map_c2e = []
     ecl.set_filter(lambda x: x[0] in ix_phrases)
 
     for k, cand_list in ecl:
@@ -137,38 +139,44 @@ def link_candidate_entity(ec_spans: dict, ecl: ExtCandidateList):
                 )
             (ec_ixs,) = np.where((dist > 0.8).any(axis=1))
             # map current candidate to entity index
-            cand_entity += [(MuIndex(False, *k, n), i_e[i]) for i in ec_ixs]
+            map_c2e += [(MuIndex(False, *k, n), i_e[i]) for i in ec_ixs]
 
     # e_index : (iphrase, eindex)
     # c_index : (iphrase, sindex, cand_subindex)
     # 1 -> n : cand -> entity (could be easily generalizable)
-    map_c2e = dict(cand_entity)
     return map_c2e
 
 
+entity_normalized_foo_map = {
+    EntityLinker.BERN_V2: normalize_bern_entity,
+    EntityLinker.SPACY_NAIVE_EL: normalize_naive_entityLinker,
+}
+
+
 def iterate_linking_over_phrases(
-    phrases, ecl, foo, map_eindex_entity, map_c2e, etype=EntLinking.BERN_V2
-) -> tuple[dict[tuple[int, int], dict], dict[MuIndex, tuple[int, int]]]:
+    phrases,
+    ecl,
+    link_foo,
+    map_eindex_entity,
+    map_c2e,
+    etype=EntityLinker.BERN_V2,
+) -> tuple[dict[tuple[int, int], dict], list[tuple[MuIndex, tuple[int, int]]]]:
     """
 
     :param phrases:
     :param ecl:
-    :param foo:
+    :param link_foo: function, maps a phrase to a list of entities
     :param map_eindex_entity:
     :param map_c2e:
     :param etype:
     :return:
         i_e -> e ; i_e -> i_mu
     """
-    entity_normalized_foo_map = {
-        EntLinking.BERN_V2: normalize_bern_entity,
-        EntLinking.SPACY_NAIVE_EL: normalize_naive_entityLinker,
-    }
 
     foo_normalize = entity_normalized_foo_map[etype]
 
     for ix_current_phrase, phrase in enumerate(phrases):
-        response = foo(phrase)
+        response = link_foo(phrase)
 
         # entities + spans
         entity_pack_current = [foo_normalize(item) for item in response]
@@ -177,10 +185,10 @@ def iterate_linking_over_phrases(
         entity_normalized_current = [x for x, _ in entity_pack_current]
 
         existing_ents = [
-            k[0] for k in map_eindex_entity if k[0] == ix_current_phrase
+            k[1] for k in map_eindex_entity if k[0] == ix_current_phrase
         ]
 
-        e_index_max = max(existing_ents) if existing_ents else 0
+        e_index_max = max(existing_ents) + 1 if existing_ents else 0
 
         entities_index = [
             (ix_current_phrase, j + e_index_max)
@@ -195,7 +203,33 @@ def iterate_linking_over_phrases(
 
         map_c2e_current = link_candidate_entity(ei_span_map, ecl)
 
-        map_c2e.update(map_c2e_current)
+        map_c2e.extend(map_c2e_current)
         map_eindex_entity.update(entities_index_e_map_current)
 
+    return map_eindex_entity, map_c2e
+
+
+def iterate_over_linkers(
+    phrases: list[str],
+    ecl: ExtCandidateList,
+    map_muindex_candidate: dict[MuIndex, Candidate],
+    phrase_entities_foos: dict,
+) -> tuple[dict[tuple[int, int], dict], list[tuple[MuIndex, tuple[int, int]]]]:
+
+    map_eindex_entity: dict[tuple[int, int], dict] = {}
+    map_c2e: list[tuple[MuIndex, tuple[int, int]]] = []
+
+    for link_mode, link_foo in phrase_entities_foos.items():
+        map_eindex_entity, map_c2e = iterate_linking_over_phrases(
+            phrases=phrases,
+            ecl=ecl,
+            map_eindex_entity=map_eindex_entity,
+            map_c2e=map_c2e,
+            link_foo=link_foo,
+            etype=link_mode,
+        )
+
+    map_eindex_entity, map_c2e = link_unlinked_entities(
+        map_eindex_entity, map_c2e, map_muindex_candidate
+    )
     return map_eindex_entity, map_c2e
