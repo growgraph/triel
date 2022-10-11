@@ -68,6 +68,9 @@ def phrases_to_triples(
         phrases, nlp, rules, plot_path
     )
 
+    for r in relations:
+        r.normalize()
+
     global_ecl = ExtCandidateList()
 
     window_size = min([window_size, len(phrases)])
