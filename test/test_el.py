@@ -26,7 +26,6 @@ class MyTestCase(unittest.TestCase):
             {
                 "id": ["mesh:D017719"],
                 "is_neural_normalized": True,
-                "mention": "Diabetic ulcers",
                 "obj": "disease",
                 "prob": 0.9999968409538269,
                 "span": {"begin": 0, "end": 15},
@@ -34,7 +33,6 @@ class MyTestCase(unittest.TestCase):
             {
                 "id": ["mesh:D002056"],
                 "is_neural_normalized": False,
-                "mention": "burns",
                 "obj": "disease",
                 "prob": 0.9982181191444397,
                 "span": {"begin": 31, "end": 36},
@@ -83,9 +81,68 @@ class MyTestCase(unittest.TestCase):
         )
 
     def test_iterate_linking_over_phrases(self):
+        from lm_service.linking import EntLinking
+
         foo_link = lambda p: self.response_bern["annotations"]
         text = "Diabetic ulcers are related to burns."
         phrases = normalize_text(text, self.nlp)
+
+        (
+            striples,
+            striples_meta,
+            candidate_depot,
+            relations,
+        ) = phrases_to_basis_triples(self.nlp, self.rules, phrases)
+
+        ecl = candidate_depot.unfold_conjunction()
+
+        map_eindex_entity = {}
+        map_c2e = {}
+        map_eindex_entity, map_c2e = iterate_linking_over_phrases(
+            phrases=phrases,
+            ecl=ecl,
+            map_eindex_entity=map_eindex_entity,
+            map_c2e=map_c2e,
+            foo=foo_link,
+        )
+
+        entities_index_e_map_ref, map_c2e_ref = (
+            {
+                (0, 0): {
+                    "linker_type": EntLinking.BERN_V2,
+                    "ent_type": "disease",
+                    "ent_db_type": "mesh",
+                    "id": "D017719",
+                    "confidence": 0.9999968409538269,
+                },
+                (0, 1): {
+                    "linker_type": EntLinking.BERN_V2,
+                    "ent_type": "disease",
+                    "ent_db_type": "mesh",
+                    "id": "D002056",
+                    "confidence": 0.9982181191444397,
+                },
+            },
+            {
+                MuIndex(meta=False, phrase=0, token="001", running=0): (0, 0),
+                MuIndex(meta=False, phrase=0, token="005", running=0): (0, 1),
+            },
+        )
+
+        self.assertEqual(map_eindex_entity, entities_index_e_map_ref)
+        self.assertEqual(map_c2e, map_c2e_ref)
+
+    def test_iterate_naive_linking(self):
+        from lm_service.linking import EntLinking
+
+        text = "Diabetic ulcers are related to burns."
+
+        phrases = normalize_text(text, self.nlp)
+
+        nlp = self.nlp
+        nlp.add_pipe("entityLinker", last=True)
+
+        foo_link = lambda p: nlp(p)._.linkedEntities
 
         (
             striples,
@@ -101,28 +158,32 @@ class MyTestCase(unittest.TestCase):
         entities_index_e_map, map_c2e = iterate_linking_over_phrases(
             phrases=phrases,
             ecl=ecl,
-            entities_index_e_map=entities_index_e_map,
+            map_eindex_entity=entities_index_e_map,
             map_c2e=map_c2e,
             foo=foo_link,
+            etype=EntLinking.SPACY_NAIVE_EL,
         )
 
         entities_index_e_map_ref, map_c2e_ref = (
             {
                 (0, 0): {
-                    "linker_type": "bern",
-                    "ent_type": "disease",
-                    "ent_db_type": "mesh",
-                    "id": "D017719",
-                    "confidence": 0.9999968409538269,
-                    "mention": "Diabetic ulcers",
+                    "linker_type": EntLinking.SPACY_NAIVE_EL,
+                    "ent_db_type": "wikidata",
+                    "id": "Q6452285",
+                    "original": "ulcer",
+                    "ent_type": None,
+                    "desc": "type of cutaneous condition",
                 },
                 (0, 1): {
-                    "linker_type": "bern",
-                    "ent_type": "disease",
-                    "ent_db_type": "mesh",
-                    "id": "D002056",
-                    "confidence": 0.9982181191444397,
-                    "mention": "burns",
+                    "linker_type": EntLinking.SPACY_NAIVE_EL,
+                    "ent_db_type": "wikidata",
+                    "id": "Q170518",
+                    "original": "burns",
+                    "ent_type": None,
+                    "desc": (
+                        "injury to flesh or skin, often caused by excessive"
+                        " heat"
+                    ),
                 },
             },
             {
