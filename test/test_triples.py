@@ -14,7 +14,7 @@ from reference.distances import reference_distance
 from lm_service.coref import graph_component_maps, render_coref_maps_wrapper
 from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
 from lm_service.linking import (
-    EntLinking,
+    EntityLinker,
     ent_db_type_local_gg,
     iterate_linking_over_phrases,
     link_unlinked_entities,
@@ -397,13 +397,13 @@ class TestTriples(unittest.TestCase):
         foo_link = lambda p: response_bern["annotations"]
 
         map_eindex_entity = {}
-        map_c2e = {}
+        map_c2e = []
         map_eindex_entity, map_c2e = iterate_linking_over_phrases(
             phrases=phrases,
             ecl=ecl,
             map_eindex_entity=map_eindex_entity,
             map_c2e=map_c2e,
-            foo=foo_link,
+            link_foo=foo_link,
         )
 
         map_eindex_entity, map_c2e = link_unlinked_entities(
@@ -413,31 +413,40 @@ class TestTriples(unittest.TestCase):
         entities_index_e_map_ref, map_c2e_ref = (
             {
                 (0, 0): {
-                    "linker_type": EntLinking.BERN_V2,
+                    "linker_type": EntityLinker.BERN_V2,
                     "ent_type": "disease",
                     "ent_db_type": "mesh",
                     "id": "D017719",
                     "confidence": 0.9999968409538269,
                 },
                 (0, 1): {
-                    "linker_type": EntLinking.BERN_V2,
+                    "linker_type": EntityLinker.BERN_V2,
                     "ent_type": "disease",
                     "ent_db_type": "mesh",
                     "id": "D002056",
                     "confidence": 0.9982181191444397,
                 },
                 (0, 2): {
-                    "linker_type": EntLinking.LOCAL_NON_EL,
+                    "linker_type": EntityLinker.LOCAL_NON_EL,
                     "ent_db_type": ent_db_type_local_gg,
                     "id": "is related to",
                     "confidence": 0.0,
                 },
             },
-            {
-                MuIndex(meta=False, phrase=0, token="001", running=0): (0, 0),
-                MuIndex(meta=False, phrase=0, token="005", running=0): (0, 1),
-                MuIndex(meta=False, phrase=0, token="002", running=0): (0, 2),
-            },
+            [
+                (
+                    MuIndex(meta=False, phrase=0, token="001", running=0),
+                    (0, 0),
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="005", running=0),
+                    (0, 1),
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="002", running=0),
+                    (0, 2),
+                ),
+            ],
         )
 
         self.assertEqual(map_eindex_entity, entities_index_e_map_ref)
