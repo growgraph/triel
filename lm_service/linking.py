@@ -14,7 +14,8 @@ class EntityCandidateAlignmentError(Exception):
 
 class EntityLinker(str, Enum):
     BERN_V2 = "BERN_V2"
-    SPACY_NAIVE_EL = "SPACY_NAIVE_EL"
+    SPACY_NAIVE_WIKI = "SPACY_NAIVE_EL"
+    SPACY_BASIC = "SPACY_BASIC"
     LOCAL_NON_EL = "LOCAL_NON_EL"
 
 
@@ -45,7 +46,15 @@ def normalize_bern_entity(item) -> tuple[dict | None, tuple | None]:
         return None, None
 
 
-def normalize_naive_entityLinker(item) -> tuple[dict | None, tuple | None]:
+def normalize_naive_wiki_entity_linker(
+    item,
+) -> tuple[dict | None, tuple | None]:
+    """
+    spacy-entity-linker package
+
+    :param item:
+    :return:
+    """
     if item.get_url():
         span = item.get_span()
         item_id = item.get_url().split("/")[-1]
@@ -56,13 +65,52 @@ def normalize_naive_entityLinker(item) -> tuple[dict | None, tuple | None]:
         except:
             ent_type = None
         return {
-            "linker_type": EntityLinker.SPACY_NAIVE_EL,
+            "linker_type": EntityLinker.SPACY_NAIVE_WIKI,
             "ent_db_type": "wikidata",
             "id": item_id,
             "original": item.get_original_alias(),
             "ent_type": ent_type,
             "desc": item.get_description(),
         }, (span.start_char, span.end_char)
+    else:
+        return None, None
+
+
+def phrase_to_spacy_basic_entities(phrase=None, rdoc=None, nlp=None):
+    if rdoc is None:
+        rdoc = nlp(phrase)
+    ents0 = (item for item in rdoc if item.ent_type != 0)
+    ents_split = []
+    ent_item = []
+    for t in ents0:
+        # 2 means ent_iob_ == "B", beginning of entity
+        if t.ent_iob == 3:
+            ents_split += [ent_item]
+            ent_item = [t]
+        else:
+            ent_item += [t]
+    if ent_item:
+        ents_split += [ent_item]
+    ents_split = [x for x in ents_split if x]
+
+    return ents_split
+
+
+def normalize_spacy_basic(item) -> tuple[dict | None, tuple | None]:
+    """
+
+    :param item:
+    :return:
+    """
+    if item:
+        span = item[0].idx, item[-1].idx + len(item[-1].text)
+        ent_type = item[0].ent_type
+
+        return {
+            "linker_type": EntityLinker.SPACY_BASIC,
+            "ent_db_type": "basic",
+            "ent_type": ent_type,
+        }, span
     else:
         return None, None
 
@@ -149,7 +197,8 @@ def link_candidate_entity(ec_spans: dict, ecl: ExtCandidateList):
 
 entity_normalized_foo_map = {
     EntityLinker.BERN_V2: normalize_bern_entity,
-    EntityLinker.SPACY_NAIVE_EL: normalize_naive_entityLinker,
+    EntityLinker.SPACY_NAIVE_WIKI: normalize_naive_wiki_entity_linker,
+    EntityLinker.SPACY_BASIC: normalize_spacy_basic,
 }
 
 
@@ -157,8 +206,9 @@ def iterate_linking_over_phrases(
     phrases,
     ecl,
     link_foo,
-    map_eindex_entity,
-    map_c2e,
+    link_foo_kwargs=None,
+    map_eindex_entity=None,
+    map_c2e=None,
     etype=EntityLinker.BERN_V2,
 ) -> tuple[dict[tuple[int, int], dict], list[tuple[MuIndex, tuple[int, int]]]]:
     """
@@ -166,17 +216,24 @@ def iterate_linking_over_phrases(
     :param phrases:
     :param ecl:
     :param link_foo: function, maps a phrase to a list of entities
+    :param link_foo_kwargs:
     :param map_eindex_entity:
     :param map_c2e:
     :param etype:
     :return:
         i_e -> e ; i_e -> i_mu
     """
+    if link_foo_kwargs is None:
+        link_foo_kwargs = dict()
+    if map_eindex_entity is None:
+        map_eindex_entity = dict()
+    if map_c2e is None:
+        map_c2e = dict()
 
     foo_normalize = entity_normalized_foo_map[etype]
 
     for ix_current_phrase, phrase in enumerate(phrases):
-        response = link_foo(phrase)
+        response = link_foo(phrase, **link_foo_kwargs)
 
         # entities + spans
         entity_pack_current = [foo_normalize(item) for item in response]

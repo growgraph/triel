@@ -11,6 +11,7 @@ from lm_service.linking import (
     iterate_over_linkers,
     link_candidate_entity,
     normalize_bern_entity,
+    phrase_to_spacy_basic_entities,
 )
 from lm_service.onto import MuIndex
 from lm_service.text import (
@@ -20,7 +21,7 @@ from lm_service.text import (
 )
 
 
-class MyTestCase(unittest.TestCase):
+class TestEL(unittest.TestCase):
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
 
@@ -86,7 +87,7 @@ class MyTestCase(unittest.TestCase):
             ],
         )
 
-    def test_iterate_linking_over_phrases(self):
+    def test_iterate_linking_bern(self):
         foo_link = lambda p: self.response_bern["annotations"]
         text = "Diabetic ulcers are related to burns."
         phrases = normalize_text(text, self.nlp)
@@ -142,7 +143,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(map_eindex_entity, entities_index_e_map_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
-    def test_iterate_naive_linking(self):
+    def test_iterate_naive_wiki_linking(self):
 
         text = "Diabetic ulcers are related to burns."
 
@@ -170,13 +171,13 @@ class MyTestCase(unittest.TestCase):
             map_eindex_entity=entities_index_e_map,
             map_c2e=map_c2e,
             link_foo=foo_link,
-            etype=EntityLinker.SPACY_NAIVE_EL,
+            etype=EntityLinker.SPACY_NAIVE_WIKI,
         )
 
         entities_index_e_map_ref, map_c2e_ref = (
             {
                 (0, 0): {
-                    "linker_type": EntityLinker.SPACY_NAIVE_EL,
+                    "linker_type": EntityLinker.SPACY_NAIVE_WIKI,
                     "ent_db_type": "wikidata",
                     "id": "Q6452285",
                     "original": "ulcer",
@@ -184,7 +185,7 @@ class MyTestCase(unittest.TestCase):
                     "desc": "type of cutaneous condition",
                 },
                 (0, 1): {
-                    "linker_type": EntityLinker.SPACY_NAIVE_EL,
+                    "linker_type": EntityLinker.SPACY_NAIVE_WIKI,
                     "ent_db_type": "wikidata",
                     "id": "Q170518",
                     "original": "burns",
@@ -210,6 +211,67 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(entities_index_e_map, entities_index_e_map_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
+    def test_iterate_spacy(self):
+
+        text = (
+            "Cheops ( CHaracterising ExOPlanets Satellite ) is a European"
+            " space telescope to determine the size of known extrasolar"
+            " planets , which will allow the estimation of their mass ,"
+            " density , composition and their formation."
+        )
+
+        phrases = normalize_text(text, self.nlp)
+
+        (
+            striples,
+            striples_meta,
+            candidate_depot,
+            relations,
+        ) = phrases_to_basis_triples(self.nlp, self.rules, phrases)
+
+        ecl = candidate_depot.unfold_conjunction()
+
+        map_eindex_entity = {}
+        map_c2e = []
+
+        map_eindex_entity, map_c2e = iterate_linking_over_phrases(
+            phrases=phrases,
+            ecl=ecl,
+            map_eindex_entity=map_eindex_entity,
+            map_c2e=map_c2e,
+            link_foo=phrase_to_spacy_basic_entities,
+            link_foo_kwargs={"nlp": self.nlp},
+            etype=EntityLinker.SPACY_BASIC,
+        )
+
+        entities_index_e_map_ref, map_c2e_ref = (
+            {
+                (0, 0): {
+                    "linker_type": EntityLinker.SPACY_BASIC,
+                    "ent_db_type": "basic",
+                    "ent_type": 386,
+                },
+                (0, 1): {
+                    "linker_type": EntityLinker.SPACY_BASIC,
+                    "ent_db_type": "basic",
+                    "ent_type": 381,
+                },
+            },
+            [
+                (
+                    MuIndex(meta=False, phrase=0, token="000", running=0),
+                    (0, 0),
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="010", running=0),
+                    (0, 1),
+                ),
+            ],
+        )
+
+        self.assertEqual(map_eindex_entity, entities_index_e_map_ref)
+        self.assertEqual(map_c2e, map_c2e_ref)
+
     def test_iterate_over_linkers(self):
 
         text = "Diabetic ulcers are related to burns."
@@ -225,7 +287,7 @@ class MyTestCase(unittest.TestCase):
 
         phrase_entities_foos: dict = {
             EntityLinker.BERN_V2: lambda p: self.response_bern["annotations"],
-            EntityLinker.SPACY_NAIVE_EL: lambda p: self.nlp(
+            EntityLinker.SPACY_NAIVE_WIKI: lambda p: self.nlp(
                 p
             )._.linkedEntities,
         }
@@ -240,21 +302,21 @@ class MyTestCase(unittest.TestCase):
         entities_index_e_map_ref, map_c2e_ref = (
             {
                 (0, 0): {
-                    "linker_type": "BERN_V2",
+                    "linker_type": EntityLinker.BERN_V2,
                     "ent_type": "disease",
                     "ent_db_type": "mesh",
                     "id": "D017719",
                     "confidence": 0.9999968409538269,
                 },
                 (0, 1): {
-                    "linker_type": "BERN_V2",
+                    "linker_type": EntityLinker.BERN_V2,
                     "ent_type": "disease",
                     "ent_db_type": "mesh",
                     "id": "D002056",
                     "confidence": 0.9982181191444397,
                 },
                 (0, 2): {
-                    "linker_type": "SPACY_NAIVE_EL",
+                    "linker_type": EntityLinker.SPACY_NAIVE_WIKI,
                     "ent_db_type": "wikidata",
                     "id": "Q6452285",
                     "original": "ulcer",
@@ -262,7 +324,7 @@ class MyTestCase(unittest.TestCase):
                     "desc": "type of cutaneous condition",
                 },
                 (0, 3): {
-                    "linker_type": "SPACY_NAIVE_EL",
+                    "linker_type": EntityLinker.SPACY_NAIVE_WIKI,
                     "ent_db_type": "wikidata",
                     "id": "Q170518",
                     "original": "burns",
@@ -273,7 +335,7 @@ class MyTestCase(unittest.TestCase):
                     ),
                 },
                 (0, 4): {
-                    "linker_type": "LOCAL_NON_EL",
+                    "linker_type": EntityLinker.LOCAL_NON_EL,
                     "ent_db_type": "ent_db_type_local_gg",
                     "id": "is related to",
                     "confidence": 0.0,
