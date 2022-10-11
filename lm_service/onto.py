@@ -260,13 +260,13 @@ class Candidate(AbsCandidate, JSONWizard):
             0 if self.empty else max(t._level for t in self._tokens.values())
         )
 
-    def _recompute_root(self, robust_mode=False):
+    def _recompute_root(self, robust_mode=True):
         roots = [
             k for k, v in self._tokens.items() if len(v.predecessors) == 0
         ]
         if len(roots) > 1:
             logger.error(f" {len(roots)} roots: dumping self")
-            logger.error(f" {self}")
+            logger.error(f" {self._tokens}")
             if robust_mode:
                 logger.error(
                     f" robust_mode picking a root with a smaller index"
@@ -881,7 +881,7 @@ def partition_conjunctive_wrapper(
     for _, candidate in clauses:
         sparent, _ = clauses[0]
         c_prime = deepcopy(root_candidate)
-        # it's a choice to remove subtree rather than a token
+        # it is a choice to remove subtree rather than a token
         # c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
         c_prime.replace_subtree_with_acandidate(i=sparent, ac=candidate)
         acc.append(

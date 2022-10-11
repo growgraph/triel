@@ -121,7 +121,3 @@ relation:
         value: IN
       - key: dep_
         value: agent
-
-
-#(vtoken.tag_ == "IN" and vtoken.dep_ == "prep")
-#or (vtoken.tag_ == "IN" and vtoken.dep_ == "agent"):

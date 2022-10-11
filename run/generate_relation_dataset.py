@@ -22,9 +22,9 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    phs = normalize_text(text, nlp, head)
+    phrases = normalize_text(text, nlp, head)
     triples, map_mu_index_triple, _ = phrases_to_triples(
-        phs,
+        phrases,
         nlp,
         rules,
         window_size=window_size,
