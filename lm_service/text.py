@@ -50,6 +50,8 @@ def phrases_to_triples_stage_a(
 
     # mnemonics : ecl ~ ExtCandidateList()
     ecl = candidate_depot.unfold_conjunction()
+    for r in relations:
+        r.normalize()
     return striples, striples_meta, relations, ecl
 
 
@@ -161,6 +163,7 @@ def phrases_to_triples(
             logger.error(f" Dangling metatriples : {failing_deq}")
             for ip in failing_phrases:  # type: ignore
                 logger.error(f" failing phrase : <B>{phrases[ip]}<E>")
+            break
             # raise ValueError(f"Deq is stuck in a loop: {deq_striples_meta}")
 
         s, r, t = deq_striples_meta.pop()
