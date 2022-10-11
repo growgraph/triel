@@ -659,9 +659,16 @@ class Relation(Candidate):
 
     def normalize(self):
         """
-        TODO exteand to perfect tense
+        TODO extend to perfect tense
         :return:
         """
+
+        # drop all aux
+        drop_aux_indices = [
+            j for j, t in self._tokens.items() if t.dep_ == "aux"
+        ]
+        self.drop_tokens(drop_aux_indices)
+
         if self.passive:
             # find auxpass, inflect it to was
             for s in self.stokens:
@@ -669,15 +676,14 @@ class Relation(Candidate):
                 if token.dep_ == "auxpass":
                     lemmas = getLemma(token.text, upos="VERB")
                     if lemmas:
-                        inflected = getInflection(lemmas[0], tag="VBD")
+                        # -> "was"
+                        # inflected = getInflection(lemmas[0], tag="VBD")
+                        # -> "is"
+                        inflected = getInflection(lemmas[0], tag="VBZ")
+
                         if inflected:
                             token.text = inflected[0]
         else:
-            # drop all aux
-            drop_aux_indices = [
-                j for j, t in self._tokens.items() if t.dep_ == "aux"
-            ]
-            self.drop_tokens(drop_aux_indices)
             # inflect remaining VBs
             for s, t in self._tokens.items():
                 if t.tag_.startswith("VB"):
