@@ -155,6 +155,8 @@ class ExtCandidateList:
         return item in self._root_to_lists
 
     def set_filter(self, key):
+        # eg consider only candidates from a phrase range
+        # self.set_filter(lambda x: i <= x[0] < i + window_size)
         self._filter = key
 
     def __setitem__(self, key, value):

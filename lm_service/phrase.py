@@ -13,11 +13,11 @@ from lm_service.coref import (
 from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
 from lm_service.onto import Token, TripleCandidate, apply_map
 from lm_service.relation import (
+    align_relation_to_target,
     form_triples,
     graph_to_candidate_pile,
     graph_to_maps,
     logger,
-    realign_prepositions,
 )
 
 
@@ -128,7 +128,9 @@ def graph_to_triples(
     for tri in itriples:
         s, r, t = tri
         for sprime, tprime in product(ncp[s], ncp[t]):
-            relation = realign_prepositions(pile.relations[r], tprime, graph)
+            relation = align_relation_to_target(
+                pile.relations[r], tprime, graph
+            )
             # relation = pile.relations[r]
             triples += [
                 TripleCandidate(

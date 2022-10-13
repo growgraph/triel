@@ -13,7 +13,13 @@ from reference.distances import reference_distance
 
 from lm_service.coref import graph_component_maps, render_coref_maps_wrapper
 from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
-from lm_service.onto import AToken, MuIndex, apply_map
+from lm_service.linking import (
+    EntityLinker,
+    ent_db_type_local_gg,
+    iterate_linking_over_phrases,
+    link_unlinked_entities,
+)
+from lm_service.onto import AbsToken, MuIndex, apply_map
 from lm_service.phrase import graph_to_triples
 from lm_service.preprocessing import normalize_input_text
 from lm_service.relation import (
@@ -21,13 +27,16 @@ from lm_service.relation import (
     generate_extra_graphs,
     graph_to_candidate_pile,
 )
-from lm_service.text import cast_simplified_triples_table, text_to_triples
+from lm_service.text import (
+    cast_simplified_triples_table,
+    normalize_text,
+    phrases_to_triples,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class TestR(unittest.TestCase):
-
+class TestTriples(unittest.TestCase):
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     path = Path(__file__).parent
 
@@ -92,7 +101,7 @@ class TestR(unittest.TestCase):
             # cast index to compound index
             map_tree_subtree_index = graph_component_maps(graph0)
             map_tree_subtree_index = {
-                k: AToken.ituple2stuple(v)
+                k: AbsToken.ituple2stuple(v)
                 for k, v in map_tree_subtree_index.items()
             }
 
@@ -137,11 +146,11 @@ class TestR(unittest.TestCase):
         documents = {
             key: self.documents[key]
             for key in [
-                "near-field",
-                "cheops0_trunc",
+                # "near-field",
+                # "cheops0_trunc",
                 "cheops_ext",
-                "photometric",
-                "thousands",
+                # "photometric",
+                # "thousands",
             ]
         }
         acc_triples = []
@@ -153,7 +162,7 @@ class TestR(unittest.TestCase):
             # cast index to compound index
             map_tree_subtree_index = graph_component_maps(graph)
             map_tree_subtree_index = {
-                k: AToken.ituple2stuple(v)
+                k: AbsToken.ituple2stuple(v)
                 for k, v in map_tree_subtree_index.items()
             }
             graph_relabeled = relabel_nodes_and_key(
@@ -186,7 +195,7 @@ class TestR(unittest.TestCase):
             triples_projected[key] = [tri.project_to_text() for tri in triples]
 
         reference = {
-            "near-field": [("medium", "wasAffectedBy", "nearFieldRadiation")],
+            "near-field": [("medium", "isAffectedBy", "nearFieldRadiation")],
             "cheops0_trunc": [
                 ("CHEOPS", "is", "europeanSpaceTelescope"),
                 (
@@ -230,13 +239,13 @@ class TestR(unittest.TestCase):
                 ("transitOfEarthSizedPlanet", "orbitsOf", "09RIn60Day"),
             ],
             "thousands": [
-                ("thousandOfExoplanets", "haveWasDiscoveredBy", "endOf2010"),
+                ("thousandOfExoplanets", "isDiscoveredBy", "endOf2010"),
                 (
                     "some",
                     "has",
                     "minimumMassMeasurementsFromRadialVelocityMethod",
                 ),
-                ("others", "wasSeen", "toTransitParentStarsOfOthers"),
+                ("others", "isSeen", "toTransitParentStarsOfOthers"),
                 ("others", "has", "measuresOfPhysicalSizeOfOthers"),
             ],
         }
@@ -265,8 +274,10 @@ class TestR(unittest.TestCase):
             " measures of their physical size."
         )
 
-        global_triples, map_mu_index_triple = text_to_triples(
-            text, self.nlp, self.rules, window_size=2
+        phrases = normalize_text(text, self.nlp)
+
+        global_triples, map_mu_index_triple, _ = phrases_to_triples(
+            phrases, self.nlp, self.rules, window_size=2
         )
 
         global_triples_txt = cast_simplified_triples_table(
@@ -281,7 +292,7 @@ class TestR(unittest.TestCase):
             ),
             MuIndex(meta=True, phrase=0, token="000", running=1): (
                 "europeanSpaceTelescope",
-                "determine",
+                "determines",
                 "sizeOfKnownExtrasolarPlanets",
             ),
             MuIndex(meta=True, phrase=1, token="000", running=0): (
@@ -291,7 +302,7 @@ class TestR(unittest.TestCase):
             ),
             MuIndex(meta=True, phrase=1, token="000", running=1): (
                 "firstSmallClassMissionInEsaCosmicVisionScienceProgramme",
-                "launchedOn",
+                "launchesOn",
                 "18December2019",
             ),
             MuIndex(meta=True, phrase=2, token="000", running=0): (
@@ -301,57 +312,145 @@ class TestR(unittest.TestCase):
             ),
             MuIndex(meta=True, phrase=2, token="000", running=1): (
                 "opticalRitcheyChretienTelescopeWithApertureOf30Cm",
-                "mountedOn",
+                "mountsOn",
                 "standardSmallSatellitePlatform",
             ),
             MuIndex(meta=True, phrase=3, token="000", running=0): (
                 "smallSatellite",
-                "wasPlacedInto",
+                "isPlacedInto",
                 "SunSynchronousOrbitOf700KmAltitude",
             ),
             MuIndex(meta=True, phrase=4, token="000", running=0): (
                 "some",
-                "have",
+                "has",
                 "minimumMassMeasurementsFromRadialVelocityMethod",
             ),
             MuIndex(meta=True, phrase=4, token="000", running=1): (
                 "thousandOfExoplanets",
-                "haveBeenDiscoveredBy",
+                "isDiscoveredBy",
                 "endOf2010S",
             ),
             MuIndex(meta=True, phrase=4, token="000", running=2): (
                 "others",
-                "have",
+                "has",
                 "measuresOfPhysicalSizeOfOthers",
             ),
             MuIndex(meta=True, phrase=4, token="000", running=3): (
                 "others",
-                "areSeen",
+                "isSeen",
                 "toTransitParentStarsOfOthers",
             ),
             MuIndex(meta=True, phrase=0, token="000", running=2): (
-                "(meta)determine",
-                "willAllow",
+                "(meta)determines",
+                "allows",
                 "estimationOfDensity",
             ),
             MuIndex(meta=True, phrase=0, token="000", running=3): (
-                "(meta)determine",
-                "willAllow",
+                "(meta)determines",
+                "allows",
                 "estimationOfComposition",
             ),
             MuIndex(meta=True, phrase=0, token="000", running=4): (
-                "(meta)determine",
-                "willAllow",
+                "(meta)determines",
+                "allows",
                 "estimationOfMassOfKnownExtrasolarPlanets",
             ),
             MuIndex(meta=True, phrase=0, token="000", running=5): (
-                "(meta)determine",
-                "willAllow",
+                "(meta)determines",
+                "allows",
                 "estimationOfFormationOfKnownExtrasolarPlanets",
             ),
         }
 
         self.assertEqual(global_triples_txt, reference)
+
+    def test_text_linking(self):
+        text = "Diabetic ulcers are related to burns."
+
+        response_bern = {
+            "annotations": [
+                {
+                    "id": ["mesh:D017719"],
+                    "is_neural_normalized": True,
+                    "obj": "disease",
+                    "prob": 0.9999968409538269,
+                    "span": {"begin": 0, "end": 15},
+                },
+                {
+                    "id": ["mesh:D002056"],
+                    "is_neural_normalized": False,
+                    "obj": "disease",
+                    "prob": 0.9982181191444397,
+                    "span": {"begin": 31, "end": 36},
+                },
+            ],
+            "text": "Diabetic ulcers are related to burns.",
+            "timestamp": "Tue Sep 20 16:11:48 +0000 2022",
+        }
+
+        phrases = normalize_text(text, self.nlp)
+
+        global_triples, map_muindex_candidate, ecl = phrases_to_triples(
+            phrases, self.nlp, self.rules, window_size=2
+        )
+
+        foo_link = lambda p: response_bern["annotations"]
+
+        map_eindex_entity = {}
+        map_c2e = []
+        map_eindex_entity, map_c2e = iterate_linking_over_phrases(
+            phrases=phrases,
+            ecl=ecl,
+            map_eindex_entity=map_eindex_entity,
+            map_c2e=map_c2e,
+            link_foo=foo_link,
+        )
+
+        map_eindex_entity, map_c2e = link_unlinked_entities(
+            map_eindex_entity, map_c2e, map_muindex_candidate
+        )
+
+        entities_index_e_map_ref, map_c2e_ref = (
+            {
+                (0, 0): {
+                    "linker_type": EntityLinker.BERN_V2,
+                    "ent_type": "disease",
+                    "ent_db_type": "mesh",
+                    "id": "D017719",
+                    "confidence": 0.9999968409538269,
+                },
+                (0, 1): {
+                    "linker_type": EntityLinker.BERN_V2,
+                    "ent_type": "disease",
+                    "ent_db_type": "mesh",
+                    "id": "D002056",
+                    "confidence": 0.9982181191444397,
+                },
+                (0, 2): {
+                    "linker_type": EntityLinker.LOCAL_NON_EL,
+                    "ent_db_type": ent_db_type_local_gg,
+                    "id": "is related to",
+                    "confidence": 0.0,
+                },
+            },
+            [
+                (
+                    MuIndex(meta=False, phrase=0, token="001", running=0),
+                    (0, 0),
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="005", running=0),
+                    (0, 1),
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="002", running=9),
+                    (0, 2),
+                ),
+            ],
+        )
+
+        self.assertEqual(map_eindex_entity, entities_index_e_map_ref)
+        self.assertEqual(map_c2e, map_c2e_ref)
 
 
 if __name__ == "__main__":

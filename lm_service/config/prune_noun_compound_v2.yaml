@@ -21,11 +21,11 @@ sourcetarget:
         value: CD
       - key: dep_
         value: nsubj
-    - - how: startswith
-        key: tag_
-        value: JJ
-      - key: dep_
-        value: acomp
+#    - - how: startswith
+#        key: tag_
+#        value: JJ
+#      - key: dep_
+#        value: acomp
   secondary:
     - - key: dep_
         value: punct
@@ -107,6 +107,11 @@ relation:
         value: VBG
       - key: dep_
         value: advcl
+    - - how: startswith
+        key: tag_
+        value: JJ
+      - key: dep_
+        value: acomp
   secondary_preceding:
     - - key: tag_
         value: IN
@@ -116,7 +121,3 @@ relation:
         value: IN
       - key: dep_
         value: agent
-
-
-#(vtoken.tag_ == "IN" and vtoken.dep_ == "prep")
-#or (vtoken.tag_ == "IN" and vtoken.dep_ == "agent"):

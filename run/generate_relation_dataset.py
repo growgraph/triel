@@ -10,7 +10,11 @@ import pandas as pd
 import spacy
 import yaml
 
-from lm_service.text import cast_simplified_triples_table, text_to_triples
+from lm_service.text import (
+    cast_simplified_triples_table,
+    normalize_text,
+    phrases_to_triples,
+)
 from lm_service.util import plot_graph
 
 
@@ -18,13 +22,12 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    triples, map_mu_index_triple = text_to_triples(
-        text,
+    phrases = normalize_text(text, nlp, head)
+    triples, map_mu_index_triple, _ = phrases_to_triples(
+        phrases,
         nlp,
         rules,
         window_size=window_size,
-        head=head,
-        return_phrases=True,
         plot_path=plot_path,
     )
 
@@ -52,7 +55,6 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
     for mu_key in triples:
         ix = mu_key.phrase
         s, r, t = triples[mu_key]
-        s_txt, r_txt, t_txt = triples_text[mu_key]
         df_acc += [
             [
                 ix,

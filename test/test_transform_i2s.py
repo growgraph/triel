@@ -6,7 +6,7 @@ import logging
 import sys
 import unittest
 
-from lm_service.onto import AToken, apply_map, to_string
+from lm_service.onto import AbsToken, apply_map, to_string
 
 logger = logging.getLogger(__name__)
 
@@ -17,15 +17,15 @@ class TestTransforms(unittest.TestCase):
 
     def test_relation_candidates(self):
         i = 15
-        s = AToken.i2s(i)
+        s = AbsToken.i2s(i)
         itup = (0, 15)
-        stup = AToken.ituple2stuple(itup)
+        stup = AbsToken.ituple2stuple(itup)
         self.assertEqual(s, "015")
         self.assertEqual(stup, (0, "015"))
 
     def test_to_string(self):
         example = {(0, 10): [(1, 3)]}
-        r = to_string(example, AToken.ituple2stuple)
+        r = to_string(example, AbsToken.ituple2stuple)
         self.assertEqual(r, {(0, "010"): [(1, "003")]})
 
 

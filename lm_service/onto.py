@@ -6,7 +6,7 @@ from abc import ABC
 from collections import deque
 from copy import deepcopy
 from enum import Enum
-from typing import TypeVar
+from typing import TypeVar, Union
 
 import networkx as nx
 from dataclass_wizard import JSONWizard
@@ -29,8 +29,6 @@ class RequestedIndexDoesNotExist(Exception):
     pass
 
 
-from typing import Union
-
 TokenIndexT = Union[str, tuple[int, str]]
 
 
@@ -46,7 +44,7 @@ def is_int(s):
 
 
 CandidateType = TypeVar("CandidateType", bound="Candidate")
-TokenType = TypeVar("TokenType", bound="AToken")
+TokenType = TypeVar("TokenType", bound="AbsToken")
 
 
 class ConfigToken:
@@ -54,7 +52,7 @@ class ConfigToken:
 
 
 @dataclasses.dataclass(repr=False)
-class AToken(JSONWizard, ABC):
+class AbsToken(JSONWizard, ABC):
     """
     represents a token in dep tree
     """
@@ -67,9 +65,17 @@ class AToken(JSONWizard, ABC):
     tag_: str = ""
     lower: str = ""
     lemma: str = ""
-    ent_iob: str = ""
+    ent_iob: int = 0
     _level: int = 0
     label: str = ""
+    idx: int = 0
+    idx_eot: int = 0
+    ent_id: int = 0
+    ent_kb_id: int = 0
+    ent_type: int = 0
+    ent_id_: str = ""
+    ent_kb_id_: str = ""
+    ent_type_: str = ""
 
     def __post_init__(self):
         if not self.lemma and self.text:
@@ -116,7 +122,7 @@ class AToken(JSONWizard, ABC):
 
 
 @dataclasses.dataclass(repr=False)
-class Token(AToken):
+class Token(AbsToken):
     """
     represents a token in dep tree
     """
@@ -166,9 +172,6 @@ class Token(AToken):
             return "/"
         else:
             raise TypeError(f"Unexpected TokenIndexT subtype: {type(self.s)}")
-
-
-from abc import ABC
 
 
 @dataclasses.dataclass(repr=False)
@@ -257,13 +260,13 @@ class Candidate(AbsCandidate, JSONWizard):
             0 if self.empty else max(t._level for t in self._tokens.values())
         )
 
-    def _recompute_root(self, robust_mode=False):
+    def _recompute_root(self, robust_mode=True):
         roots = [
             k for k, v in self._tokens.items() if len(v.predecessors) == 0
         ]
         if len(roots) > 1:
             logger.error(f" {len(roots)} roots: dumping self")
-            logger.error(f" {self}")
+            logger.error(f" {self._tokens}")
             if robust_mode:
                 logger.error(
                     f" robust_mode picking a root with a smaller index"
@@ -293,6 +296,7 @@ class Candidate(AbsCandidate, JSONWizard):
 
     @property
     def stokens(self):
+        return self._index_vec
         return self._index_vec
 
     def token(self, i, index=False):
@@ -654,11 +658,24 @@ class Relation(Candidate):
     def passive(self):
         return any([t.dep_ == "auxpass" for t in self._tokens.values()])
 
+    def has_prepositions(self):
+        return any(t.dep_ == "prep" and t.tag_ == "IN" for t in self.tokens)
+
+    def approximate_hash_int(self):
+        return sum(int(x) for _, x in self.stokens)
+
     def normalize(self):
         """
-        TODO exteand to perfect tense
+        TODO extend to perfect tense
         :return:
         """
+
+        # drop all aux
+        drop_aux_indices = [
+            j for j, t in self._tokens.items() if t.dep_ == "aux"
+        ]
+        self.drop_tokens(drop_aux_indices)
+
         if self.passive:
             # find auxpass, inflect it to was
             for s in self.stokens:
@@ -666,15 +683,14 @@ class Relation(Candidate):
                 if token.dep_ == "auxpass":
                     lemmas = getLemma(token.text, upos="VERB")
                     if lemmas:
-                        inflected = getInflection(lemmas[0], tag="VBD")
+                        # -> "was"
+                        # inflected = getInflection(lemmas[0], tag="VBD")
+                        # -> "is"
+                        inflected = getInflection(lemmas[0], tag="VBZ")
+
                         if inflected:
                             token.text = inflected[0]
         else:
-            # drop all aux
-            drop_aux_indices = [
-                j for j, t in self._tokens.items() if t.dep_ == "aux"
-            ]
-            self.drop_tokens(drop_aux_indices)
             # inflect remaining VBs
             for s, t in self._tokens.items():
                 if t.tag_.startswith("VB"):
@@ -872,7 +888,7 @@ def partition_conjunctive_wrapper(
     for _, candidate in clauses:
         sparent, _ = clauses[0]
         c_prime = deepcopy(root_candidate)
-        # it's a choice to remove subtree rather than a token
+        # it is a choice to remove subtree rather than a token
         # c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
         c_prime.replace_subtree_with_acandidate(i=sparent, ac=candidate)
         acc.append(
@@ -888,10 +904,13 @@ def partition_conjunctive_wrapper(
 @dataclasses.dataclass(eq=True, frozen=True, order=True)
 class MuIndex(JSONWizard):
     """
+    Candidate index in a collections of phrases.
+
     meta - flag, true if MuIndex points to a triple
     phrase - phrase number
     token - token index within phrase
-    running -
+    running - in case there are several `candidates` (conjunction),
+            that exist under the same token root
     """
 
     meta: bool

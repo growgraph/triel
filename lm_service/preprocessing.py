@@ -21,8 +21,8 @@ def split_tokens_into_phrases(tokens_list, terminal_puncts=None):
     ):
         cur_phrase.append(token1)
         if (
-            not token0[-1].isupper()
-            and token1 in terminal_puncts
+            # not token0[-1].isupper() and
+            token1 in terminal_puncts
             and token2[0].isupper()
         ):
             phrases.append(cur_phrase)

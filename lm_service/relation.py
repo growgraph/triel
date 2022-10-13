@@ -21,8 +21,8 @@ from lm_service.graph import (
     relabel_nodes_and_key,
 )
 from lm_service.onto import (
+    AbsToken,
     ACandidateKind,
-    AToken,
     Candidate,
     CandidateType,
     Relation,
@@ -394,9 +394,14 @@ def derive_targets_per_relaton(
     return targets_per_relation
 
 
-def realign_prepositions(r: Relation, t: SourceOrTarget, graph: nx.DiGraph):
+def align_relation_to_target(
+    r: Relation, t: SourceOrTarget, graph: nx.DiGraph
+):
     """
     remove prepositions that on the path from relation to target
+
+    example : Relation with [submits through with], SourceOrTarget [annual program] -> Relation with [submits through]
+
     :param r:
     :param t:
     :param graph:
@@ -407,7 +412,13 @@ def realign_prepositions(r: Relation, t: SourceOrTarget, graph: nx.DiGraph):
         t.s for t in r.tokens if t.dep_ == "prep" and t.tag_ == "IN"
     ]
     for prep in preposition_tokens:
-        path = nx.shortest_path(graph, r.sroot, t.sroot)
+        try:
+            path = nx.shortest_path(graph, r.sroot, t.sroot)
+        except:
+            # TODO exception is caused by using coreference: it is possible that target,
+            #  subbed by coreference is not in the path. The original target should be used.
+            #  Test on Cheops, phrase 5.
+            path = [prep]
         if prep not in path:
             r.drop_tokens([prep])
     return r
@@ -667,7 +678,7 @@ def text_to_compound_index_graph(nlp, text, initial_phrase_index):
     map_tree_subtree_index = graph_component_maps(graph, initial_phrase_index)
 
     map_tree_subtree_index = {
-        k: AToken.ituple2stuple(v) for k, v in map_tree_subtree_index.items()
+        k: AbsToken.ituple2stuple(v) for k, v in map_tree_subtree_index.items()
     }
     graph_relabeled = relabel_nodes_and_key(graph, map_tree_subtree_index, "s")
     return graph_relabeled, rdoc, map_tree_subtree_index
