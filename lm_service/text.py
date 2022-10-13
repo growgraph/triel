@@ -4,10 +4,13 @@ import logging
 from collections import defaultdict, deque
 from itertools import product
 
-from lm_service.onto import Candidate, MuIndex, TokenIndexT
+import networkx as nx
+
+from lm_service.onto import Candidate, MuIndex, Relation, TokenIndexT
 from lm_service.piles import CandidatePile, ExtCandidateList
 from lm_service.preprocessing import normalize_input_text, transform_advcl
 from lm_service.relation import (
+    align_relation_to_target,
     form_triples,
     graph_to_candidate_pile,
     graph_to_maps,
@@ -46,13 +49,14 @@ def phrases_to_triples_stage_a(
         striples_meta,
         candidate_depot,
         relations,
+        megagraph,
     ) = phrases_to_basis_triples(nlp, rules, phrases, plot_path)
 
     # mnemonics : ecl ~ ExtCandidateList()
     ecl = candidate_depot.unfold_conjunction()
     for r in relations:
         r.normalize()
-    return striples, striples_meta, relations, ecl
+    return striples, striples_meta, relations, ecl, megagraph
 
 
 def phrases_to_triples(
@@ -66,12 +70,13 @@ def phrases_to_triples(
     dict[MuIndex, Candidate],
     ExtCandidateList,
 ]:
-    striples, striples_meta, relations, ecl = phrases_to_triples_stage_a(
-        phrases, nlp, rules, plot_path
-    )
-
-    for r in relations:
-        r.normalize()
+    (
+        striples,
+        striples_meta,
+        relations,
+        ecl,
+        megagraph,
+    ) = phrases_to_triples_stage_a(phrases, nlp, rules, plot_path)
 
     global_ecl = ExtCandidateList()
 
@@ -113,24 +118,57 @@ def phrases_to_triples(
 
     # triple_index -> meta triple
     meta_triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]] = dict()
+    relation_ecd: defaultdict[TokenIndexT, dict[int, Relation]] = defaultdict(
+        dict
+    )
 
     for s, r, t in striples:
-        for srunning, trunning in product(
-            range(len(global_ecl[s])), range(len(global_ecl[t]))
-        ):
-            if isinstance(r, str):
-                ip = 0
-            elif isinstance(r, tuple):
-                ip = r[0]
+        current_relation = relations[r]
+        if isinstance(r, str):
+            iphrase = 0
+        elif isinstance(r, tuple):
+            iphrase = r[0]
+        else:
+            raise TypeError("Unknown TokenIndexT subtype")
+        for srunning in range(len(global_ecl[s])):
+
+            if current_relation.has_prepositions():
+                relation_redux = [
+                    align_relation_to_target(relations[r], tprime, megagraph)
+                    for tprime in global_ecl[t]
+                ]
+
+                rt = list(
+                    zip(
+                        (r.approximate_hash_int() for r in relation_redux),
+                        range(len(relation_redux)),
+                    )
+                )
+
+                rt_map = dict(rt)
+
+                for k, v in rt_map.items():
+                    relation_ecd[r][k] = relation_redux[v]
             else:
-                raise TypeError("Unknown TokenIndexT subtype")
-            fundamental_triples_aux[ip] += [
+                relation_index = relations[r].approximate_hash_int()
+                rt = [
+                    (relation_index, trunning)
+                    for trunning in range(len(global_ecl[t]))
+                ]
+                relation_ecd[r][relation_index] = relations[r]
+
+            fundamental_triples_aux[iphrase] += [
                 (
                     MuIndex(False, *s, srunning),
-                    MuIndex(False, *r, 0),
+                    MuIndex(False, *r, rrunning),
                     MuIndex(False, *t, trunning),
                 )
+                for rrunning, trunning in rt
             ]
+
+    for r in relations.sroots:
+        if r not in relation_ecd:
+            relation_ecd[r][relations[r].approximate_hash_int()] = relations[r]
 
     for iphrase, list_item in fundamental_triples_aux.items():
         for k_tri, tri in enumerate(list_item):
@@ -157,20 +195,23 @@ def phrases_to_triples(
             failing_deq = list(deq_striples_meta)
             failing_phrases = sorted(set([r[0] for _, r, _ in failing_deq]))
             logger.error(
-                "Following meta-triples could not be resolved :"
+                " the following meta-triples could not be resolved :"
                 f" {failing_phrases}"
             )
             logger.error(f" Dangling metatriples : {failing_deq}")
-            for ip in failing_phrases:  # type: ignore
-                logger.error(f" failing phrase : <B>{phrases[ip]}<E>")
+            for iphrase in failing_phrases:  # type: ignore
+                logger.error(f" failing phrase : <B>{phrases[iphrase]}<E>")
             break
             # raise ValueError(f"Deq is stuck in a loop: {deq_striples_meta}")
 
         s, r, t = deq_striples_meta.pop()
 
         if s in relations.sroots:
-            if MuIndex(False, *s, 0) in relation_triple_map:
-                sources_mu = [relation_triple_map[MuIndex(False, *s, 0)]]
+            r_current_index = relations[s].approximate_hash_int()
+            if MuIndex(False, *s, r_current_index) in relation_triple_map:
+                sources_mu = [
+                    relation_triple_map[MuIndex(False, *s, r_current_index)]
+                ]
             else:
                 deq_striples_meta.appendleft((s, r, t))
                 continue
@@ -179,8 +220,12 @@ def phrases_to_triples(
                 MuIndex(False, *s, j) for j in range(len(global_ecl[s]))
             ]
         if t in relations.sroots:
-            if MuIndex(False, *t, 0) in relation_triple_map:
-                targets_mu = [relation_triple_map[MuIndex(False, *t, 0)]]
+            r_current_index = relations[t].approximate_hash_int()
+
+            if MuIndex(False, *t, r_current_index) in relation_triple_map:
+                targets_mu = [
+                    relation_triple_map[MuIndex(False, *t, r_current_index)]
+                ]
             else:
                 deq_striples_meta.appendleft((s, r, t))
                 continue
@@ -190,17 +235,21 @@ def phrases_to_triples(
             ]
 
         if isinstance(r, str):
-            ip = 0
+            iphrase = 0
         elif isinstance(r, tuple):
-            ip = r[0]
+            iphrase = r[0]
         else:
             raise TypeError("Unexpected TokenIndexT composition")
-        current_phrase_index = ip
+        current_phrase_index = iphrase
         k_tri_offset_meta = len(meta_triples_aux[current_phrase_index])
 
         for sprime, tprime in product(sources_mu, targets_mu):
             meta_triples_aux[current_phrase_index] += [
-                (sprime, MuIndex(False, *r, 0), tprime)
+                (
+                    sprime,
+                    MuIndex(False, *r, relations[r].approximate_hash_int()),
+                    tprime,
+                )
             ]
 
         for k_tri, tri in enumerate(meta_triples_aux[current_phrase_index]):
@@ -229,15 +278,23 @@ def phrases_to_triples(
     mu_index_candidate_map: dict[MuIndex, Candidate] = dict()
     for candlike_like in candidate_likes:
         basic_index = (candlike_like.phrase, candlike_like.token)
-        if basic_index in global_ecl:
+        if (
+            basic_index in relation_ecd
+            and candlike_like.running in relation_ecd[basic_index]
+        ):
+            mu_index_candidate_map[candlike_like] = relation_ecd[basic_index][
+                candlike_like.running
+            ]
+        elif basic_index in global_ecl and candlike_like.running < len(
+            global_ecl[basic_index]
+        ):
             mu_index_candidate_map[candlike_like] = global_ecl[basic_index][
                 candlike_like.running
             ]
-        elif basic_index in relations.sroots:
-            mu_index_candidate_map[candlike_like] = relations[basic_index]
         else:
-            raise ValueError(
-                "Fundamental MuIndex not in ExtCandPile and not in relations"
+            raise IndexError(
+                f"Fundamental MuIndex {candlike_like} not in global_ecl and"
+                " not in relation_ecd"
             )
     return global_triples, mu_index_candidate_map, ecl
 
@@ -249,6 +306,7 @@ def phrases_to_basis_triples(
     set[tuple[TokenIndexT, TokenIndexT, TokenIndexT]],
     CandidatePile,
     CandidatePile,
+    nx.DiGraph,
 ]:
     """
     accumulate prospective triples
@@ -263,6 +321,8 @@ def phrases_to_basis_triples(
     striples_meta = set()
     candidate_depot = CandidatePile()
     relations = CandidatePile()
+    megagraph = nx.DiGraph()
+
     for k, phrase in enumerate(phrases):
         (
             graph_relabeled,
@@ -299,8 +359,11 @@ def phrases_to_basis_triples(
         if plot_path is not None:
             plot_graph(graph_relabeled, plot_path, f"phrase_{k}_full")
 
+        megagraph.add_nodes_from(graph_relabeled.nodes(data=True))
+        megagraph.add_edges_from(graph_relabeled.edges())
+
     # mnemonics : prefix `s` stands for str or compound index
-    return striples, striples_meta, candidate_depot, relations
+    return striples, striples_meta, candidate_depot, relations, megagraph
 
 
 def cast_simplified_triples_table(global_triples, map_mu_index_triple):

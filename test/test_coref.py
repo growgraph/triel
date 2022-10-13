@@ -102,6 +102,7 @@ class TestCoref(unittest.TestCase):
             striples_meta,
             candidate_depot,
             relations,
+            _,
         ) = phrases_to_basis_triples(self.nlp, self.rules, [self.phrase])
 
         (

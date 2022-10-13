@@ -297,6 +297,7 @@ class Candidate(AbsCandidate, JSONWizard):
     @property
     def stokens(self):
         return self._index_vec
+        return self._index_vec
 
     def token(self, i, index=False):
         if index:
@@ -656,6 +657,12 @@ class Relation(Candidate):
     @property
     def passive(self):
         return any([t.dep_ == "auxpass" for t in self._tokens.values()])
+
+    def has_prepositions(self):
+        return any(t.dep_ == "prep" and t.tag_ == "IN" for t in self.tokens)
+
+    def approximate_hash_int(self):
+        return sum(int(x) for _, x in self.stokens)
 
     def normalize(self):
         """

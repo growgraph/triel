@@ -443,7 +443,7 @@ class TestTriples(unittest.TestCase):
                     (0, 1),
                 ),
                 (
-                    MuIndex(meta=False, phrase=0, token="002", running=0),
+                    MuIndex(meta=False, phrase=0, token="002", running=9),
                     (0, 2),
                 ),
             ],

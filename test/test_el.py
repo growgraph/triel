@@ -58,6 +58,7 @@ class TestEL(unittest.TestCase):
             striples_meta,
             candidate_depot,
             relations,
+            _,
         ) = phrases_to_basis_triples(self.nlp, self.rules, phs)
 
         ecl = candidate_depot.unfold_conjunction()
@@ -97,6 +98,7 @@ class TestEL(unittest.TestCase):
             striples_meta,
             candidate_depot,
             relations,
+            _,
         ) = phrases_to_basis_triples(self.nlp, self.rules, phrases)
 
         ecl = candidate_depot.unfold_conjunction()
@@ -159,6 +161,7 @@ class TestEL(unittest.TestCase):
             striples_meta,
             candidate_depot,
             relations,
+            _,
         ) = phrases_to_basis_triples(self.nlp, self.rules, phrases)
 
         ecl = candidate_depot.unfold_conjunction()
@@ -227,6 +230,7 @@ class TestEL(unittest.TestCase):
             striples_meta,
             candidate_depot,
             relations,
+            _,
         ) = phrases_to_basis_triples(self.nlp, self.rules, phrases)
 
         ecl = candidate_depot.unfold_conjunction()
@@ -359,7 +363,7 @@ class TestEL(unittest.TestCase):
                     (0, 3),
                 ),
                 (
-                    MuIndex(meta=False, phrase=0, token="002", running=0),
+                    MuIndex(meta=False, phrase=0, token="002", running=9),
                     (0, 4),
                 ),
             ],
