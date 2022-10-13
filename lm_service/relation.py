@@ -394,9 +394,14 @@ def derive_targets_per_relaton(
     return targets_per_relation
 
 
-def realign_prepositions(r: Relation, t: SourceOrTarget, graph: nx.DiGraph):
+def align_relation_to_target(
+    r: Relation, t: SourceOrTarget, graph: nx.DiGraph
+):
     """
     remove prepositions that on the path from relation to target
+
+    example : Relation with [submits through with], SourceOrTarget [annual program] -> Relation with [submits through]
+
     :param r:
     :param t:
     :param graph:
@@ -407,7 +412,13 @@ def realign_prepositions(r: Relation, t: SourceOrTarget, graph: nx.DiGraph):
         t.s for t in r.tokens if t.dep_ == "prep" and t.tag_ == "IN"
     ]
     for prep in preposition_tokens:
-        path = nx.shortest_path(graph, r.sroot, t.sroot)
+        try:
+            path = nx.shortest_path(graph, r.sroot, t.sroot)
+        except:
+            # TODO exception is caused by using coreference: it is possible that target,
+            #  subbed by coreference is not in the path. The original target should be used.
+            #  Test on Cheops, phrase 5.
+            path = [prep]
         if prep not in path:
             r.drop_tokens([prep])
     return r
