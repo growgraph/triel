@@ -11,7 +11,7 @@ Ordered triples of candidates comprise triple space: $\tau \in T(\mathcal{K})$, 
 - relation : $\rho :T \to \mathcal{K}$
 - target : $\pi :T \to \mathcal{K}$
 
-Define the extension of triple space recursively by adding itself to candidate space: $\mathcal{K}^{(1)} = \mathcal{K}^{(0)} \bigcup T^{(0)}$, $T^{(i)} = T(\mathcal{K}^{(i)})$. Then define $K^* = \lim \mathcal{K}^{*}$ and $T^* = \lim T(\mathcal{K}^{*)$. 
+Define the extension of triple space recursively by adding itself to candidate space: $\mathcal{K}^{(1)} = \mathcal{K}^{(0)} \bigcup T^{(0)}$, $T^{(i)} = T(\mathcal{K}^{(i)})$. Then define $\mathcal{K}^* = \lim \mathcal{K}^{n}$ and $T^* = \lim T(\mathcal{K}^*)$. 
 
 We call $\mathcal{K}$ fundamental candidates and $T$ - metacandidates.
 
@@ -21,7 +21,7 @@ The structured representation of text $\pi$ then looks like
 $\pi \mapsto \tau \mapsto \kappa \mapsto e$.
 
 
-For clarity candidates and entities are indexes for each text $\pi$ by $i_{\pi\kappa} \in I_{\pi\kappa}$ and by $i_{\pi e} \in I_{\pi e}$.
+For clarity candidates and entities are indexes for each text $\pi$ by $i^\pi_\kappa \in I^\pi_\kappa$ and by $i^\pi_e \in I^\pi_e$.
 
 The output of REL therefore yields:
 1. $\tau \mapsto i_\kappa$
