@@ -53,10 +53,10 @@ def phrases_to_triples_stage_a(
     ) = phrases_to_basis_triples(nlp, rules, phrases, plot_path)
 
     # mnemonics : ecl ~ ExtCandidateList()
-    ecl = candidate_depot.unfold_conjunction()
+    ext_cand_list = candidate_depot.unfold_conjunction()
     for r in relations:
         r.normalize()
-    return striples, striples_meta, relations, ecl, megagraph
+    return striples, striples_meta, relations, ext_cand_list, megagraph
 
 
 def phrases_to_triples(
@@ -74,7 +74,7 @@ def phrases_to_triples(
         striples,
         striples_meta,
         relations,
-        ecl,
+        ext_cand_list,
         megagraph,
     ) = phrases_to_triples_stage_a(phrases, nlp, rules, plot_path)
 
@@ -84,9 +84,9 @@ def phrases_to_triples(
     nmax = len(phrases) - window_size + 1
     for i in range(nmax):
         fragment = " ".join(phrases[i : i + window_size])
-        ecl.set_filter(lambda x: i <= x[0] < i + window_size)
+        ext_cand_list.set_filter(lambda x: i <= x[0] < i + window_size)
         ncp = text_to_coref_sourcetarget(
-            nlp, fragment, ecl, initial_phrase_index=i
+            nlp, fragment, ext_cand_list, initial_phrase_index=i
         )
 
         for key, candidate_list in ncp.items():
@@ -296,7 +296,7 @@ def phrases_to_triples(
                 f"Fundamental MuIndex {candlike_like} not in global_ecl and"
                 " not in relation_ecd"
             )
-    return global_triples, mu_index_candidate_map, ecl
+    return global_triples, mu_index_candidate_map, ext_cand_list
 
 
 def phrases_to_basis_triples(

@@ -30,7 +30,9 @@ repos:
 #        args:
 #          - --module lm_service
         exclude: ^test/
-#        args: [--strict]
+        args: [--show-error-codes]
+        additional_dependencies: ['types-requests']
+
 
 #  - repo: https://github.com/pre-commit/mirrors-pylint
 #    rev: v2.14.5

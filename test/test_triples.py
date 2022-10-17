@@ -410,46 +410,52 @@ class TestTriples(unittest.TestCase):
             map_eindex_entity, map_c2e, map_muindex_candidate
         )
 
-        entities_index_e_map_ref, map_c2e_ref = (
+        map_eindex_entity_str = {
+            k: v.to_dict(skip_defaults=True)
+            for k, v in map_eindex_entity.items()
+        }
+
+        map_eindex_entity_ref, map_c2e_ref = (
             {
-                (0, 0): {
-                    "linker_type": EntityLinker.BERN_V2,
-                    "ent_type": "disease",
+                "BERN_V2/mesh/D017719": {
+                    "linker_type": "BERN_V2",
                     "ent_db_type": "mesh",
                     "id": "D017719",
-                    "confidence": 0.9999968409538269,
-                },
-                (0, 1): {
-                    "linker_type": EntityLinker.BERN_V2,
+                    "hash": "BERN_V2/mesh/D017719",
                     "ent_type": "disease",
+                },
+                "BERN_V2/mesh/D002056": {
+                    "linker_type": "BERN_V2",
                     "ent_db_type": "mesh",
                     "id": "D002056",
-                    "confidence": 0.9982181191444397,
+                    "hash": "BERN_V2/mesh/D002056",
+                    "ent_type": "disease",
                 },
-                (0, 2): {
-                    "linker_type": EntityLinker.LOCAL_NON_EL,
-                    "ent_db_type": ent_db_type_local_gg,
-                    "id": "is related to",
-                    "confidence": 0.0,
+                "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847": {
+                    "linker_type": "LOCAL_NON_EL",
+                    "ent_db_type": "ent_db_type_local_gg",
+                    "id": "44afc2df2816ef50ecd4f847",
+                    "hash": "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847",
+                    "original_form": "is related to",
                 },
             },
             [
                 (
                     MuIndex(meta=False, phrase=0, token="001", running=0),
-                    (0, 0),
+                    "BERN_V2/mesh/D017719",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="005", running=0),
-                    (0, 1),
+                    "BERN_V2/mesh/D002056",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="002", running=9),
-                    (0, 2),
+                    "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847",
                 ),
             ],
         )
 
-        self.assertEqual(map_eindex_entity, entities_index_e_map_ref)
+        self.assertEqual(map_eindex_entity_str, map_eindex_entity_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
 

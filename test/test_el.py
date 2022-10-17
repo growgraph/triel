@@ -34,14 +34,12 @@ class TestEL(unittest.TestCase):
                 "id": ["mesh:D017719"],
                 "is_neural_normalized": True,
                 "obj": "disease",
-                "prob": 0.9999968409538269,
                 "span": {"begin": 0, "end": 15},
             },
             {
                 "id": ["mesh:D002056"],
                 "is_neural_normalized": False,
                 "obj": "disease",
-                "prob": 0.9982181191444397,
                 "span": {"begin": 31, "end": 36},
             },
         ],
@@ -64,27 +62,27 @@ class TestEL(unittest.TestCase):
         ecl = candidate_depot.unfold_conjunction()
 
         # phrase index set
-        ix_current_phrase = 0
 
         bern_normalized = [
             normalize_bern_entity(item)
             for item in self.response_bern["annotations"]
         ]
 
-        bern_normalized = dict(
-            zip(
-                [(ix_current_phrase, j) for j in range(len(bern_normalized))],
-                [x for _, x in bern_normalized if x],
-            )
-        )
+        bern_normalized = {e.hash: span for e, span in bern_normalized}
 
-        map_c2e = link_candidate_entity(bern_normalized, ecl)
+        map_c2e = link_candidate_entity(bern_normalized, ecl, ix_phrases=(0,))
 
         self.assertEqual(
             map_c2e,
             [
-                (MuIndex(False, 0, "001", 0), (0, 0)),
-                (MuIndex(False, 0, "005", 0), (0, 1)),
+                (
+                    MuIndex(meta=False, phrase=0, token="001", running=0),
+                    "BERN_V2/mesh/D017719",
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="005", running=0),
+                    "BERN_V2/mesh/D002056",
+                ),
             ],
         )
 
@@ -113,36 +111,41 @@ class TestEL(unittest.TestCase):
             link_foo=foo_link,
         )
 
-        entities_index_e_map_ref, map_c2e_ref = (
+        map_eindex_entity_str = {
+            k: v.to_dict(skip_defaults=True)
+            for k, v in map_eindex_entity.items()
+        }
+
+        map_eindex_entity_str_ref, map_c2e_ref = (
             {
-                (0, 0): {
-                    "linker_type": EntityLinker.BERN_V2,
-                    "ent_type": "disease",
+                "BERN_V2/mesh/D017719": {
+                    "linker_type": "BERN_V2",
                     "ent_db_type": "mesh",
                     "id": "D017719",
-                    "confidence": 0.9999968409538269,
-                },
-                (0, 1): {
-                    "linker_type": EntityLinker.BERN_V2,
+                    "hash": "BERN_V2/mesh/D017719",
                     "ent_type": "disease",
+                },
+                "BERN_V2/mesh/D002056": {
+                    "linker_type": "BERN_V2",
                     "ent_db_type": "mesh",
                     "id": "D002056",
-                    "confidence": 0.9982181191444397,
+                    "hash": "BERN_V2/mesh/D002056",
+                    "ent_type": "disease",
                 },
             },
             [
                 (
                     MuIndex(meta=False, phrase=0, token="001", running=0),
-                    (0, 0),
+                    "BERN_V2/mesh/D017719",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="005", running=0),
-                    (0, 1),
+                    "BERN_V2/mesh/D002056",
                 ),
             ],
         )
 
-        self.assertEqual(map_eindex_entity, entities_index_e_map_ref)
+        self.assertEqual(map_eindex_entity_str, map_eindex_entity_str_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
     def test_iterate_naive_wiki_linking(self):
@@ -166,34 +169,39 @@ class TestEL(unittest.TestCase):
 
         ecl = candidate_depot.unfold_conjunction()
 
-        entities_index_e_map = {}
+        map_eindex_entity = {}
         map_c2e = []
-        entities_index_e_map, map_c2e = iterate_linking_over_phrases(
+        map_eindex_entity, map_c2e = iterate_linking_over_phrases(
             phrases=phrases,
             ecl=ecl,
-            map_eindex_entity=entities_index_e_map,
+            map_eindex_entity=map_eindex_entity,
             map_c2e=map_c2e,
             link_foo=foo_link,
             etype=EntityLinker.SPACY_NAIVE_WIKI,
         )
 
-        entities_index_e_map_ref, map_c2e_ref = (
+        map_eindex_entity_str = {
+            k: v.to_dict(skip_defaults=True)
+            for k, v in map_eindex_entity.items()
+        }
+
+        map_eindex_entity_ref, map_c2e_ref = (
             {
-                (0, 0): {
-                    "linker_type": EntityLinker.SPACY_NAIVE_WIKI,
+                "SPACY_NAIVE_WIKI/wikidata/Q6452285": {
+                    "linker_type": "SPACY_NAIVE_WIKI",
                     "ent_db_type": "wikidata",
                     "id": "Q6452285",
-                    "original": "ulcer",
-                    "ent_type": None,
-                    "desc": "type of cutaneous condition",
+                    "hash": "SPACY_NAIVE_WIKI/wikidata/Q6452285",
+                    "original_form": "ulcer",
+                    "description": "type of cutaneous condition",
                 },
-                (0, 1): {
-                    "linker_type": EntityLinker.SPACY_NAIVE_WIKI,
+                "SPACY_NAIVE_WIKI/wikidata/Q170518": {
+                    "linker_type": "SPACY_NAIVE_WIKI",
                     "ent_db_type": "wikidata",
                     "id": "Q170518",
-                    "original": "burns",
-                    "ent_type": None,
-                    "desc": (
+                    "hash": "SPACY_NAIVE_WIKI/wikidata/Q170518",
+                    "original_form": "burns",
+                    "description": (
                         "injury to flesh or skin, often caused by excessive"
                         " heat"
                     ),
@@ -202,16 +210,16 @@ class TestEL(unittest.TestCase):
             [
                 (
                     MuIndex(meta=False, phrase=0, token="001", running=0),
-                    (0, 0),
+                    "SPACY_NAIVE_WIKI/wikidata/Q6452285",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="005", running=0),
-                    (0, 1),
+                    "SPACY_NAIVE_WIKI/wikidata/Q170518",
                 ),
             ],
         )
 
-        self.assertEqual(entities_index_e_map, entities_index_e_map_ref)
+        self.assertEqual(map_eindex_entity_str, map_eindex_entity_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
     def test_iterate_spacy(self):
@@ -248,32 +256,43 @@ class TestEL(unittest.TestCase):
             etype=EntityLinker.SPACY_BASIC,
         )
 
+        map_eindex_entity_str = {
+            k: v.to_dict(skip_defaults=True)
+            for k, v in map_eindex_entity.items()
+        }
+
         entities_index_e_map_ref, map_c2e_ref = (
             {
-                (0, 0): {
-                    "linker_type": EntityLinker.SPACY_BASIC,
+                "SPACY_BASIC/basic/92298dabd25734eab4386b6a": {
+                    "linker_type": "SPACY_BASIC",
                     "ent_db_type": "basic",
-                    "ent_type": 386,
+                    "id": "92298dabd25734eab4386b6a",
+                    "hash": "SPACY_BASIC/basic/92298dabd25734eab4386b6a",
+                    "ent_type": "386",
+                    "original_form": "cheops",
                 },
-                (0, 1): {
-                    "linker_type": EntityLinker.SPACY_BASIC,
+                "SPACY_BASIC/basic/636a58bcdfd3c8e3450c0bbe": {
+                    "linker_type": "SPACY_BASIC",
                     "ent_db_type": "basic",
-                    "ent_type": 381,
+                    "id": "636a58bcdfd3c8e3450c0bbe",
+                    "hash": "SPACY_BASIC/basic/636a58bcdfd3c8e3450c0bbe",
+                    "ent_type": "381",
+                    "original_form": "european",
                 },
             },
             [
                 (
                     MuIndex(meta=False, phrase=0, token="000", running=0),
-                    (0, 0),
+                    "SPACY_BASIC/basic/92298dabd25734eab4386b6a",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="010", running=0),
-                    (0, 1),
+                    "SPACY_BASIC/basic/636a58bcdfd3c8e3450c0bbe",
                 ),
             ],
         )
 
-        self.assertEqual(map_eindex_entity, entities_index_e_map_ref)
+        self.assertEqual(map_eindex_entity_str, entities_index_e_map_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
     def test_iterate_over_linkers(self):
@@ -296,80 +315,86 @@ class TestEL(unittest.TestCase):
             )._.linkedEntities,
         }
 
-        entities_index_e_map, map_c2e = iterate_over_linkers(
+        map_eindex_entity, map_c2e = iterate_over_linkers(
             phrases=phrases,
             ecl=ecl,
             map_muindex_candidate=map_muindex_candidate,
             phrase_entities_foos=phrase_entities_foos,
         )
 
-        entities_index_e_map_ref, map_c2e_ref = (
+        map_eindex_entity_str = {
+            k: v.to_dict(skip_defaults=True)
+            for k, v in map_eindex_entity.items()
+        }
+
+        map_eindex_entity_ref, map_c2e_ref = (
             {
-                (0, 0): {
-                    "linker_type": EntityLinker.BERN_V2,
-                    "ent_type": "disease",
+                "BERN_V2/mesh/D017719": {
+                    "linker_type": "BERN_V2",
                     "ent_db_type": "mesh",
                     "id": "D017719",
-                    "confidence": 0.9999968409538269,
-                },
-                (0, 1): {
-                    "linker_type": EntityLinker.BERN_V2,
+                    "hash": "BERN_V2/mesh/D017719",
                     "ent_type": "disease",
+                },
+                "BERN_V2/mesh/D002056": {
+                    "linker_type": "BERN_V2",
                     "ent_db_type": "mesh",
                     "id": "D002056",
-                    "confidence": 0.9982181191444397,
+                    "hash": "BERN_V2/mesh/D002056",
+                    "ent_type": "disease",
                 },
-                (0, 2): {
-                    "linker_type": EntityLinker.SPACY_NAIVE_WIKI,
+                "SPACY_NAIVE_WIKI/wikidata/Q6452285": {
+                    "linker_type": "SPACY_NAIVE_WIKI",
                     "ent_db_type": "wikidata",
                     "id": "Q6452285",
-                    "original": "ulcer",
-                    "ent_type": None,
-                    "desc": "type of cutaneous condition",
+                    "hash": "SPACY_NAIVE_WIKI/wikidata/Q6452285",
+                    "original_form": "ulcer",
+                    "description": "type of cutaneous condition",
                 },
-                (0, 3): {
-                    "linker_type": EntityLinker.SPACY_NAIVE_WIKI,
+                "SPACY_NAIVE_WIKI/wikidata/Q170518": {
+                    "linker_type": "SPACY_NAIVE_WIKI",
                     "ent_db_type": "wikidata",
                     "id": "Q170518",
-                    "original": "burns",
-                    "ent_type": None,
-                    "desc": (
+                    "hash": "SPACY_NAIVE_WIKI/wikidata/Q170518",
+                    "original_form": "burns",
+                    "description": (
                         "injury to flesh or skin, often caused by excessive"
                         " heat"
                     ),
                 },
-                (0, 4): {
-                    "linker_type": EntityLinker.LOCAL_NON_EL,
+                "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847": {
+                    "linker_type": "LOCAL_NON_EL",
                     "ent_db_type": "ent_db_type_local_gg",
-                    "id": "is related to",
-                    "confidence": 0.0,
+                    "id": "44afc2df2816ef50ecd4f847",
+                    "hash": "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847",
+                    "original_form": "is related to",
                 },
             },
             [
                 (
                     MuIndex(meta=False, phrase=0, token="001", running=0),
-                    (0, 0),
+                    "BERN_V2/mesh/D017719",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="005", running=0),
-                    (0, 1),
+                    "BERN_V2/mesh/D002056",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="001", running=0),
-                    (0, 2),
+                    "SPACY_NAIVE_WIKI/wikidata/Q6452285",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="005", running=0),
-                    (0, 3),
+                    "SPACY_NAIVE_WIKI/wikidata/Q170518",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="002", running=9),
-                    (0, 4),
+                    "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847",
                 ),
             ],
         )
 
-        self.assertEqual(entities_index_e_map, entities_index_e_map_ref)
+        self.assertEqual(map_eindex_entity_str, map_eindex_entity_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
 

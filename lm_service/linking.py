@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import dataclasses
 from enum import Enum
+from hashlib import blake2b
 
 import numpy as np
+from dataclass_wizard import JSONWizard
+from spacy.tokens import Token
 
 from lm_service.onto import Candidate, MuIndex
 from lm_service.piles import ExtCandidateList
@@ -14,12 +18,37 @@ class EntityCandidateAlignmentError(Exception):
 
 class EntityLinker(str, Enum):
     BERN_V2 = "BERN_V2"
-    SPACY_NAIVE_WIKI = "SPACY_NAIVE_EL"
+    SPACY_NAIVE_WIKI = "SPACY_NAIVE_WIKI"
     SPACY_BASIC = "SPACY_BASIC"
     LOCAL_NON_EL = "LOCAL_NON_EL"
 
+    def __repr__(self):
+        return self.name
+
 
 ent_db_type_local_gg = "ent_db_type_local_gg"
+blake2b_digest_size = 12
+
+
+@dataclasses.dataclass(repr=False)
+class Entity(JSONWizard):
+    """
+    represents a token in dep tree
+    """
+
+    class _(JSONWizard.Meta):
+        key_transform_with_dump = "SNAKE"
+
+    linker_type: EntityLinker
+    ent_db_type: str
+    id: str
+    hash: str = ""
+    ent_type: str | None = None
+    original_form: str | None = None
+    description: str | None = None
+
+    def __post_init__(self):
+        self.hash = f"{self.linker_type}/{self.ent_db_type}/{self.id}"
 
 
 def interval_inclusion_metric(x, y):
@@ -31,24 +60,23 @@ def interval_inclusion_metric(x, y):
     return (xb - xa) / int_size if int_size > 0 else 0
 
 
-def normalize_bern_entity(item) -> tuple[dict | None, tuple | None]:
+def normalize_bern_entity(item) -> tuple[Entity | None, tuple | None]:
     if len(item["id"]) > 0:
         item_spec = item["id"][0].split(":")
         db_type, item_id = item_spec
-        return {
-            "linker_type": EntityLinker.BERN_V2,
-            "ent_type": item["obj"],
-            "ent_db_type": db_type,
-            "id": item_id,
-            "confidence": item["prob"],
-        }, (item["span"]["begin"], item["span"]["end"])
+        return Entity(
+            linker_type=EntityLinker.BERN_V2,
+            ent_type=item["obj"],
+            ent_db_type=db_type,
+            id=item_id,
+        ), (item["span"]["begin"], item["span"]["end"])
     else:
         return None, None
 
 
 def normalize_naive_wiki_entity_linker(
     item,
-) -> tuple[dict | None, tuple | None]:
+) -> tuple[Entity | None, tuple | None]:
     """
     spacy-entity-linker package
 
@@ -64,14 +92,15 @@ def normalize_naive_wiki_entity_linker(
             ent_type = ee.get_url().split("/")[-1]
         except:
             ent_type = None
-        return {
-            "linker_type": EntityLinker.SPACY_NAIVE_WIKI,
-            "ent_db_type": "wikidata",
-            "id": item_id,
-            "original": item.get_original_alias(),
-            "ent_type": ent_type,
-            "desc": item.get_description(),
-        }, (span.start_char, span.end_char)
+        return Entity(
+            linker_type=EntityLinker.SPACY_NAIVE_WIKI,
+            ent_db_type="wikidata",
+            ent_type=ent_type,
+            id=item_id,
+            description=item.get_description(),
+            original_form=item.get_original_alias(),
+        ), (span.start_char, span.end_char)
+
     else:
         return None, None
 
@@ -96,7 +125,9 @@ def phrase_to_spacy_basic_entities(phrase=None, rdoc=None, nlp=None):
     return ents_split
 
 
-def normalize_spacy_basic(item) -> tuple[dict | None, tuple | None]:
+def normalize_spacy_basic(
+    item: list[Token],
+) -> tuple[Entity | None, tuple | None]:
     """
 
     :param item:
@@ -104,22 +135,31 @@ def normalize_spacy_basic(item) -> tuple[dict | None, tuple | None]:
     """
     if item:
         span = item[0].idx, item[-1].idx + len(item[-1].text)
-        ent_type = item[0].ent_type
+        original_form = " ".join([x.text for x in item]).lower()
+        e_id = blake2b(
+            original_form.encode("utf-8"), digest_size=blake2b_digest_size
+        ).hexdigest()
+        ent_type = str(item[0].ent_type)
 
-        return {
-            "linker_type": EntityLinker.SPACY_BASIC,
-            "ent_db_type": "basic",
-            "ent_type": ent_type,
-        }, span
+        return (
+            Entity(
+                linker_type=EntityLinker.SPACY_BASIC,
+                ent_db_type="basic",
+                ent_type=ent_type,
+                original_form=original_form,
+                id=e_id,
+            ),
+            span,
+        )
     else:
         return None, None
 
 
 def link_unlinked_entities(
-    map_eindex_entity: dict[tuple[int, int], dict],
-    map_c2e: list[tuple[MuIndex, tuple[int, int]]],
+    map_eindex_entity: dict[str, Entity],
+    map_c2e: list[tuple[MuIndex, str]],
     map_muindex_candidate: dict[MuIndex, Candidate],
-) -> tuple[dict[tuple[int, int], dict], list[tuple[MuIndex, tuple[int, int]]]]:
+) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
     """
 
     :param map_eindex_entity:
@@ -138,33 +178,35 @@ def link_unlinked_entities(
 
     for i_mu in mentions_not_in_entities:
         c = map_muindex_candidate[i_mu]
-        s = " ".join(c.project_to_text())
-        new_entity = {
-            "linker_type": EntityLinker.LOCAL_NON_EL,
-            "ent_db_type": ent_db_type_local_gg,
-            "id": s,
-            "confidence": 0.0,
-        }
-        max_ent = max(y for x, y in map_eindex_entity if x == i_mu.phrase)
-        i_ent = (i_mu.phrase, max_ent + 1)
-        map_c2e += [(i_mu, i_ent)]
-        map_eindex_entity[i_ent] = new_entity
+        original_form = " ".join(c.project_to_text()).lower()
+        e_id = blake2b(
+            original_form.encode("utf-8"), digest_size=blake2b_digest_size
+        ).hexdigest()
+
+        new_entity = Entity(
+            linker_type=EntityLinker.LOCAL_NON_EL,
+            ent_db_type=ent_db_type_local_gg,
+            id=e_id,
+            original_form=original_form,
+        )
+        map_c2e += [(i_mu, new_entity.hash)]
+        map_eindex_entity[new_entity.hash] = new_entity
 
     return map_eindex_entity, map_c2e
 
 
-def link_candidate_entity(ec_spans: dict, ecl: ExtCandidateList):
+def link_candidate_entity(ec_spans: dict, ecl: ExtCandidateList, ix_phrases):
     """
         NB: in future (iphrase, i_ent): ent
             will also be used for linking used
     :param ec_spans: (iphrase, i_ent): (span_beg, span_end)
     :param ecl:
+    :param ix_phrases: phrases which to link
     :return:
     """
 
     # pick phrase indices
     i_e = list(ec_spans.keys())
-    ix_phrases = set(k[0] for k in i_e)
     # c_index : (iphrase, sindex, cand_subindex, token_index) : [spans]
 
     map_c2e = []
@@ -189,7 +231,7 @@ def link_candidate_entity(ec_spans: dict, ecl: ExtCandidateList):
             # map current candidate to entity index
             map_c2e += [(MuIndex(False, *k, n), i_e[i]) for i in ec_ixs]
 
-    # e_index : (iphrase, eindex)
+    # e_index : (str)
     # c_index : (iphrase, sindex, cand_subindex)
     # 1 -> n : cand -> entity (could be easily generalizable)
     return map_c2e
@@ -210,7 +252,7 @@ def iterate_linking_over_phrases(
     map_eindex_entity=None,
     map_c2e=None,
     etype=EntityLinker.BERN_V2,
-) -> tuple[dict[tuple[int, int], dict], list[tuple[MuIndex, tuple[int, int]]]]:
+) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
     """
 
     :param phrases:
@@ -221,7 +263,7 @@ def iterate_linking_over_phrases(
     :param map_c2e:
     :param etype:
     :return:
-        i_e -> e ; i_e -> i_mu
+        s_e -> e ; i_c -> i_se
     """
     if link_foo_kwargs is None:
         link_foo_kwargs = dict()
@@ -237,28 +279,19 @@ def iterate_linking_over_phrases(
 
         # entities + spans
         entity_pack_current = [foo_normalize(item) for item in response]
-        entity_pack_current = [(x, y) for x, y in entity_pack_current if x]
-        spans = [y for _, y in entity_pack_current]
-        entity_normalized_current = [x for x, _ in entity_pack_current]
+        spans, ents = [], []
+        for e, span in entity_pack_current:
+            if e is not None:
+                spans += [span]
+                ents += [e]
 
-        existing_ents = [
-            k[1] for k in map_eindex_entity if k[0] == ix_current_phrase
-        ]
+        entities_index_e_map_current = {e.hash: e for e in ents}
 
-        e_index_max = max(existing_ents) + 1 if existing_ents else 0
+        ei_span_map = {e.hash: span for e, span in zip(ents, spans)}
 
-        entities_index = [
-            (ix_current_phrase, j + e_index_max)
-            for j in range(len(entity_normalized_current))
-        ]
-
-        entities_index_e_map_current = dict(
-            zip(entities_index, entity_normalized_current)
+        map_c2e_current = link_candidate_entity(
+            ei_span_map, ecl, (ix_current_phrase,)
         )
-
-        ei_span_map = dict(zip(entities_index, spans))
-
-        map_c2e_current = link_candidate_entity(ei_span_map, ecl)
 
         map_c2e.extend(map_c2e_current)
         map_eindex_entity.update(entities_index_e_map_current)
@@ -271,10 +304,10 @@ def iterate_over_linkers(
     ecl: ExtCandidateList,
     map_muindex_candidate: dict[MuIndex, Candidate],
     phrase_entities_foos: dict,
-) -> tuple[dict[tuple[int, int], dict], list[tuple[MuIndex, tuple[int, int]]]]:
+) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
 
-    map_eindex_entity: dict[tuple[int, int], dict] = {}
-    map_c2e: list[tuple[MuIndex, tuple[int, int]]] = []
+    map_eindex_entity: dict[str, Entity] = {}
+    map_c2e: list[tuple[MuIndex, str]] = []
 
     for link_mode, link_foo in phrase_entities_foos.items():
         map_eindex_entity, map_c2e = iterate_linking_over_phrases(

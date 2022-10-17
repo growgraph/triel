@@ -25,27 +25,9 @@ def hello_world():
     return "parse phrases into relations"
 
 
-@app.route("/lm/re", methods=["POST"])
-def re():
-    if request.method == "POST":
-        logger.info(request)
-        logger.info(request.json)
-        json_data = request.json
-        text = json_data["phrase"]
-
-        phrases = normalize_input_text(text, terminal_full_stop=False)
-        phrases = [transform_advcl(nlp, p) for p in phrases]
-        fragment = ". ".join(phrases)
-        (triples_expanded, triples_proj, graph) = phrase_to_triples(
-            fragment, nlp, rules
-        )
-
-        return jsonify({"triples": triples_proj}), 200
-
-
 if __name__ == "__main__":
     logging.basicConfig(
-        filename="lm_service.log",
+        filename="lm_serve.log",
         format=(
             "%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s:"
             " %(message)s"
@@ -53,7 +35,6 @@ if __name__ == "__main__":
         datefmt="%Y-%m-%d %H:%M:%S",
         level=logging.INFO,
         filemode="w",
-        # stream=sys.stdout,
     )
 
     parser = argparse.ArgumentParser()
