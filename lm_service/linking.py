@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import dataclasses
 from enum import Enum
-from hashlib import blake2b
 
 import numpy as np
 from dataclass_wizard import JSONWizard
 from spacy.tokens import Token
 
+from lm_service.hash import hashme
 from lm_service.onto import Candidate, MuIndex
 from lm_service.piles import ExtCandidateList
 
@@ -27,7 +27,6 @@ class EntityLinker(str, Enum):
 
 
 ent_db_type_local_gg = "ent_db_type_local_gg"
-blake2b_digest_size = 12
 
 
 @dataclasses.dataclass(repr=False)
@@ -38,6 +37,7 @@ class Entity(JSONWizard):
 
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
+        skip_defaults = True
 
     linker_type: EntityLinker
     ent_db_type: str
@@ -136,9 +136,7 @@ def normalize_spacy_basic(
     if item:
         span = item[0].idx, item[-1].idx + len(item[-1].text)
         original_form = " ".join([x.text for x in item]).lower()
-        e_id = blake2b(
-            original_form.encode("utf-8"), digest_size=blake2b_digest_size
-        ).hexdigest()
+        e_id = hashme(original_form)
         ent_type = str(item[0].ent_type)
 
         return (
@@ -179,9 +177,8 @@ def link_unlinked_entities(
     for i_mu in mentions_not_in_entities:
         c = map_muindex_candidate[i_mu]
         original_form = " ".join(c.project_to_text()).lower()
-        e_id = blake2b(
-            original_form.encode("utf-8"), digest_size=blake2b_digest_size
-        ).hexdigest()
+
+        e_id = c.hashme()
 
         new_entity = Entity(
             linker_type=EntityLinker.LOCAL_NON_EL,

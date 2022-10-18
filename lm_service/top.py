@@ -1,15 +1,34 @@
+import dataclasses
 import logging
 
 import requests
+from dataclass_wizard import JSONWizard
 
 from lm_service.linking import (
+    Entity,
     EntityLinker,
     iterate_over_linkers,
     link_unlinked_entities,
 )
+from lm_service.onto import MuIndex, SimplifiedCandidate
 from lm_service.text import normalize_text, phrases_to_triples
 
 logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass(repr=False, frozen=True, eq=True)
+class RELResponse(JSONWizard):
+    """
+    represents a token in dep tree
+    """
+
+    class _(JSONWizard.Meta):
+        key_transform_with_dump = "SNAKE"
+
+    triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]]
+    eindex_entity: dict[str, Entity]
+    muindex_eindex: list[tuple[MuIndex, str]]
+    muindex_candidate: dict[str, SimplifiedCandidate]
 
 
 # only v2 is supported by the API
@@ -22,54 +41,23 @@ api_spec = {
 }
 
 
+def to_dict(obj):
+    if isinstance(obj, dict):
+        return {to_dict(k): to_dict(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [to_dict(v) for v in obj]
+    elif isinstance(obj, MuIndex):
+        return obj.to_str()
+    elif dataclasses.is_dataclass(obj):
+        return obj.to_dict()
+    else:
+        return obj
+
+
 def query_bern(text, version="v2"):
     url = api_spec[version]["url"]
     text_field = api_spec[version]["text_field"]
     return requests.post(url, json={text_field: text}, verify=False).json()
-
-
-# def link(sentences):
-#     es = []
-#     for s in sentences:
-#         es.append(link_phrase(s))
-#     return es
-#
-#
-# def link_phrase(s):
-#     entities = query_bern(s)
-#     if not entities.get("denotations"):
-#         return {
-#             "text": entities["text"],
-#             # "text_sha256": hashlib.sha256(
-#             #     entities["text"].encode("utf-8")
-#             # ).hexdigest(),
-#         }
-#     else:
-#         e = []
-#         for entity in entities["denotations"]:
-#             other_ids = [
-#                 eid for eid in entity["id"] if not eid.startswith("BERN")
-#             ]
-#             entity_type = entity["obj"]
-#             entity_name = entities["text"][
-#                 entity["span"]["begin"] : entity["span"]["end"]
-#             ]
-#             bern_id = [eid for eid in entity["id"] if eid.startswith("BERN")]
-#             e.append(
-#                 {
-#                     "entity_id": bern_id[0] if bern_id else entity_name,
-#                     "other_ids": other_ids,
-#                     "entity_type": entity_type,
-#                     "entity": entity_name,
-#                 }
-#             )
-#         return {
-#             "entities": e,
-#             "text": entities["text"],
-#             # "text_sha256": hashlib.sha256(
-#             #     entities["text"].encode("utf-8")
-#             # ).hexdigest(),
-#         }
 
 
 def text_to_rel_graph(text, nlp, rules):
@@ -98,10 +86,20 @@ def text_to_rel_graph(text, nlp, rules):
         map_eindex_entity, map_c2e, map_muindex_candidate
     )
 
-    # eindex_set = set(map_eindex_entity.keys()) & set(y for _, y in map_c2e)
-
-    map_eindex_entity_str = {
-        k: v.to_dict(skip_defaults=True) for k, v in map_eindex_entity.items()
+    map_muindex_candidate_simplified = {
+        k: v.to_simplified() for k, v in map_muindex_candidate.items()
     }
 
-    return map_eindex_entity_str, map_c2e, map_muindex_candidate
+    return {
+        "triples": global_triples,
+        "eindex_entity": map_eindex_entity,
+        "muindex_eindex": map_c2e,
+        "muindex_candidate": map_muindex_candidate_simplified,
+    }
+    # TODO
+    # return RELResponse(
+    #     triples=global_triples,
+    #     eindex_entity=map_eindex_entity,
+    #     muindex_eindex=map_c2e,
+    #     muindex_candidate=map_muindex_candidate_simplified,
+    # )

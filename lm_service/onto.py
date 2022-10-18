@@ -12,6 +12,8 @@ import networkx as nx
 from dataclass_wizard import JSONWizard
 from lemminflect import getInflection, getLemma
 
+from lm_service.hash import hashme
+
 
 class MissingTokenInACandidate(Exception):
     pass
@@ -207,6 +209,15 @@ class CandidateReference(AbsCandidate, JSONWizard):
 
 
 @dataclasses.dataclass(repr=False)
+class SimplifiedCandidate(JSONWizard):
+    class _(JSONWizard.Meta):
+        key_transform_with_dump = "SNAKE"
+
+    hash: str
+    text: str
+
+
+@dataclasses.dataclass(repr=False)
 class Candidate(AbsCandidate, JSONWizard):
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
@@ -223,6 +234,15 @@ class Candidate(AbsCandidate, JSONWizard):
 
     def __len__(self) -> int:
         return len(self._tokens)
+
+    def hashme(self) -> str:
+        original_form = " ".join(self.project_to_text()).lower()
+        return hashme(original_form)
+
+    def to_simplified(self):
+        return SimplifiedCandidate(
+            hash=self.hashme(), text=" ".join(self.project_to_text()).lower()
+        )
 
     def __repr__(self):
         content = []
@@ -920,3 +940,9 @@ class MuIndex(JSONWizard):
 
     def to_tuple(self):
         return self.meta, self.phrase, self.token, self.running
+
+    def to_str(self):
+        return "|".join(f"{int(x)}" for x in self.to_tuple())
+
+    def __hash__(self):
+        return hash((self.meta, self.phrase, self.token, self.running))

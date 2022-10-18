@@ -6,13 +6,11 @@ import coreferee
 import spacy
 import yaml
 from flask import Flask, jsonify, request
-from flask_restful import Api, reqparse
+from flask_restful import Api
 from graph_cast.db.factory import ConfigFactory
 from graph_cast.util import ResourceHandler
 
-from lm_service.phrase import phrase_to_triples
-from lm_service.preprocessing import normalize_input_text, transform_advcl
-from lm_service.relation import add_hash
+from lm_service.top import text_to_rel_graph
 
 app = Flask(__name__)
 api = Api(app)
@@ -47,26 +45,20 @@ if __name__ == "__main__":
 
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound.yaml")
+    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
     print(" re model loaded")
 
     @app.route(wsgi_re.path, methods=["POST"])
-    def re_v2():
+    def re():
         if request.method == "POST":
             logger.info(request)
             logger.info(request.json)
             json_data = request.json
-            text = json_data["phrase"]
+            text = json_data["text"]
+            response = text_to_rel_graph(text, nlp, rules)
 
-            phrases = normalize_input_text(text, terminal_full_stop=False)
-            phrases = [transform_advcl(nlp, p) for p in phrases]
-            fragment = ". ".join(phrases)
-            (triples_expanded, triples_proj, graph) = phrase_to_triples(
-                fragment, nlp, rules
-            )
-            r = add_hash(triples_expanded)
-            return jsonify({"triples": r}), 200
+            return jsonify(response), 200
 
     print(f" wsgi: host {wsgi_re.host}")
     app.run(port=wsgi_re.port, host=wsgi_re.host)

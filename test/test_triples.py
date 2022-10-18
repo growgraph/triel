@@ -14,8 +14,6 @@ from reference.distances import reference_distance
 from lm_service.coref import graph_component_maps, render_coref_maps_wrapper
 from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
 from lm_service.linking import (
-    EntityLinker,
-    ent_db_type_local_gg,
     iterate_linking_over_phrases,
     link_unlinked_entities,
 )
