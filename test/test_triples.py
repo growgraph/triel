@@ -30,6 +30,7 @@ from lm_service.text import (
     normalize_text,
     phrases_to_triples,
 )
+from lm_service.top import to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -408,10 +409,7 @@ class TestTriples(unittest.TestCase):
             map_eindex_entity, map_c2e, map_muindex_candidate
         )
 
-        map_eindex_entity_str = {
-            k: v.to_dict(skip_defaults=True)
-            for k, v in map_eindex_entity.items()
-        }
+        map_eindex_entity_str = to_dict(map_eindex_entity)
 
         map_eindex_entity_ref, map_c2e_ref = (
             {
@@ -429,11 +427,11 @@ class TestTriples(unittest.TestCase):
                     "hash": "BERN_V2/mesh/D002056",
                     "ent_type": "disease",
                 },
-                "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847": {
+                "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3": {
                     "linker_type": "LOCAL_NON_EL",
                     "ent_db_type": "ent_db_type_local_gg",
-                    "id": "44afc2df2816ef50ecd4f847",
-                    "hash": "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847",
+                    "id": "dda96135ac461d989729db27e63bdf3f88b724e3",
+                    "hash": "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3",
                     "original_form": "is related to",
                 },
             },
@@ -448,7 +446,7 @@ class TestTriples(unittest.TestCase):
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="002", running=9),
-                    "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847",
+                    "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3",
                 ),
             ],
         )

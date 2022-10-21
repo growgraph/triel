@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import dataclasses
 import logging
+from collections import deque
 
 import requests
 from dataclass_wizard import JSONWizard
 
+from lm_service.hash import hashme
 from lm_service.linking import (
     Entity,
     EntityLinker,
@@ -40,6 +44,8 @@ api_spec = {
     "v2": {"url": "http://bern2.korea.ac.kr/plain", "text_field": "text"},
 }
 
+from aenum import Enum
+
 
 def to_dict(obj):
     if isinstance(obj, dict):
@@ -48,6 +54,9 @@ def to_dict(obj):
         return [to_dict(v) for v in obj]
     elif isinstance(obj, MuIndex):
         return obj.to_str()
+    # not the best
+    elif isinstance(obj, Enum):
+        return str(obj)
     elif dataclasses.is_dataclass(obj):
         return obj.to_dict()
     else:
@@ -90,16 +99,76 @@ def text_to_rel_graph(text, nlp, rules):
         k: v.to_simplified() for k, v in map_muindex_candidate.items()
     }
 
+    # return {
+    #     "triples": global_triples,
+    #     "eindex_entity": map_eindex_entity,
+    #     "muindex_eindex": map_c2e,
+    #     "muindex_candidate": map_muindex_candidate_simplified,
+    # }
+    return RELResponse(
+        triples=global_triples,
+        eindex_entity=map_eindex_entity,
+        muindex_eindex=map_c2e,
+        muindex_candidate=map_muindex_candidate_simplified,
+    )
+
+
+def cast_triple(item):
+    mu, (s, r, t) = item
     return {
-        "triples": global_triples,
-        "eindex_entity": map_eindex_entity,
-        "muindex_eindex": map_c2e,
-        "muindex_candidate": map_muindex_candidate_simplified,
+        "mu": mu,
+        "source": s,
+        "relation": r,
+        "target": t,
     }
-    # TODO
-    # return RELResponse(
-    #     triples=global_triples,
-    #     eindex_entity=map_eindex_entity,
-    #     muindex_eindex=map_c2e,
-    #     muindex_candidate=map_muindex_candidate_simplified,
-    # )
+
+
+def cast_response_to_unfolded(response: RELResponse):
+    muc = response.muindex_candidate
+    map_eindex_entity = response.eindex_entity
+
+    deq: deque[
+        tuple[
+            MuIndex,
+            tuple[
+                MuIndex | SimplifiedCandidate,
+                MuIndex | SimplifiedCandidate,
+                MuIndex | SimplifiedCandidate,
+            ],
+        ]
+    ] = deque(
+        response.triples.items()
+    )  # type: ignore
+
+    triples_upd = []
+
+    # extend muc with meta candidates
+    # create {{} , source:{}, target:{} {}}
+    while deq:
+        mu, tri = deq.popleft()
+        tri_sub = [muc[t] if t in muc else t for t in tri]
+        if all(t in muc.values() for t in tri_sub):
+            if mu in muc:
+                mu_sub = muc[mu]
+            else:
+                s = "".join(t.hash for t in tri_sub)
+                mu_sub = SimplifiedCandidate(hash=hashme(s))
+                muc[mu] = mu_sub
+            triples_upd += [(mu_sub, tri_sub)]
+        else:
+            deq.append((mu, tuple(tri_sub)))  # type: ignore
+
+    mu_ei = response.muindex_eindex
+
+    mu_ei_grounded = []
+    for mu, ei in mu_ei:
+        mu_ei_grounded += [
+            {
+                "mention": muc[mu],
+                "entity": map_eindex_entity[ei],
+            }
+        ]
+
+    triples_upd = [cast_triple(x) for x in triples_upd]
+    r = to_dict({"triples": triples_upd, "map_mention_entity": mu_ei_grounded})
+    return r

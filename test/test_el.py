@@ -19,6 +19,7 @@ from lm_service.text import (
     phrases_to_basis_triples,
     phrases_to_triples,
 )
+from lm_service.top import to_dict
 
 
 class TestEL(unittest.TestCase):
@@ -111,10 +112,7 @@ class TestEL(unittest.TestCase):
             link_foo=foo_link,
         )
 
-        map_eindex_entity_str = {
-            k: v.to_dict(skip_defaults=True)
-            for k, v in map_eindex_entity.items()
-        }
+        map_eindex_entity_str = to_dict(map_eindex_entity)
 
         map_eindex_entity_str_ref, map_c2e_ref = (
             {
@@ -180,10 +178,7 @@ class TestEL(unittest.TestCase):
             etype=EntityLinker.SPACY_NAIVE_WIKI,
         )
 
-        map_eindex_entity_str = {
-            k: v.to_dict(skip_defaults=True)
-            for k, v in map_eindex_entity.items()
-        }
+        map_eindex_entity_str = to_dict(map_eindex_entity)
 
         map_eindex_entity_ref, map_c2e_ref = (
             {
@@ -256,26 +251,23 @@ class TestEL(unittest.TestCase):
             etype=EntityLinker.SPACY_BASIC,
         )
 
-        map_eindex_entity_str = {
-            k: v.to_dict(skip_defaults=True)
-            for k, v in map_eindex_entity.items()
-        }
+        map_eindex_entity_str = to_dict(map_eindex_entity)
 
-        entities_index_e_map_ref, map_c2e_ref = (
+        map_eindex_entity_ref, map_c2e_ref = (
             {
-                "SPACY_BASIC/basic/92298dabd25734eab4386b6a": {
+                "SPACY_BASIC/basic/e50064e29b1d2f3fe19cd61ba0b6b7144069c90f": {
                     "linker_type": "SPACY_BASIC",
                     "ent_db_type": "basic",
-                    "id": "92298dabd25734eab4386b6a",
-                    "hash": "SPACY_BASIC/basic/92298dabd25734eab4386b6a",
+                    "id": "e50064e29b1d2f3fe19cd61ba0b6b7144069c90f",
+                    "hash": "SPACY_BASIC/basic/e50064e29b1d2f3fe19cd61ba0b6b7144069c90f",
                     "ent_type": "386",
                     "original_form": "cheops",
                 },
-                "SPACY_BASIC/basic/636a58bcdfd3c8e3450c0bbe": {
+                "SPACY_BASIC/basic/c93ca73f8d770c25597bb877021545d719bf1e4d": {
                     "linker_type": "SPACY_BASIC",
                     "ent_db_type": "basic",
-                    "id": "636a58bcdfd3c8e3450c0bbe",
-                    "hash": "SPACY_BASIC/basic/636a58bcdfd3c8e3450c0bbe",
+                    "id": "c93ca73f8d770c25597bb877021545d719bf1e4d",
+                    "hash": "SPACY_BASIC/basic/c93ca73f8d770c25597bb877021545d719bf1e4d",
                     "ent_type": "381",
                     "original_form": "european",
                 },
@@ -283,16 +275,16 @@ class TestEL(unittest.TestCase):
             [
                 (
                     MuIndex(meta=False, phrase=0, token="000", running=0),
-                    "SPACY_BASIC/basic/92298dabd25734eab4386b6a",
+                    "SPACY_BASIC/basic/e50064e29b1d2f3fe19cd61ba0b6b7144069c90f",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="010", running=0),
-                    "SPACY_BASIC/basic/636a58bcdfd3c8e3450c0bbe",
+                    "SPACY_BASIC/basic/c93ca73f8d770c25597bb877021545d719bf1e4d",
                 ),
             ],
         )
 
-        self.assertEqual(map_eindex_entity_str, entities_index_e_map_ref)
+        self.assertEqual(map_eindex_entity_str, map_eindex_entity_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
     def test_iterate_over_linkers(self):
@@ -322,10 +314,7 @@ class TestEL(unittest.TestCase):
             phrase_entities_foos=phrase_entities_foos,
         )
 
-        map_eindex_entity_str = {
-            k: v.to_dict(skip_defaults=True)
-            for k, v in map_eindex_entity.items()
-        }
+        map_eindex_entity_str = to_dict(map_eindex_entity)
 
         map_eindex_entity_ref, map_c2e_ref = (
             {
@@ -362,11 +351,11 @@ class TestEL(unittest.TestCase):
                         " heat"
                     ),
                 },
-                "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847": {
+                "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3": {
                     "linker_type": "LOCAL_NON_EL",
                     "ent_db_type": "ent_db_type_local_gg",
-                    "id": "44afc2df2816ef50ecd4f847",
-                    "hash": "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847",
+                    "id": "dda96135ac461d989729db27e63bdf3f88b724e3",
+                    "hash": "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3",
                     "original_form": "is related to",
                 },
             },
@@ -389,7 +378,7 @@ class TestEL(unittest.TestCase):
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="002", running=9),
-                    "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847",
+                    "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3",
                 ),
             ],
         )

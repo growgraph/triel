@@ -5,7 +5,11 @@ import coreferee
 import spacy
 import yaml
 
-from lm_service.top import text_to_rel_graph, to_dict
+from lm_service.top import (
+    cast_response_to_unfolded,
+    text_to_rel_graph,
+    to_dict,
+)
 
 
 class TestREL(unittest.TestCase):
@@ -18,79 +22,99 @@ class TestREL(unittest.TestCase):
     def test_iterate_linking_bern(self):
         text = "Diabetic ulcers are related to burns."
         response = text_to_rel_graph(text, self.nlp, self.rules)
-
-        rd = to_dict(response)
-
-        rd_ref = {
-            "triples": {"1|0|0|0": ["0|0|1|0", "0|0|2|9", "0|0|5|0"]},
-            "eindex_entity": {
-                "BERN_V2/mesh/D017719": {
-                    "linker_type": "BERN_V2",
-                    "ent_db_type": "mesh",
-                    "id": "D017719",
-                    "hash": "BERN_V2/mesh/D017719",
-                    "ent_type": "disease",
-                },
-                "BERN_V2/mesh/D002056": {
-                    "linker_type": "BERN_V2",
-                    "ent_db_type": "mesh",
-                    "id": "D002056",
-                    "hash": "BERN_V2/mesh/D002056",
-                    "ent_type": "disease",
-                },
-                "SPACY_NAIVE_WIKI/wikidata/Q6452285": {
-                    "linker_type": "SPACY_NAIVE_WIKI",
-                    "ent_db_type": "wikidata",
-                    "id": "Q6452285",
-                    "hash": "SPACY_NAIVE_WIKI/wikidata/Q6452285",
-                    "original_form": "ulcer",
-                    "description": "type of cutaneous condition",
-                },
-                "SPACY_NAIVE_WIKI/wikidata/Q170518": {
-                    "linker_type": "SPACY_NAIVE_WIKI",
-                    "ent_db_type": "wikidata",
-                    "id": "Q170518",
-                    "hash": "SPACY_NAIVE_WIKI/wikidata/Q170518",
-                    "original_form": "burns",
-                    "description": (
-                        "injury to flesh or skin, often caused by excessive"
-                        " heat"
-                    ),
-                },
-                "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847": {
-                    "linker_type": "LOCAL_NON_EL",
-                    "ent_db_type": "ent_db_type_local_gg",
-                    "id": "44afc2df2816ef50ecd4f847",
-                    "hash": "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847",
-                    "original_form": "is related to",
-                },
-            },
-            "muindex_eindex": [
-                ["0|0|1|0", "BERN_V2/mesh/D017719"],
-                ["0|0|5|0", "BERN_V2/mesh/D002056"],
-                ["0|0|1|0", "SPACY_NAIVE_WIKI/wikidata/Q6452285"],
-                ["0|0|5|0", "SPACY_NAIVE_WIKI/wikidata/Q170518"],
-                [
-                    "0|0|2|9",
-                    "LOCAL_NON_EL/ent_db_type_local_gg/44afc2df2816ef50ecd4f847",
-                ],
+        response_jsonlike = cast_response_to_unfolded(response)
+        rj_ref = {
+            "triples": [
+                {
+                    "mu": {"hash": "36dc4e2a7d2eae685d047bca0bc144bc9d95049b"},
+                    "source": {
+                        "hash": "c621319201d349cb4f42aabedbea2c73a1419b98",
+                        "text": "diabetic ulcers",
+                    },
+                    "relation": {
+                        "hash": "dda96135ac461d989729db27e63bdf3f88b724e3",
+                        "text": "is related to",
+                    },
+                    "target": {
+                        "hash": "0547fec2c8f9153e2ea5619090155c87fddf806b",
+                        "text": "burns",
+                    },
+                }
             ],
-            "muindex_candidate": {
-                "0|0|1|0": {
-                    "hash": "f531ac82d224ed6fe5bb5487",
-                    "text": "diabetic ulcers",
+            "map_mention_entity": [
+                {
+                    "mention": {
+                        "hash": "c621319201d349cb4f42aabedbea2c73a1419b98",
+                        "text": "diabetic ulcers",
+                    },
+                    "entity": {
+                        "linker_type": "BERN_V2",
+                        "ent_db_type": "mesh",
+                        "id": "D017719",
+                        "hash": "BERN_V2/mesh/D017719",
+                        "ent_type": "disease",
+                    },
                 },
-                "0|0|2|9": {
-                    "hash": "44afc2df2816ef50ecd4f847",
-                    "text": "is related to",
+                {
+                    "mention": {
+                        "hash": "0547fec2c8f9153e2ea5619090155c87fddf806b",
+                        "text": "burns",
+                    },
+                    "entity": {
+                        "linker_type": "BERN_V2",
+                        "ent_db_type": "mesh",
+                        "id": "D002056",
+                        "hash": "BERN_V2/mesh/D002056",
+                        "ent_type": "disease",
+                    },
                 },
-                "0|0|5|0": {
-                    "hash": "0e037ba9e99471d472ef9edc",
-                    "text": "burns",
+                {
+                    "mention": {
+                        "hash": "c621319201d349cb4f42aabedbea2c73a1419b98",
+                        "text": "diabetic ulcers",
+                    },
+                    "entity": {
+                        "linker_type": "SPACY_NAIVE_WIKI",
+                        "ent_db_type": "wikidata",
+                        "id": "Q6452285",
+                        "hash": "SPACY_NAIVE_WIKI/wikidata/Q6452285",
+                        "original_form": "ulcer",
+                        "description": "type of cutaneous condition",
+                    },
                 },
-            },
+                {
+                    "mention": {
+                        "hash": "0547fec2c8f9153e2ea5619090155c87fddf806b",
+                        "text": "burns",
+                    },
+                    "entity": {
+                        "linker_type": "SPACY_NAIVE_WIKI",
+                        "ent_db_type": "wikidata",
+                        "id": "Q170518",
+                        "hash": "SPACY_NAIVE_WIKI/wikidata/Q170518",
+                        "original_form": "burns",
+                        "description": (
+                            "injury to flesh or skin, often caused by"
+                            " excessive heat"
+                        ),
+                    },
+                },
+                {
+                    "mention": {
+                        "hash": "dda96135ac461d989729db27e63bdf3f88b724e3",
+                        "text": "is related to",
+                    },
+                    "entity": {
+                        "linker_type": "LOCAL_NON_EL",
+                        "ent_db_type": "ent_db_type_local_gg",
+                        "id": "dda96135ac461d989729db27e63bdf3f88b724e3",
+                        "hash": "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3",
+                        "original_form": "is related to",
+                    },
+                },
+            ],
         }
-        self.assertEqual(rd, rd_ref)
+        self.assertEqual(response_jsonlike, rj_ref)
 
 
 if __name__ == "__main__":

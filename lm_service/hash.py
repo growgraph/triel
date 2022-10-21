@@ -1,6 +1,6 @@
 from hashlib import blake2b
 
-blake2b_digest_size = 12
+blake2b_digest_size = 20
 
 
 def hashme(s: str):

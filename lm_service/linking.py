@@ -22,9 +22,6 @@ class EntityLinker(str, Enum):
     SPACY_BASIC = "SPACY_BASIC"
     LOCAL_NON_EL = "LOCAL_NON_EL"
 
-    def __repr__(self):
-        return self.name
-
 
 ent_db_type_local_gg = "ent_db_type_local_gg"
 
@@ -49,6 +46,16 @@ class Entity(JSONWizard):
 
     def __post_init__(self):
         self.hash = f"{self.linker_type}/{self.ent_db_type}/{self.id}"
+
+    def as_dict(self):
+        return {
+            k: v.value if isinstance(v, Enum) else v
+            for k, v in self.__dict__.items()
+            if v
+        }
+
+    def to_dict(self):
+        return self.as_dict()
 
 
 def interval_inclusion_metric(x, y):

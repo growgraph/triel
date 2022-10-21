@@ -212,15 +212,17 @@ class CandidateReference(AbsCandidate, JSONWizard):
 class SimplifiedCandidate(JSONWizard):
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
+        skip_defaults = True
 
     hash: str
-    text: str
+    text: str | None = None
 
 
 @dataclasses.dataclass(repr=False)
 class Candidate(AbsCandidate, JSONWizard):
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
+        skip_defaults = True
 
     _tokens: dict[TokenIndexT, Token] = dataclasses.field(default_factory=dict)
     _index_vec: list[TokenIndexT] = dataclasses.field(default_factory=list)
