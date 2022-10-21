@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lm_service"
-version = "0.1.0"
+version = "0.2.0"
 description = "Convert text to graphs. Create candidates. Use language models fo entity linking"
 authors = ["Alexander Belikov <alexander@growgraph.dev>"]
 
