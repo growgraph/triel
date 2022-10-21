@@ -44,8 +44,6 @@ api_spec = {
     "v2": {"url": "http://bern2.korea.ac.kr/plain", "text_field": "text"},
 }
 
-from aenum import Enum
-
 
 def to_dict(obj):
     if isinstance(obj, dict):
@@ -54,9 +52,6 @@ def to_dict(obj):
         return [to_dict(v) for v in obj]
     elif isinstance(obj, MuIndex):
         return obj.to_str()
-    # not the best
-    elif isinstance(obj, Enum):
-        return str(obj)
     elif dataclasses.is_dataclass(obj):
         return obj.to_dict()
     else:
@@ -99,12 +94,6 @@ def text_to_rel_graph(text, nlp, rules):
         k: v.to_simplified() for k, v in map_muindex_candidate.items()
     }
 
-    # return {
-    #     "triples": global_triples,
-    #     "eindex_entity": map_eindex_entity,
-    #     "muindex_eindex": map_c2e,
-    #     "muindex_candidate": map_muindex_candidate_simplified,
-    # }
     return RELResponse(
         triples=global_triples,
         eindex_entity=map_eindex_entity,

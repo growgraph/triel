@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import logging
 from enum import Enum
 
 import numpy as np
@@ -10,6 +11,8 @@ from spacy.tokens import Token
 from lm_service.hash import hashme
 from lm_service.onto import Candidate, MuIndex
 from lm_service.piles import ExtCandidateList
+
+logger = logging.getLogger(__name__)
 
 
 class EntityCandidateAlignmentError(Exception):
@@ -67,10 +70,20 @@ def interval_inclusion_metric(x, y):
     return (xb - xa) / int_size if int_size > 0 else 0
 
 
-def normalize_bern_entity(item) -> tuple[Entity | None, tuple | None]:
-    if len(item["id"]) > 0:
+def normalize_bern_entity(
+    item, prob_thr=0.8
+) -> tuple[Entity | None, tuple | None]:
+    if len(item["id"]) > 0 and item["prob"] > prob_thr:
         item_spec = item["id"][0].split(":")
-        db_type, item_id = item_spec
+        try:
+            db_type, item_id = item_spec
+        except:
+            logger.warning(
+                " non standard bern entity (does not look like"
+                f" `<ent_type>:<id>` : {item}"
+            )
+            item_id = item["id"][0]
+            db_type = None
         return Entity(
             linker_type=EntityLinker.BERN_V2,
             ent_type=item["obj"],
@@ -227,13 +240,14 @@ def link_candidate_entity(ec_spans: dict, ecl: ExtCandidateList, ix_phrases):
                     for k, int_ec in ec_spans.items()
                 ]
             )
-            if np.sum((dist > 0) & (dist < 1)) > 0:
-                raise EntityCandidateAlignmentError(
-                    "Entity indices and candidate indices are not aligned."
-                )
-            (ec_ixs,) = np.where((dist > 0.8).any(axis=1))
-            # map current candidate to entity index
-            map_c2e += [(MuIndex(False, *k, n), i_e[i]) for i in ec_ixs]
+            if dist.size > 0:
+                if np.sum((dist > 0) & (dist < 1)) > 0:
+                    raise EntityCandidateAlignmentError(
+                        "Entity indices and candidate indices are not aligned."
+                    )
+                (ec_ixs,) = np.where((dist > 0.8).any(axis=1))
+                # map current candidate to entity index
+                map_c2e += [(MuIndex(False, *k, n), i_e[i]) for i in ec_ixs]
 
     # e_index : (str)
     # c_index : (iphrase, sindex, cand_subindex)
@@ -282,7 +296,7 @@ def iterate_linking_over_phrases(
         response = link_foo(phrase, **link_foo_kwargs)
 
         # entities + spans
-        entity_pack_current = [foo_normalize(item) for item in response]
+        entity_pack_current = [foo_normalize(item) for item in response]  # type: ignore
         spans, ents = [], []
         for e, span in entity_pack_current:
             if e is not None:

@@ -5,11 +5,7 @@ import coreferee
 import spacy
 import yaml
 
-from lm_service.top import (
-    cast_response_to_unfolded,
-    text_to_rel_graph,
-    to_dict,
-)
+from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 
 class TestREL(unittest.TestCase):
@@ -21,6 +17,12 @@ class TestREL(unittest.TestCase):
 
     def test_iterate_linking_bern(self):
         text = "Diabetic ulcers are related to burns."
+        # text = (
+        #     "Thousands of exoplanets have been discovered by the end of the"
+        #     " 2010s; some have minimum mass measurements from the radial"
+        #     " velocity method while others that are seen to transit their"
+        #     " parent stars have measures of their physical size."
+        # )
         response = text_to_rel_graph(text, self.nlp, self.rules)
         response_jsonlike = cast_response_to_unfolded(response)
         rj_ref = {

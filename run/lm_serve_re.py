@@ -10,7 +10,7 @@ from flask_restful import Api
 from graph_cast.db.factory import ConfigFactory
 from graph_cast.util import ResourceHandler
 
-from lm_service.top import text_to_rel_graph, to_dict
+from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 app = Flask(__name__)
 api = Api(app)
@@ -57,8 +57,8 @@ if __name__ == "__main__":
             json_data = request.json
             text = json_data["text"]
             response = text_to_rel_graph(text, nlp, rules)
-            rd = to_dict(response)
-            jy = jsonify(rd)
+            response_jsonlike = cast_response_to_unfolded(response)
+            jy = jsonify(response_jsonlike)
             return jy, 200
 
     print(f" wsgi: host {wsgi_re.host}")
