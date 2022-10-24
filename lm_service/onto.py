@@ -216,6 +216,11 @@ class SimplifiedCandidate(JSONWizard):
 
     hash: str
     text: str | None = None
+    role: str | None = None
+
+    def set_role(self, s: str):
+        self.role = s
+        return self
 
 
 @dataclasses.dataclass(repr=False)

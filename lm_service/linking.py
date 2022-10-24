@@ -73,7 +73,9 @@ def interval_inclusion_metric(x, y):
 def normalize_bern_entity(
     item, prob_thr=0.8
 ) -> tuple[Entity | None, tuple | None]:
-    if len(item["id"]) > 0 and item["prob"] > prob_thr:
+    if len(item["id"]) > 0 and (
+        item["prob"] > prob_thr if "prob" in item else True
+    ):
         item_spec = item["id"][0].split(":")
         try:
             db_type, item_id = item_spec

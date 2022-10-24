@@ -20,6 +20,10 @@ from lm_service.text import normalize_text, phrases_to_triples
 logger = logging.getLogger(__name__)
 
 
+class UnknownCastTripleVersion(Exception):
+    pass
+
+
 @dataclasses.dataclass(repr=False, frozen=True, eq=True)
 class RELResponse(JSONWizard):
     """
@@ -102,17 +106,38 @@ def text_to_rel_graph(text, nlp, rules):
     )
 
 
-def cast_triple(item):
+def cast_triple(
+    item: tuple[
+        SimplifiedCandidate,
+        tuple[SimplifiedCandidate, SimplifiedCandidate, SimplifiedCandidate],
+    ],
+    cast_triple_version: str = "v0",
+):
     mu, (s, r, t) = item
-    return {
-        "mu": mu,
-        "source": s,
-        "relation": r,
-        "target": t,
-    }
+    if cast_triple_version == "v0":
+        result = {
+            "mu": mu,
+            "source": s,
+            "relation": r,
+            "target": t,
+        }
+    elif cast_triple_version == "v1":
+        result = {
+            "triple_index": mu,
+            "triple": tuple(  # type: ignore
+                [
+                    s.set_role("source"),
+                    r.set_role("relation"),
+                    t.set_role("target"),
+                ]
+            ),
+        }
+    else:
+        raise UnknownCastTripleVersion("")
+    return result
 
 
-def cast_response_to_unfolded(response: RELResponse):
+def cast_response_to_unfolded(response: RELResponse, **kwargs):
     muc = response.muindex_candidate
     map_eindex_entity = response.eindex_entity
 
@@ -158,6 +183,6 @@ def cast_response_to_unfolded(response: RELResponse):
             }
         ]
 
-    triples_upd = [cast_triple(x) for x in triples_upd]
+    triples_upd = [cast_triple(x, **kwargs) for x in triples_upd]  # type: ignore
     r = to_dict({"triples": triples_upd, "map_mention_entity": mu_ei_grounded})
     return r

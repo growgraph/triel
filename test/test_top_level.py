@@ -25,22 +25,32 @@ class TestREL(unittest.TestCase):
         # )
         response = text_to_rel_graph(text, self.nlp, self.rules)
         response_jsonlike = cast_response_to_unfolded(response)
+        response_jsonlike = cast_response_to_unfolded(
+            response, cast_triple_version="v1"
+        )
         rj_ref = {
             "triples": [
                 {
-                    "mu": {"hash": "36dc4e2a7d2eae685d047bca0bc144bc9d95049b"},
-                    "source": {
-                        "hash": "c621319201d349cb4f42aabedbea2c73a1419b98",
-                        "text": "diabetic ulcers",
+                    "triple_index": {
+                        "hash": "36dc4e2a7d2eae685d047bca0bc144bc9d95049b"
                     },
-                    "relation": {
-                        "hash": "dda96135ac461d989729db27e63bdf3f88b724e3",
-                        "text": "is related to",
-                    },
-                    "target": {
-                        "hash": "0547fec2c8f9153e2ea5619090155c87fddf806b",
-                        "text": "burns",
-                    },
+                    "triple": [
+                        {
+                            "hash": "c621319201d349cb4f42aabedbea2c73a1419b98",
+                            "text": "diabetic ulcers",
+                            "role": "source",
+                        },
+                        {
+                            "hash": "dda96135ac461d989729db27e63bdf3f88b724e3",
+                            "text": "is related to",
+                            "role": "relation",
+                        },
+                        {
+                            "hash": "0547fec2c8f9153e2ea5619090155c87fddf806b",
+                            "text": "burns",
+                            "role": "target",
+                        },
+                    ],
                 }
             ],
             "map_mention_entity": [
@@ -48,6 +58,7 @@ class TestREL(unittest.TestCase):
                     "mention": {
                         "hash": "c621319201d349cb4f42aabedbea2c73a1419b98",
                         "text": "diabetic ulcers",
+                        "role": "source",
                     },
                     "entity": {
                         "linker_type": "BERN_V2",
@@ -61,6 +72,7 @@ class TestREL(unittest.TestCase):
                     "mention": {
                         "hash": "0547fec2c8f9153e2ea5619090155c87fddf806b",
                         "text": "burns",
+                        "role": "target",
                     },
                     "entity": {
                         "linker_type": "BERN_V2",
@@ -74,6 +86,7 @@ class TestREL(unittest.TestCase):
                     "mention": {
                         "hash": "c621319201d349cb4f42aabedbea2c73a1419b98",
                         "text": "diabetic ulcers",
+                        "role": "source",
                     },
                     "entity": {
                         "linker_type": "SPACY_NAIVE_WIKI",
@@ -88,6 +101,7 @@ class TestREL(unittest.TestCase):
                     "mention": {
                         "hash": "0547fec2c8f9153e2ea5619090155c87fddf806b",
                         "text": "burns",
+                        "role": "target",
                     },
                     "entity": {
                         "linker_type": "SPACY_NAIVE_WIKI",
@@ -105,6 +119,7 @@ class TestREL(unittest.TestCase):
                     "mention": {
                         "hash": "dda96135ac461d989729db27e63bdf3f88b724e3",
                         "text": "is related to",
+                        "role": "relation",
                     },
                     "entity": {
                         "linker_type": "LOCAL_NON_EL",

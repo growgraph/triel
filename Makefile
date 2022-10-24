@@ -21,7 +21,21 @@ isort:
 autoflake:
 	autoflake --remove-unused-variables --verbose --in-place  ./lm_service/**/*py
 
-all: autoflake black isort mypy
+.PHONY: prettyyaml
+prettyyaml:
+	find . -name "*yaml" -and -not -ipath './.*' -type f | xargs pretty-format-yaml --autofix --indent 4
+
+.PHONY: prettyjson
+prettyjson:
+	find . -name "*json" -and -not -ipath './.*' -type f | xargs pretty-format-json --autofix --indent 4
+
+.PHONY: prettytoml
+prettytoml:
+	pretty-format-toml --autofix ./*toml
+	toml-sort -ia ./*.toml
+
+
+all: autoflake black isort mypy prettyjson prettytoml prettyyaml
 
 #.PHONY: pylint
 #pylint:

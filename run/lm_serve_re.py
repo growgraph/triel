@@ -57,7 +57,10 @@ if __name__ == "__main__":
             json_data = request.json
             text = json_data["text"]
             response = text_to_rel_graph(text, nlp, rules)
-            response_jsonlike = cast_response_to_unfolded(response)
+            response_jsonlike = cast_response_to_unfolded(
+                response, cast_triple_version="v1"
+            )
+
             jy = jsonify(response_jsonlike)
             return jy, 200
 
