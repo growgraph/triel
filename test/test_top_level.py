@@ -1,5 +1,6 @@
 import pkgutil
 import unittest
+from pprint import pprint
 
 import coreferee
 import spacy
@@ -24,7 +25,6 @@ class TestREL(unittest.TestCase):
         #     " parent stars have measures of their physical size."
         # )
         response = text_to_rel_graph(text, self.nlp, self.rules)
-        response_jsonlike = cast_response_to_unfolded(response)
         response_jsonlike = cast_response_to_unfolded(
             response, cast_triple_version="v1"
         )
@@ -131,7 +131,14 @@ class TestREL(unittest.TestCase):
                 },
             ],
         }
-        self.assertEqual(response_jsonlike, rj_ref)
+        for k in response_jsonlike:
+            item = response_jsonlike[k]
+            ref_item = rj_ref[k]
+            for x, y in zip(item, ref_item):
+                if x != y:
+                    pprint(x)
+                    pprint(y)
+                self.assertEqual(x, y)
 
 
 if __name__ == "__main__":

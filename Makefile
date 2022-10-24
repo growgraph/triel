@@ -27,7 +27,7 @@ prettyyaml:
 
 .PHONY: prettyjson
 prettyjson:
-	find . -name "*json" -and -not -ipath './.*' -type f | xargs pretty-format-json --autofix --indent 4
+	find . -name "*json" -and -not -ipath './.*' -type f | xargs pretty-format-json --autofix --indent 4 --no-sort-keys
 
 .PHONY: prettytoml
 prettytoml:

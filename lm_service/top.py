@@ -75,13 +75,16 @@ def text_to_rel_graph(text, nlp, rules):
         phrases, nlp, rules, window_size=2
     )
 
-    if "entityLinker" not in nlp.pipe_names:
-        nlp.add_pipe("entityLinker", last=True)
-
     phrase_entities_foos: dict = {
         EntityLinker.BERN_V2: lambda p: query_bern(p, "v2")["annotations"],
         EntityLinker.SPACY_NAIVE_WIKI: lambda p: nlp(p)._.linkedEntities,
     }
+
+    if (
+        EntityLinker.SPACY_NAIVE_WIKI in phrase_entities_foos
+        and "entityLinker" not in nlp.pipe_names
+    ):
+        nlp.add_pipe("entityLinker", last=True)
 
     map_eindex_entity, map_c2e = iterate_over_linkers(
         phrases=phrases,
@@ -89,6 +92,12 @@ def text_to_rel_graph(text, nlp, rules):
         map_muindex_candidate=map_muindex_candidate,
         phrase_entities_foos=phrase_entities_foos,
     )
+
+    if (
+        EntityLinker.SPACY_NAIVE_WIKI in phrase_entities_foos
+        and "entityLinker" in nlp.pipe_names
+    ):
+        nlp.remove_pipe("entityLinker")
 
     map_eindex_entity, map_c2e = link_unlinked_entities(
         map_eindex_entity, map_c2e, map_muindex_candidate
@@ -176,6 +185,15 @@ def cast_response_to_unfolded(response: RELResponse, **kwargs):
 
     mu_ei_grounded = []
     for mu, ei in mu_ei:
+        if mu not in muc:
+            logger.error(
+                f"index {mu} should be in muc. muc keys(): {muc.keys()}"
+            )
+        if ei not in map_eindex_entity:
+            logger.error(
+                f"index {mu} should be in muc. muc keys():"
+                f" {map_eindex_entity.keys()}"
+            )
         mu_ei_grounded += [
             {
                 "mention": muc[mu],

@@ -31,7 +31,7 @@ if __name__ == "__main__":
             " %(message)s"
         ),
         datefmt="%Y-%m-%d %H:%M:%S",
-        level=logging.INFO,
+        level=logging.ERROR,
         filemode="w",
     )
 

@@ -330,14 +330,19 @@ def iterate_over_linkers(
     map_c2e: list[tuple[MuIndex, str]] = []
 
     for link_mode, link_foo in phrase_entities_foos.items():
-        map_eindex_entity, map_c2e = iterate_linking_over_phrases(
-            phrases=phrases,
-            ecl=ecl,
-            map_eindex_entity=map_eindex_entity,
-            map_c2e=map_c2e,
-            link_foo=link_foo,
-            etype=link_mode,
-        )
+        try:
+            map_eindex_entity, map_c2e = iterate_linking_over_phrases(
+                phrases=phrases,
+                ecl=ecl,
+                map_eindex_entity=map_eindex_entity,
+                map_c2e=map_c2e,
+                link_foo=link_foo,
+                etype=link_mode,
+            )
+        except:
+            logger.error(
+                f"in iterate_over_linkers, linker {link_mode} failed."
+            )
 
     map_eindex_entity, map_c2e = link_unlinked_entities(
         map_eindex_entity, map_c2e, map_muindex_candidate
