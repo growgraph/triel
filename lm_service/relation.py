@@ -52,6 +52,7 @@ def find_candidates_bfs(
     deq: deque[int],
     candidate_pile: CandidatePile,
     how: ACandidateKind,
+    terminals=None,
     robust_mode=False,
     rules=None,
 ):
@@ -62,6 +63,7 @@ def find_candidates_bfs(
     :param deq: deque to keep track of vertices while traversing
     :param candidate_pile: pile to accumulate candidates
     :param how:
+    :param terminals:
     :param robust_mode: if True, try to resolve errors
     :param rules: if True, try to resolve errors
     :return:
@@ -87,10 +89,26 @@ def find_candidates_bfs(
     current_candidate = foo_map_class[how]()  # type: ignore
 
     if current_vertex not in candidate_pile.tokens:
-        find_subtree_dfs(graph, original_graph, deque([(current_vertex, 0)]), current_candidate, rules_current)  # type: ignore
+        find_subtree_dfs(
+            graph,
+            original_graph,
+            deque([(current_vertex, 0)]),
+            current_candidate,
+            terminals=terminals,
+            rules=rules_current,
+        )  # type: ignore
 
     if not current_candidate.empty:  # type: ignore
-        candidate_pile.append(current_candidate.clean_dangling_edges(robust_mode).sort_index())  # type: ignore
+        clean_candidate = current_candidate.clean_dangling_edges(robust_mode)  # type: ignore
+        try:
+            clean_candidate = clean_candidate.sort_index()
+            candidate_pile.append(clean_candidate)
+        except Exception as e:
+            logger.error(f" relation.find_candidates_bfs(): exception {e}")
+            logger.error(
+                " relaton.find_candidates_bfs() failed to sort"
+                f" {clean_candidate.tokens}"
+            )
 
     deq.extend(graph.successors(current_vertex))
     find_candidates_bfs(
@@ -99,6 +117,7 @@ def find_candidates_bfs(
         deq,
         candidate_pile,
         how,
+        terminals=terminals,
         robust_mode=robust_mode,
         rules=rules,
     )
@@ -110,6 +129,7 @@ def find_subtree_dfs(
     deq: deque[tuple[int, int]],
     current_candidate: CandidateType,
     rules=None,
+    terminals=None,
 ):
     """
 
@@ -118,18 +138,19 @@ def find_subtree_dfs(
     :param deq: (!) the initial call should have only a single vertex in q
     :param current_candidate:
     :param rules:
+    :param terminals: list of tokens (indices) that are interpreted as terminal for a given Candidate
     :return:
     """
 
     if not deq:
         return
     current_vertex, level = deq.pop()
-    if current_candidate.empty:
-        if level > 0:
-            return
-    else:
-        if level - current_candidate.max_level() > 1:
-            return
+    if current_candidate.empty and level > 0:
+        return
+    elif level - current_candidate.max_level() > 1:
+        return
+    elif terminals is not None and current_vertex in terminals:
+        return
 
     vtoken = Token(
         **graph.nodes[current_vertex],
@@ -160,7 +181,12 @@ def find_subtree_dfs(
         for v in successors:
             deq.append((v, level + 1))
             find_subtree_dfs(
-                graph, original_graph, deq, current_candidate, rules
+                graph,
+                original_graph,
+                deq,
+                current_candidate,
+                rules,
+                terminals=terminals,
             )
 
 
@@ -187,20 +213,22 @@ def graph_to_candidate_pile(
         mgraph,
         graph,
         deque(roots),
-        candidate_pile,
-        ACandidateKind.SOURCE_TARGET,
+        relation_pile,
+        ACandidateKind.RELATION,
+        terminals=[],
         rules=rules,
-        robust_mode=robust_mode,
+        robust_mode=True,
     )
 
     find_candidates_bfs(
         mgraph,
         graph,
         deque(roots),
-        relation_pile,
-        ACandidateKind.RELATION,
+        candidate_pile,
+        ACandidateKind.SOURCE_TARGET,
+        terminals=relation_pile.sroots,
         rules=rules,
-        robust_mode=True,
+        robust_mode=robust_mode,
     )
 
     source_candidates, target_candidates = sieve_sources_targets(

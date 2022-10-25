@@ -191,12 +191,12 @@ def phrases_to_triples(
             cnt += 1
         deq_len = len(deq_striples_meta)
 
-        if cnt > deq_len_original:
+        if cnt > deq_len_original + 5:
             failing_deq = list(deq_striples_meta)
             failing_phrases = sorted(set([r[0] for _, r, _ in failing_deq]))
             logger.error(
-                " the following meta-triples could not be resolved :"
-                f" {failing_phrases}"
+                " the following meta-triples could not be resolved [phrase"
+                f" numbers]: {failing_phrases}"
             )
             logger.error(f" Dangling metatriples : {failing_deq}")
             for iphrase in failing_phrases:  # type: ignore
@@ -330,6 +330,9 @@ def phrases_to_basis_triples(
             map_tree_subtree_index,
         ) = text_to_compound_index_graph(nlp, phrase, initial_phrase_index=k)
 
+        if plot_path is not None:
+            plot_graph(graph_relabeled, plot_path, f"phrase_{k}_full")
+
         pile, candidate_depot0, mod_graph = graph_to_candidate_pile(
             graph_relabeled, rules
         )
@@ -355,9 +358,6 @@ def phrases_to_basis_triples(
         striples += striples0
         striples_meta |= striples0_meta
         candidate_depot += candidate_depot0
-
-        if plot_path is not None:
-            plot_graph(graph_relabeled, plot_path, f"phrase_{k}_full")
 
         megagraph.add_nodes_from(graph_relabeled.nodes(data=True))
         megagraph.add_edges_from(graph_relabeled.edges())

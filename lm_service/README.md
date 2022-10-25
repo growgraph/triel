@@ -31,3 +31,8 @@ The output of REL therefore yields:
 5. $\kappa \mapsto \alpha$
 
 
+
+### POS and DEP references
+[dep](https://github.com/clir/clearnlp-guidelines/blob/master/md/specifications/dependency_labels.md) and [POS](https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html)
+
+

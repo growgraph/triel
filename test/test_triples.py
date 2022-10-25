@@ -5,11 +5,11 @@ import sys
 import unittest
 from pathlib import Path
 from pprint import pprint
+from test.reference.distances import reference_distance
 
 import coreferee
 import spacy
 import yaml
-from reference.distances import reference_distance
 
 from lm_service.coref import graph_component_maps, render_coref_maps_wrapper
 from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
@@ -90,8 +90,15 @@ class TestTriples(unittest.TestCase):
             " velocity method while others that are seen to transit their"
             " parent stars have measures of their physical size."
         ),
+        # "terminals_test": (
+        #     "For the planned mission duration of 3.5 years, CHEOPS is to"
+        #     " measure the size of known transiting exoplanets orbiting bright"
+        #     " and nearby stars  as well as search for transits of exoplanets"
+        #     " previously discovered via radial velocity."
+        # ),
     }
 
+    @unittest.skip("distance work")
     def test_distances(self):
         distance_check = {}
         for key, document in self.documents.items():
@@ -145,11 +152,11 @@ class TestTriples(unittest.TestCase):
         documents = {
             key: self.documents[key]
             for key in [
-                # "near-field",
-                # "cheops0_trunc",
+                "near-field",
+                "cheops0_trunc",
                 "cheops_ext",
-                # "photometric",
-                # "thousands",
+                "photometric",
+                "thousands",
             ]
         }
         acc_triples = []
@@ -217,7 +224,7 @@ class TestTriples(unittest.TestCase):
                 ),
                 (
                     "firstSmallClassMissionInEsaCosmicVisionScienceProgramme",
-                    "LaunchesOn",
+                    "LaunchedOn",
                     "18December2019",
                 ),
             ],
@@ -230,12 +237,12 @@ class TestTriples(unittest.TestCase):
                 ),
                 (
                     "precisionOf150PpmMinFor9thMagnitudeStar",
-                    "limitsBy",
+                    "limitedBy",
                     "stellarPhotonNoise",
                 ),
                 ("This", "correspondsTo", "transitOfEarthSizedPlanet"),
-                ("transitOfEarthSizedPlanet", "orbits", "star"),
-                ("transitOfEarthSizedPlanet", "orbitsOf", "09RIn60Day"),
+                ("transitOfEarthSizedPlanet", "orbited", "star"),
+                ("transitOfEarthSizedPlanet", "orbitedOf", "09RIn60Day"),
             ],
             "thousands": [
                 ("thousandOfExoplanets", "isDiscoveredBy", "endOf2010"),
@@ -301,7 +308,7 @@ class TestTriples(unittest.TestCase):
             ),
             MuIndex(meta=True, phrase=1, token="000", running=1): (
                 "firstSmallClassMissionInEsaCosmicVisionScienceProgramme",
-                "launchesOn",
+                "launchedOn",
                 "18December2019",
             ),
             MuIndex(meta=True, phrase=2, token="000", running=0): (
@@ -311,7 +318,7 @@ class TestTriples(unittest.TestCase):
             ),
             MuIndex(meta=True, phrase=2, token="000", running=1): (
                 "opticalRitcheyChretienTelescopeWithApertureOf30Cm",
-                "mountsOn",
+                "mountedOn",
                 "standardSmallSatellitePlatform",
             ),
             MuIndex(meta=True, phrase=3, token="000", running=0): (

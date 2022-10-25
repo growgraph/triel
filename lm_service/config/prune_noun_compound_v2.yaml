@@ -21,6 +21,10 @@ sourcetarget:
             value: CD
         -   key: dep_
             value: nsubj
+    -   -   key: tag_
+            value: VBG
+        -   key: dep_
+            value: nsubj
 #    - - how: startswith
 #        key: tag_
 #        value: JJ
@@ -87,6 +91,15 @@ relation:
         -   how: __ne__
             key: dep_
             value: amod
+        -   how: __ne__
+            key: dep_
+            value: nsubj
+        -   how: __ne__
+            key: dep_
+            value: conj
+        -   how: __ne__
+            key: dep_
+            value: xcomp
     -   -   key: tag_
             value: VBN
         -   key: dep_
@@ -110,6 +123,16 @@ relation:
     -   -   how: startswith
             key: tag_
             value: JJ
+        -   key: dep_
+            value: acomp
+    -   -   how: startswith
+            key: tag_
+            value: VBG
+        -   key: dep_
+            value: pcomp
+    -   -   how: startswith
+            key: tag_
+            value: VBN
         -   key: dep_
             value: acomp
     secondary_preceding:

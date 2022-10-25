@@ -208,7 +208,7 @@ class CandidateReference(AbsCandidate, JSONWizard):
         return f"{self.sroot}"
 
 
-@dataclasses.dataclass(repr=False)
+@dataclasses.dataclass(eq=True, order=True)
 class SimplifiedCandidate(JSONWizard):
     class _(JSONWizard.Meta):
         key_transform_with_dump = "SNAKE"
@@ -293,7 +293,10 @@ class Candidate(AbsCandidate, JSONWizard):
         ]
         if len(roots) > 1:
             logger.error(f" {len(roots)} roots: dumping self")
-            logger.error(f" {self._tokens}")
+            logger.error(
+                f" {sorted(self.stokens)} :"
+                f" {' '.join([self.token(x).text for x in sorted(self.stokens)])}"
+            )
             if robust_mode:
                 logger.error(
                     f" robust_mode picking a root with a smaller index"
@@ -306,7 +309,9 @@ class Candidate(AbsCandidate, JSONWizard):
                 self._recompute_root(robust_mode)
             else:
                 raise ValueError(
-                    f" candidate has {len(roots)} roots, should be one"
+                    f" candidate has {len(roots)} roots {roots} | candidate"
+                    f" <{' '.join([self.token(x).text for x in sorted(self.stokens)])}>,"
+                    " should be one"
                 )
         elif len(roots) == 1:
             self._root = next(iter(roots))
@@ -323,7 +328,6 @@ class Candidate(AbsCandidate, JSONWizard):
 
     @property
     def stokens(self):
-        return self._index_vec
         return self._index_vec
 
     def token(self, i, index=False):
@@ -683,7 +687,11 @@ class ACandidateKind(Enum):
 class Relation(Candidate):
     @property
     def passive(self):
-        return any([t.dep_ == "auxpass" for t in self._tokens.values()])
+        flags = [
+            t.dep_ in ("auxpass", "ccomp", "acl")
+            for t in self._tokens.values()
+        ]
+        return any(flags)
 
     def has_prepositions(self):
         return any(t.dep_ == "prep" and t.tag_ == "IN" for t in self.tokens)
@@ -707,14 +715,18 @@ class Relation(Candidate):
             # find auxpass, inflect it to was
             for s in self.stokens:
                 token = self.token(s)
-                if token.dep_ == "auxpass":
+                if token.dep_ in ("auxpass", "ccomp", "acl"):
                     lemmas = getLemma(token.text, upos="VERB")
                     if lemmas:
                         # -> "was"
                         # inflected = getInflection(lemmas[0], tag="VBD")
                         # -> "is"
-                        inflected = getInflection(lemmas[0], tag="VBZ")
-
+                        if token.dep_ == "auxpass":
+                            inflected = getInflection(lemmas[0], tag="VBZ")
+                        elif token.dep_ == "acl":
+                            inflected = getInflection(lemmas[0], tag="VBD")
+                        else:
+                            inflected = []
                         if inflected:
                             token.text = inflected[0]
         else:

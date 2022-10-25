@@ -184,22 +184,26 @@ def cast_response_to_unfolded(response: RELResponse, **kwargs):
     mu_ei = response.muindex_eindex
 
     mu_ei_grounded = []
+
+    connected_mus = set(
+        [x for t in response.triples.values() for x in t]
+        + list(response.triples.keys())
+    )
+
     for mu, ei in mu_ei:
-        if mu not in muc:
-            logger.error(
-                f"index {mu} should be in muc. muc keys(): {muc.keys()}"
-            )
-        if ei not in map_eindex_entity:
-            logger.error(
-                f"index {mu} should be in muc. muc keys():"
-                f" {map_eindex_entity.keys()}"
-            )
-        mu_ei_grounded += [
-            {
-                "mention": muc[mu],
-                "entity": map_eindex_entity[ei],
-            }
-        ]
+        if mu in connected_mus:
+            try:
+                mu_ei_grounded += [
+                    {
+                        "mention": muc[mu],
+                        "entity": map_eindex_entity[ei],
+                    }
+                ]
+            except Exception as e:
+                logger.error(
+                    f"Exception in top.cast_response_to_unfolded : {e}"
+                )
+                logger.error(f" mu = {mu}, ei = {ei}")
 
     triples_upd = [cast_triple(x, **kwargs) for x in triples_upd]  # type: ignore
     r = to_dict({"triples": triples_upd, "map_mention_entity": mu_ei_grounded})
