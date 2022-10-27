@@ -13,6 +13,7 @@ from lm_service.linking import (
     iterate_over_linkers,
     link_unlinked_entities,
     query_bern,
+    query_fishing,
 )
 from lm_service.onto import MuIndex, SimplifiedCandidate
 from lm_service.text import normalize_text, phrases_to_triples
@@ -52,36 +53,22 @@ def to_dict(obj):
         return obj
 
 
-def text_to_rel_graph(text, nlp, rules):
+def text_to_rel_graph(text, nlp, rules, config=None):
+    if config is None:
+        config = {"linkers": list()}
+
     phrases = normalize_text(text, nlp)
 
     global_triples, map_muindex_candidate, ecl = phrases_to_triples(
         phrases, nlp, rules, window_size=2
     )
 
-    phrase_entities_foos: dict = {
-        EntityLinker.BERN_V2: lambda p: query_bern(p, "v2")["annotations"],
-        EntityLinker.SPACY_NAIVE_WIKI: lambda p: nlp(p)._.linkedEntities,
-    }
-
-    if (
-        EntityLinker.SPACY_NAIVE_WIKI in phrase_entities_foos
-        and "entityLinker" not in nlp.pipe_names
-    ):
-        nlp.add_pipe("entityLinker", last=True)
-
     map_eindex_entity, map_c2e = iterate_over_linkers(
         phrases=phrases,
         ecl=ecl,
         map_muindex_candidate=map_muindex_candidate,
-        phrase_entities_foos=phrase_entities_foos,
+        linkers=config["linkers"],
     )
-
-    if (
-        EntityLinker.SPACY_NAIVE_WIKI in phrase_entities_foos
-        and "entityLinker" in nlp.pipe_names
-    ):
-        nlp.remove_pipe("entityLinker")
 
     map_eindex_entity, map_c2e = link_unlinked_entities(
         map_eindex_entity, map_c2e, map_muindex_candidate

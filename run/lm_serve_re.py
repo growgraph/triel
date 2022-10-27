@@ -10,6 +10,7 @@ from flask_restful import Api
 from graph_cast.db.factory import ConfigFactory
 from graph_cast.util import ResourceHandler
 
+from lm_service.linking import EntityLinker
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 app = Flask(__name__)
@@ -63,7 +64,11 @@ if __name__ == "__main__":
             logger.info(request.json)
             json_data = request.json
             text = json_data["text"]
-            response = text_to_rel_graph(text, nlp, rules)
+            config = {
+                "linkers": [EntityLinker.FISHING, EntityLinker.LOCAL_NON_EL]
+            }
+
+            response = text_to_rel_graph(text, nlp, rules, config=config)
             response_jsonlike = cast_response_to_unfolded(
                 response, cast_triple_version="v1"
             )

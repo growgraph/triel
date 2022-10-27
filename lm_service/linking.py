@@ -24,6 +24,14 @@ api_spec = {
         "text_field": "sample_text",
     },
     "v2": {"url": "http://bern2.korea.ac.kr/plain", "text_field": "text"},
+    "fishing": {
+        "url": "http://192.168.1.197:8090/service/disambiguate",
+        "text_field": "text",
+        "extra_args": {
+            "language": {"lang": "en"},
+            "mentions": ["ner", "wikipedia"],
+        },
+    },
 }
 
 
@@ -36,6 +44,7 @@ class EntityLinker(str, Enum):
     SPACY_NAIVE_WIKI = "SPACY_NAIVE_WIKI"
     SPACY_BASIC = "SPACY_BASIC"
     LOCAL_NON_EL = "LOCAL_NON_EL"
+    FISHING = "FISHING"
 
 
 ent_db_type_local_gg = "ent_db_type_local_gg"
@@ -104,6 +113,35 @@ def normalize_bern_entity(
             ent_db_type=db_type,
             id=item_id,
         ), (item["span"]["begin"], item["span"]["end"])
+    else:
+        return None, None
+
+
+def normalize_fishing_entity(
+    item, prob_thr=0.4
+) -> tuple[Entity | None, tuple | None]:
+    if (
+        item["confidence_score"] > prob_thr
+        if "confidence_score" in item
+        else True
+    ):
+        if "wikidataId" in item:
+            db_type = "wikidataId"
+            item_id = item["wikidataId"]
+        elif "wikipediaExternalRef" in item:
+            db_type = "wikipediaExternalRef"
+            item_id = item["wikipediaExternalRef"]
+        else:
+            logger.warning(
+                " non standard fishing entity (does not look like"
+                f" `<ent_type>:<id>` : {item}"
+            )
+            return None, None
+        return Entity(
+            linker_type=EntityLinker.FISHING,
+            ent_db_type=db_type,
+            id=item_id,
+        ), (item["offsetStart"], item["offsetEnd"])
     else:
         return None, None
 
@@ -275,13 +313,18 @@ entity_normalized_foo_map = {
     EntityLinker.BERN_V2: normalize_bern_entity,
     EntityLinker.SPACY_NAIVE_WIKI: normalize_naive_wiki_entity_linker,
     EntityLinker.SPACY_BASIC: normalize_spacy_basic,
+    EntityLinker.FISHING: normalize_fishing_entity,
+}
+
+phrase_entities_foos: dict = {
+    EntityLinker.BERN_V2: lambda p: query_bern(p, "v2")["annotations"],
+    EntityLinker.FISHING: lambda p: query_fishing(p)["entities"],
 }
 
 
 def link_over_phrases(
     phrases,
     ecl,
-    link_foo,
     link_foo_kwargs=None,
     map_eindex_entity=None,
     map_c2e=None,
@@ -307,6 +350,7 @@ def link_over_phrases(
         map_c2e = list()
 
     foo_normalize = entity_normalized_foo_map[etype]
+    link_foo = phrase_entities_foos[etype]
     sep = " "
     text = sep.join(phrases)
     pm = PhraseMapper(phrases, sep)
@@ -337,13 +381,13 @@ def iterate_over_linkers(
     phrases: list[str],
     ecl: ExtCandidateList,
     map_muindex_candidate: dict[MuIndex, Candidate],
-    phrase_entities_foos: dict,
+    linkers: list,
 ) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
 
     map_eindex_entity: dict[str, Entity] = {}
     map_c2e: list[tuple[MuIndex, str]] = []
 
-    for link_mode, link_foo in phrase_entities_foos.items():
+    for link_mode in linkers:
         with Timer() as t_linking:
 
             try:
@@ -352,7 +396,6 @@ def iterate_over_linkers(
                     ecl=ecl,
                     map_eindex_entity=map_eindex_entity,
                     map_c2e=map_c2e,
-                    link_foo=link_foo,
                     etype=link_mode,
                 )
             except Exception as e:
@@ -378,6 +421,16 @@ def query_bern(text, version="v2"):
     url = api_spec[version]["url"]
     text_field = api_spec[version]["text_field"]
     return requests.post(url, json={text_field: text}, verify=False).json()
+
+
+def query_fishing(text):
+    key = "fishing"
+    url = api_spec[key]["url"]
+    text_field = api_spec[key]["text_field"]
+    extras = api_spec[key]["extra_args"]
+    return requests.post(
+        url, json={text_field: text, **extras}, verify=False
+    ).json()
 
 
 class PhraseMapper:

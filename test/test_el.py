@@ -152,7 +152,6 @@ class TestEL(unittest.TestCase):
         map_eindex_entity, map_c2e = link_over_phrases(
             phrases=phrases,
             ecl=ecl,
-            link_foo=foo_link,
         )
 
         map_eindex_entity_str = to_dict(map_eindex_entity)
@@ -189,6 +188,7 @@ class TestEL(unittest.TestCase):
         self.assertEqual(map_eindex_entity_str, map_eindex_entity_str_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
+    @unittest.skip("obsolete")
     def test_iterate_naive_wiki_linking(self):
 
         text = "Diabetic ulcers are related to burns."
@@ -217,7 +217,6 @@ class TestEL(unittest.TestCase):
             ecl=ecl,
             map_eindex_entity=map_eindex_entity,
             map_c2e=map_c2e,
-            link_foo=foo_link,
             etype=EntityLinker.SPACY_NAIVE_WIKI,
         )
 
@@ -260,6 +259,7 @@ class TestEL(unittest.TestCase):
         self.assertEqual(map_eindex_entity_str, map_eindex_entity_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
+    @unittest.skip("obsolete")
     def test_iterate_spacy(self):
 
         text = (
@@ -284,7 +284,6 @@ class TestEL(unittest.TestCase):
         map_eindex_entity, map_c2e = link_over_phrases(
             phrases=phrases,
             ecl=ecl,
-            link_foo=phrase_to_spacy_basic_entities,
             link_foo_kwargs={"nlp": self.nlp},
             etype=EntityLinker.SPACY_BASIC,
         )
@@ -340,16 +339,13 @@ class TestEL(unittest.TestCase):
 
         phrase_entities_foos: dict = {
             EntityLinker.BERN_V2: lambda p: self.response_bern["annotations"],
-            EntityLinker.SPACY_NAIVE_WIKI: lambda p: self.nlp(
-                p
-            )._.linkedEntities,
         }
 
         map_eindex_entity, map_c2e = iterate_over_linkers(
             phrases=phrases,
             ecl=ecl,
             map_muindex_candidate=map_muindex_candidate,
-            phrase_entities_foos=phrase_entities_foos,
+            linkers=phrase_entities_foos,
         )
 
         map_eindex_entity_str = to_dict(map_eindex_entity)
@@ -370,25 +366,6 @@ class TestEL(unittest.TestCase):
                     "hash": "BERN_V2/mesh/D002056",
                     "ent_type": "disease",
                 },
-                "SPACY_NAIVE_WIKI/wikidata/Q6452285": {
-                    "linker_type": "SPACY_NAIVE_WIKI",
-                    "ent_db_type": "wikidata",
-                    "id": "Q6452285",
-                    "hash": "SPACY_NAIVE_WIKI/wikidata/Q6452285",
-                    "original_form": "ulcer",
-                    "description": "type of cutaneous condition",
-                },
-                "SPACY_NAIVE_WIKI/wikidata/Q170518": {
-                    "linker_type": "SPACY_NAIVE_WIKI",
-                    "ent_db_type": "wikidata",
-                    "id": "Q170518",
-                    "hash": "SPACY_NAIVE_WIKI/wikidata/Q170518",
-                    "original_form": "burns",
-                    "description": (
-                        "injury to flesh or skin, often caused by excessive"
-                        " heat"
-                    ),
-                },
                 "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3": {
                     "linker_type": "LOCAL_NON_EL",
                     "ent_db_type": "ent_db_type_local_gg",
@@ -405,14 +382,6 @@ class TestEL(unittest.TestCase):
                 (
                     MuIndex(meta=False, phrase=0, token="005", running=0),
                     "BERN_V2/mesh/D002056",
-                ),
-                (
-                    MuIndex(meta=False, phrase=0, token="001", running=0),
-                    "SPACY_NAIVE_WIKI/wikidata/Q6452285",
-                ),
-                (
-                    MuIndex(meta=False, phrase=0, token="005", running=0),
-                    "SPACY_NAIVE_WIKI/wikidata/Q170518",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="002", running=9),
@@ -492,6 +461,127 @@ class TestEL(unittest.TestCase):
                 (
                     MuIndex(meta=False, phrase=1, token="006", running=0),
                     "BERN_V2/mesh/D001120",
+                ),
+            ],
+        )
+
+    def test_fishing(self):
+        text = "Diabetic ulcers are related to skin burns."
+        response = {
+            "date": "2022-10-27T21:26:19.815994Z",
+            "entities": [
+                {
+                    "confidence_score": 0.5669,
+                    "domains": ["Medicine"],
+                    "offsetEnd": 15,
+                    "offsetStart": 0,
+                    "rawName": "Diabetic ulcers",
+                    "wikidataId": "Q2078852",
+                    "wikipediaExternalRef": 3120850,
+                },
+                {
+                    "confidence_score": 0.4572,
+                    "domains": ["Engineering", "Chemistry"],
+                    "offsetEnd": 41,
+                    "offsetStart": 31,
+                    "rawName": "skin burns",
+                    "wikidataId": "Q170518",
+                    "wikipediaExternalRef": 233082,
+                },
+            ],
+            "global_categories": [
+                {
+                    "category": "Hazards of outdoor recreation",
+                    "page_id": 69268770,
+                    "source": "wikipedia-en",
+                    "weight": 0.14285714285714288,
+                },
+                {
+                    "category": "Medical emergencies",
+                    "page_id": 741752,
+                    "source": "wikipedia-en",
+                    "weight": 0.14285714285714288,
+                },
+                {
+                    "category": (
+                        "Skin conditions resulting from physical factors"
+                    ),
+                    "page_id": 19985316,
+                    "source": "wikipedia-en",
+                    "weight": 0.14285714285714288,
+                },
+                {
+                    "category": "Burns",
+                    "page_id": 44260517,
+                    "source": "wikipedia-en",
+                    "weight": 0.14285714285714288,
+                },
+                {
+                    "category": "Acute pain",
+                    "page_id": 49648845,
+                    "source": "wikipedia-en",
+                    "weight": 0.14285714285714288,
+                },
+                {
+                    "category": "Heat transfer",
+                    "page_id": 23011909,
+                    "source": "wikipedia-en",
+                    "weight": 0.14285714285714288,
+                },
+                {
+                    "category": "Necrosis",
+                    "page_id": 36631009,
+                    "source": "wikipedia-en",
+                    "weight": 0.14285714285714288,
+                },
+            ],
+            "language": {"conf": 1.0, "lang": "en"},
+            "nbest": False,
+            "runtime": 78,
+            "software": "entity-fishing",
+            "text": "Diabetic ulcers are related to skin burns.",
+            "version": "0.0.5",
+        }
+        phs = normalize_text(text, self.nlp)
+
+        (
+            striples,
+            striples_meta,
+            candidate_depot,
+            relations,
+            _,
+        ) = phrases_to_basis_triples(self.nlp, self.rules, phs)
+
+        ecl = candidate_depot.unfold_conjunction()
+
+        # phrase index set
+        from lm_service.linking import normalize_fishing_entity
+
+        normalized = [
+            normalize_fishing_entity(item) for item in response["entities"]
+        ]
+
+        pm = PhraseMapper([text])
+
+        normalized_ip: defaultdict[
+            int, list[tuple[str, tuple[int, int]]]
+        ] = defaultdict(list)
+        for e, span in normalized:
+            ip, (ia, ib) = pm.span(span)
+            normalized_ip[ip] += [(e.hash, (ia, ib))]
+
+        map_c2e = link_candidate_entity(normalized_ip, ecl)
+
+        self.assertEqual(
+            map_c2e,
+            [
+                (
+                    MuIndex(meta=False, phrase=0, token="001", running=0),
+                    "FISHING/wikidataId/Q2078852",
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="006", running=0),
+                    "FISHING/wikidataId/Q170518",
                 ),
             ],
         )

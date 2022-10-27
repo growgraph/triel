@@ -6,6 +6,7 @@ import coreferee
 import spacy
 import yaml
 
+from lm_service.linking import EntityLinker
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 
@@ -24,7 +25,8 @@ class TestREL(unittest.TestCase):
         #     " velocity method while others that are seen to transit their"
         #     " parent stars have measures of their physical size."
         # )
-        response = text_to_rel_graph(text, self.nlp, self.rules)
+        config = {"linkers": [EntityLinker.BERN_V2, EntityLinker.LOCAL_NON_EL]}
+        response = text_to_rel_graph(text, self.nlp, self.rules, config=config)
         response_jsonlike = cast_response_to_unfolded(
             response, cast_triple_version="v1"
         )
@@ -82,39 +84,39 @@ class TestREL(unittest.TestCase):
                         "ent_type": "disease",
                     },
                 },
-                {
-                    "mention": {
-                        "hash": "c621319201d349cb4f42aabedbea2c73a1419b98",
-                        "text": "diabetic ulcers",
-                        "role": "source",
-                    },
-                    "entity": {
-                        "linker_type": "SPACY_NAIVE_WIKI",
-                        "ent_db_type": "wikidata",
-                        "id": "Q6452285",
-                        "hash": "SPACY_NAIVE_WIKI/wikidata/Q6452285",
-                        "original_form": "ulcer",
-                        "description": "type of cutaneous condition",
-                    },
-                },
-                {
-                    "mention": {
-                        "hash": "0547fec2c8f9153e2ea5619090155c87fddf806b",
-                        "text": "burns",
-                        "role": "target",
-                    },
-                    "entity": {
-                        "linker_type": "SPACY_NAIVE_WIKI",
-                        "ent_db_type": "wikidata",
-                        "id": "Q170518",
-                        "hash": "SPACY_NAIVE_WIKI/wikidata/Q170518",
-                        "original_form": "burns",
-                        "description": (
-                            "injury to flesh or skin, often caused by"
-                            " excessive heat"
-                        ),
-                    },
-                },
+                # {
+                #     "mention": {
+                #         "hash": "c621319201d349cb4f42aabedbea2c73a1419b98",
+                #         "text": "diabetic ulcers",
+                #         "role": "source",
+                #     },
+                #     "entity": {
+                #         "linker_type": "SPACY_NAIVE_WIKI",
+                #         "ent_db_type": "wikidata",
+                #         "id": "Q6452285",
+                #         "hash": "SPACY_NAIVE_WIKI/wikidata/Q6452285",
+                #         "original_form": "ulcer",
+                #         "description": "type of cutaneous condition",
+                #     },
+                # },
+                # {
+                #     "mention": {
+                #         "hash": "0547fec2c8f9153e2ea5619090155c87fddf806b",
+                #         "text": "burns",
+                #         "role": "target",
+                #     },
+                #     "entity": {
+                #         "linker_type": "SPACY_NAIVE_WIKI",
+                #         "ent_db_type": "wikidata",
+                #         "id": "Q170518",
+                #         "hash": "SPACY_NAIVE_WIKI/wikidata/Q170518",
+                #         "original_form": "burns",
+                #         "description": (
+                #             "injury to flesh or skin, often caused by"
+                #             " excessive heat"
+                #         ),
+                #     },
+                # },
                 {
                     "mention": {
                         "hash": "dda96135ac461d989729db27e63bdf3f88b724e3",
