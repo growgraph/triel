@@ -4,7 +4,6 @@ import dataclasses
 import logging
 from collections import deque
 
-import requests
 from dataclass_wizard import JSONWizard
 
 from lm_service.hash import hashme
@@ -13,6 +12,7 @@ from lm_service.linking import (
     EntityLinker,
     iterate_over_linkers,
     link_unlinked_entities,
+    query_bern,
 )
 from lm_service.onto import MuIndex, SimplifiedCandidate
 from lm_service.text import normalize_text, phrases_to_triples
@@ -39,16 +39,6 @@ class RELResponse(JSONWizard):
     muindex_candidate: dict[str, SimplifiedCandidate]
 
 
-# only v2 is supported by the API
-api_spec = {
-    "v1": {
-        "url": "https://bern.korea.ac.kr/plain",
-        "text_field": "sample_text",
-    },
-    "v2": {"url": "http://bern2.korea.ac.kr/plain", "text_field": "text"},
-}
-
-
 def to_dict(obj):
     if isinstance(obj, dict):
         return {to_dict(k): to_dict(v) for k, v in obj.items()}
@@ -60,12 +50,6 @@ def to_dict(obj):
         return obj.to_dict()
     else:
         return obj
-
-
-def query_bern(text, version="v2"):
-    url = api_spec[version]["url"]
-    text_field = api_spec[version]["text_field"]
-    return requests.post(url, json={text_field: text}, verify=False).json()
 
 
 def text_to_rel_graph(text, nlp, rules):

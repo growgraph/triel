@@ -2,17 +2,29 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+from collections import defaultdict
 from enum import Enum
 
 import numpy as np
+import requests
 from dataclass_wizard import JSONWizard
 from spacy.tokens import Token
 
 from lm_service.hash import hashme
 from lm_service.onto import Candidate, MuIndex
 from lm_service.piles import ExtCandidateList
+from lm_service.util import Timer
 
 logger = logging.getLogger(__name__)
+
+# only v2 is supported by the API
+api_spec = {
+    "v1": {
+        "url": "https://bern.korea.ac.kr/plain",
+        "text_field": "sample_text",
+    },
+    "v2": {"url": "http://bern2.korea.ac.kr/plain", "text_field": "text"},
+}
 
 
 class EntityCandidateAlignmentError(Exception):
@@ -214,32 +226,31 @@ def link_unlinked_entities(
     return map_eindex_entity, map_c2e
 
 
-def link_candidate_entity(ec_spans: dict, ecl: ExtCandidateList, ix_phrases):
+def link_candidate_entity(
+    phrase_to_ent_spans: defaultdict[int, list[tuple[str, tuple[int, int]]]],
+    ecl: ExtCandidateList,
+):
     """
-        NB: in future (iphrase, i_ent): ent
-            will also be used for linking used
-    :param ec_spans: (iphrase, i_ent): (span_beg, span_end)
+
+    :param phrase_to_ent_spans: iphrase : (i_ent, (span_beg, span_end))
     :param ecl:
-    :param ix_phrases: phrases which to link
-    :return:
+    :return: MuIndex(iphrase, sindex, cand_subindex, token_index) : e_index (str)
     """
 
-    # pick phrase indices
-    i_e = list(ec_spans.keys())
-    # c_index : (iphrase, sindex, cand_subindex, token_index) : [spans]
+    map_candidate2entity = []
+    # filter on phrase
+    ecl.set_filter(lambda x: x[0] in phrase_to_ent_spans.keys())
 
-    map_c2e = []
-    ecl.set_filter(lambda x: x[0] in ix_phrases)
-
-    for k, cand_list in ecl:
-        for n, candidate in enumerate(cand_list):
+    for (iphrase, stoken), cand_list in ecl:
+        ec_spans_phrase = phrase_to_ent_spans[iphrase]
+        for jcandidate, candidate in enumerate(cand_list):
             dist = np.array(
                 [
                     [
                         interval_inclusion_metric((t.idx, t.idx_eot), int_ec)
                         for t in candidate.tokens
                     ]
-                    for k, int_ec in ec_spans.items()
+                    for _, int_ec in ec_spans_phrase
                 ]
             )
             if dist.size > 0:
@@ -249,12 +260,15 @@ def link_candidate_entity(ec_spans: dict, ecl: ExtCandidateList, ix_phrases):
                     )
                 (ec_ixs,) = np.where((dist > 0.8).any(axis=1))
                 # map current candidate to entity index
-                map_c2e += [(MuIndex(False, *k, n), i_e[i]) for i in ec_ixs]
+                map_candidate2entity += [
+                    (
+                        MuIndex(False, iphrase, stoken, jcandidate),
+                        ec_spans_phrase[i][0],
+                    )
+                    for i in ec_ixs
+                ]
 
-    # e_index : (str)
-    # c_index : (iphrase, sindex, cand_subindex)
-    # 1 -> n : cand -> entity (could be easily generalizable)
-    return map_c2e
+    return map_candidate2entity
 
 
 entity_normalized_foo_map = {
@@ -264,7 +278,7 @@ entity_normalized_foo_map = {
 }
 
 
-def iterate_linking_over_phrases(
+def link_over_phrases(
     phrases,
     ecl,
     link_foo,
@@ -290,32 +304,32 @@ def iterate_linking_over_phrases(
     if map_eindex_entity is None:
         map_eindex_entity = dict()
     if map_c2e is None:
-        map_c2e = dict()
+        map_c2e = list()
 
     foo_normalize = entity_normalized_foo_map[etype]
+    sep = " "
+    text = sep.join(phrases)
+    pm = PhraseMapper(phrases, sep)
 
-    for ix_current_phrase, phrase in enumerate(phrases):
-        response = link_foo(phrase, **link_foo_kwargs)
+    response = link_foo(text, **link_foo_kwargs)
+    entity_pack = [foo_normalize(item) for item in response]  # type: ignore
+    entity_pack = [
+        (x, y) for x, y in entity_pack if x is not None and y is not None
+    ]
 
-        # entities + spans
-        entity_pack_current = [foo_normalize(item) for item in response]  # type: ignore
-        spans, ents = [], []
-        for e, span in entity_pack_current:
-            if e is not None:
-                spans += [span]
-                ents += [e]
+    entity_pack_per_phrase: defaultdict[
+        int, list[tuple[str, tuple[int, int]]]
+    ] = defaultdict(list)
 
-        entities_index_e_map_current = {e.hash: e for e in ents}
+    for e, span in entity_pack:
+        ip, (ia, ib) = pm.span(span)
+        entity_pack_per_phrase[ip] += [(e.hash, (ia, ib))]
 
-        ei_span_map = {e.hash: span for e, span in zip(ents, spans)}
-
-        map_c2e_current = link_candidate_entity(
-            ei_span_map, ecl, (ix_current_phrase,)
-        )
-
-        map_c2e.extend(map_c2e_current)
-        map_eindex_entity.update(entities_index_e_map_current)
-
+    map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
+    map_eindex_entity = {
+        **map_eindex_entity,
+        **{e.hash: e for e, _ in entity_pack},
+    }
     return map_eindex_entity, map_c2e
 
 
@@ -330,21 +344,70 @@ def iterate_over_linkers(
     map_c2e: list[tuple[MuIndex, str]] = []
 
     for link_mode, link_foo in phrase_entities_foos.items():
-        try:
-            map_eindex_entity, map_c2e = iterate_linking_over_phrases(
-                phrases=phrases,
-                ecl=ecl,
-                map_eindex_entity=map_eindex_entity,
-                map_c2e=map_c2e,
-                link_foo=link_foo,
-                etype=link_mode,
-            )
-        except:
-            logger.error(
-                f"in iterate_over_linkers, linker {link_mode} failed."
-            )
+        with Timer() as t_linking:
+
+            try:
+                map_eindex_entity, map_c2e = link_over_phrases(
+                    phrases=phrases,
+                    ecl=ecl,
+                    map_eindex_entity=map_eindex_entity,
+                    map_c2e=map_c2e,
+                    link_foo=link_foo,
+                    etype=link_mode,
+                )
+            except Exception as e:
+                logger.error(
+                    f"in iterate_over_linkers, linker {link_mode} failed."
+                )
+
+                logger.error(f" <exception_start>: {e} <exception_end>")
+
+                logger.error(f" ex : {phrases}")
+
+        logger.info(
+            f" linking for {link_mode} took {t_linking.elapsed:.2f} sec"
+        )
 
     map_eindex_entity, map_c2e = link_unlinked_entities(
         map_eindex_entity, map_c2e, map_muindex_candidate
     )
     return map_eindex_entity, map_c2e
+
+
+def query_bern(text, version="v2"):
+    url = api_spec[version]["url"]
+    text_field = api_spec[version]["text_field"]
+    return requests.post(url, json={text_field: text}, verify=False).json()
+
+
+class PhraseMapper:
+    def __init__(self, phrases, sep=" "):
+        lens = [len(s) for s in phrases]
+
+        self.tri = [0]
+        acc = 0
+        for l in lens:
+            acc += l + len(sep)
+            self.tri += [acc]
+
+    def __call__(self, n):
+        """
+        n is positive and < self.tri[-1]
+        :param n:
+        :return:
+        """
+        j = 0
+        while self.tri[j] <= n:
+            j += 1
+        return j - 1, n - self.tri[j - 1]
+
+    def span(self, sp):
+        a, b = sp
+        ip_a, ia = self(a)
+        ip_b, ib = self(b)
+        if ip_a != ip_b:
+            raise ValueError(
+                f" in PhraseMapper requested span a, b: {a} {b} covers two"
+                f" phrases ip_a, ia: {ip_a} {ia} | ip_b, ib: {ip_b} {ib}"
+            )
+        return ip_a, (ia, ib)

@@ -13,10 +13,6 @@ import yaml
 
 from lm_service.coref import graph_component_maps, render_coref_maps_wrapper
 from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
-from lm_service.linking import (
-    iterate_linking_over_phrases,
-    link_unlinked_entities,
-)
 from lm_service.onto import AbsToken, MuIndex, apply_map
 from lm_service.phrase import graph_to_triples
 from lm_service.preprocessing import normalize_input_text
@@ -30,7 +26,6 @@ from lm_service.text import (
     normalize_text,
     phrases_to_triples,
 )
-from lm_service.top import to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -369,97 +364,6 @@ class TestTriples(unittest.TestCase):
         }
 
         self.assertEqual(global_triples_txt, reference)
-
-    def test_text_linking(self):
-        text = "Diabetic ulcers are related to burns."
-
-        response_bern = {
-            "annotations": [
-                {
-                    "id": ["mesh:D017719"],
-                    "is_neural_normalized": True,
-                    "obj": "disease",
-                    "prob": 0.9999968409538269,
-                    "span": {"begin": 0, "end": 15},
-                },
-                {
-                    "id": ["mesh:D002056"],
-                    "is_neural_normalized": False,
-                    "obj": "disease",
-                    "prob": 0.9982181191444397,
-                    "span": {"begin": 31, "end": 36},
-                },
-            ],
-            "text": "Diabetic ulcers are related to burns.",
-            "timestamp": "Tue Sep 20 16:11:48 +0000 2022",
-        }
-
-        phrases = normalize_text(text, self.nlp)
-
-        global_triples, map_muindex_candidate, ecl = phrases_to_triples(
-            phrases, self.nlp, self.rules, window_size=2
-        )
-
-        foo_link = lambda p: response_bern["annotations"]
-
-        map_eindex_entity = {}
-        map_c2e = []
-        map_eindex_entity, map_c2e = iterate_linking_over_phrases(
-            phrases=phrases,
-            ecl=ecl,
-            map_eindex_entity=map_eindex_entity,
-            map_c2e=map_c2e,
-            link_foo=foo_link,
-        )
-
-        map_eindex_entity, map_c2e = link_unlinked_entities(
-            map_eindex_entity, map_c2e, map_muindex_candidate
-        )
-
-        map_eindex_entity_str = to_dict(map_eindex_entity)
-
-        map_eindex_entity_ref, map_c2e_ref = (
-            {
-                "BERN_V2/mesh/D017719": {
-                    "linker_type": "BERN_V2",
-                    "ent_db_type": "mesh",
-                    "id": "D017719",
-                    "hash": "BERN_V2/mesh/D017719",
-                    "ent_type": "disease",
-                },
-                "BERN_V2/mesh/D002056": {
-                    "linker_type": "BERN_V2",
-                    "ent_db_type": "mesh",
-                    "id": "D002056",
-                    "hash": "BERN_V2/mesh/D002056",
-                    "ent_type": "disease",
-                },
-                "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3": {
-                    "linker_type": "LOCAL_NON_EL",
-                    "ent_db_type": "ent_db_type_local_gg",
-                    "id": "dda96135ac461d989729db27e63bdf3f88b724e3",
-                    "hash": "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3",
-                    "original_form": "is related to",
-                },
-            },
-            [
-                (
-                    MuIndex(meta=False, phrase=0, token="001", running=0),
-                    "BERN_V2/mesh/D017719",
-                ),
-                (
-                    MuIndex(meta=False, phrase=0, token="005", running=0),
-                    "BERN_V2/mesh/D002056",
-                ),
-                (
-                    MuIndex(meta=False, phrase=0, token="002", running=9),
-                    "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3",
-                ),
-            ],
-        )
-
-        self.assertEqual(map_eindex_entity_str, map_eindex_entity_ref)
-        self.assertEqual(map_c2e, map_c2e_ref)
 
 
 if __name__ == "__main__":

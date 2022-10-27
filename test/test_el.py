@@ -1,5 +1,6 @@
 import pkgutil
 import unittest
+from collections import defaultdict
 
 import coreferee
 import spacy
@@ -7,11 +8,13 @@ import yaml
 
 from lm_service.linking import (
     EntityLinker,
-    iterate_linking_over_phrases,
+    PhraseMapper,
     iterate_over_linkers,
     link_candidate_entity,
+    link_over_phrases,
     normalize_bern_entity,
     phrase_to_spacy_basic_entities,
+    query_bern,
 )
 from lm_service.onto import MuIndex
 from lm_service.text import (
@@ -48,6 +51,43 @@ class TestEL(unittest.TestCase):
         "timestamp": "Tue Sep 20 16:11:48 +0000 2022",
     }
 
+    r_bern_multiphrase = {
+        "annotations": [
+            {
+                "id": ["mesh:D017719"],
+                "is_neural_normalized": True,
+                "mention": "Diabetic ulcers",
+                "obj": "disease",
+                "prob": 0.9999968409538269,
+                "span": {"begin": 0, "end": 15},
+            },
+            {
+                "id": ["mesh:D002056"],
+                "is_neural_normalized": False,
+                "mention": "burns",
+                "obj": "disease",
+                "prob": 0.9982181191444397,
+                "span": {"begin": 31, "end": 36},
+            },
+            {
+                "id": ["mesh:D009369"],
+                "is_neural_normalized": False,
+                "mention": "tumour",
+                "obj": "disease",
+                "prob": 0.9999922513961792,
+                "span": {"begin": 59, "end": 65},
+            },
+            {
+                "id": ["mesh:D001120"],
+                "is_neural_normalized": False,
+                "mention": "arginine",
+                "obj": "drug",
+                "prob": 0.9819279909133911,
+                "span": {"begin": 93, "end": 101},
+            },
+        ]
+    }
+
     def test_bern(self):
         text = "Diabetic ulcers are related to burns."
         phs = normalize_text(text, self.nlp)
@@ -69,9 +109,16 @@ class TestEL(unittest.TestCase):
             for item in self.response_bern["annotations"]
         ]
 
-        bern_normalized = {e.hash: span for e, span in bern_normalized}
+        pm = PhraseMapper([text])
 
-        map_c2e = link_candidate_entity(bern_normalized, ecl, ix_phrases=(0,))
+        bern_normalized_ip: defaultdict[
+            int, list[tuple[str, tuple[int, int]]]
+        ] = defaultdict(list)
+        for e, span in bern_normalized:
+            ip, (ia, ib) = pm.span(span)
+            bern_normalized_ip[ip] += [(e.hash, (ia, ib))]
+
+        map_c2e = link_candidate_entity(bern_normalized_ip, ecl)
 
         self.assertEqual(
             map_c2e,
@@ -102,13 +149,9 @@ class TestEL(unittest.TestCase):
 
         ecl = candidate_depot.unfold_conjunction()
 
-        map_eindex_entity = {}
-        map_c2e = []
-        map_eindex_entity, map_c2e = iterate_linking_over_phrases(
+        map_eindex_entity, map_c2e = link_over_phrases(
             phrases=phrases,
             ecl=ecl,
-            map_eindex_entity=map_eindex_entity,
-            map_c2e=map_c2e,
             link_foo=foo_link,
         )
 
@@ -169,7 +212,7 @@ class TestEL(unittest.TestCase):
 
         map_eindex_entity = {}
         map_c2e = []
-        map_eindex_entity, map_c2e = iterate_linking_over_phrases(
+        map_eindex_entity, map_c2e = link_over_phrases(
             phrases=phrases,
             ecl=ecl,
             map_eindex_entity=map_eindex_entity,
@@ -238,14 +281,9 @@ class TestEL(unittest.TestCase):
 
         ecl = candidate_depot.unfold_conjunction()
 
-        map_eindex_entity = {}
-        map_c2e = []
-
-        map_eindex_entity, map_c2e = iterate_linking_over_phrases(
+        map_eindex_entity, map_c2e = link_over_phrases(
             phrases=phrases,
             ecl=ecl,
-            map_eindex_entity=map_eindex_entity,
-            map_c2e=map_c2e,
             link_foo=phrase_to_spacy_basic_entities,
             link_foo_kwargs={"nlp": self.nlp},
             etype=EntityLinker.SPACY_BASIC,
@@ -385,6 +423,78 @@ class TestEL(unittest.TestCase):
 
         self.assertEqual(map_eindex_entity_str, map_eindex_entity_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
+
+    def test_phrasemapper(self):
+        pretext = (
+            "Diabetic ulcers are related to burns. Autophagy maintains tumour"
+            " growth through circulating arginine."
+        )
+        phrases = normalize_text(pretext, self.nlp)
+        text = " ".join(phrases)
+        pm = PhraseMapper(phrases, " ")
+        i = 39
+        ip, m = pm(i)
+        self.assertEqual(text[i : i + 9], phrases[ip][m : m + 9])
+
+    def test_qb(self):
+        pretext = (
+            "Diabetic ulcers are related to burns. Autophagy maintains tumour"
+            " growth through circulating arginine."
+        )
+        phrases = normalize_text(pretext, self.nlp)
+
+        (
+            striples,
+            striples_meta,
+            candidate_depot,
+            relations,
+            _,
+        ) = phrases_to_basis_triples(self.nlp, self.rules, phrases)
+
+        ecl = candidate_depot.unfold_conjunction()
+
+        text = " ".join(phrases)
+
+        response_bern = query_bern(text)
+        # response_bern = self.r_bern_multiphrase
+
+        bern_normalized = [
+            normalize_bern_entity(item)
+            for item in response_bern["annotations"]
+        ]
+
+        pm = PhraseMapper(phrases)
+
+        bern_normalized_ip: defaultdict[
+            int, list[tuple[str, tuple[int, int]]]
+        ] = defaultdict(list)
+        for e, span in bern_normalized:
+            ip, (ia, ib) = pm.span(span)
+            bern_normalized_ip[ip] += [(e.hash, (ia, ib))]
+
+        map_c2e = link_candidate_entity(bern_normalized_ip, ecl)
+
+        self.assertEqual(
+            map_c2e,
+            [
+                (
+                    MuIndex(meta=False, phrase=0, token="001", running=0),
+                    "BERN_V2/mesh/D017719",
+                ),
+                (
+                    MuIndex(meta=False, phrase=0, token="005", running=0),
+                    "BERN_V2/mesh/D002056",
+                ),
+                (
+                    MuIndex(meta=False, phrase=1, token="003", running=0),
+                    "BERN_V2/mesh/D009369",
+                ),
+                (
+                    MuIndex(meta=False, phrase=1, token="006", running=0),
+                    "BERN_V2/mesh/D001120",
+                ),
+            ],
+        )
 
 
 if __name__ == "__main__":

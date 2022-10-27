@@ -1,4 +1,5 @@
 import os
+from timeit import default_timer
 
 from networkx.drawing.nx_agraph import to_agraph
 
@@ -35,3 +36,16 @@ def plot_leaves(metagraph, path, root_fname):
     ]
     for j, mg in enumerate(graphs):
         plot_graph(mg.tree, path, f"{root_fname}_leaf_{j}")
+
+
+class Timer:
+    def __init__(self):
+        self.timer = default_timer
+
+    def __enter__(self):
+        self.start = self.timer()
+        return self
+
+    def __exit__(self, *args):
+        end = self.timer()
+        self.elapsed = end - self.start

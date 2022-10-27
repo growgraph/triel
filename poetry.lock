@@ -980,6 +980,18 @@ python-versions = ">=3.6"
 wasabi = ">=0.8.1,<1.1.0"
 
 [[package]]
+name = "spacyfishing"
+version = "0.1.8"
+description = "A spaCy wrapper of Entity-Fishing (component) for named entity disambiguation and linking on Wikidata."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+requests = ">=2.28.0"
+spacy = ">=3.3.1"
+
+[[package]]
 name = "srsly"
 version = "2.4.3"
 description = "Modern high-performance serialization utilities for Python"
@@ -1250,7 +1262,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "b516e816dd04592c687f4e16f0fe5da2e135096c0ae9940a8d1689d2aeb02b9f"
+content-hash = "0e8a5d5df2814738b473bb10203e6744cae06275cf2a4bb7d116a23233dda493"
 
 [metadata.files]
 aenum = []
@@ -1713,6 +1725,7 @@ spacy-loggers = [
     {file = "spacy-loggers-1.0.2.tar.gz", hash = "sha256:e75d44f4cf99e6763d7132ca7c8c420e0a92790222a08bc8eb9e24ea2c13536e"},
     {file = "spacy_loggers-1.0.2-py3-none-any.whl", hash = "sha256:d48c9313a577ad1818da961cf6db71a73fd1e556ae47e6e68d7e28b541d11e18"},
 ]
+spacyfishing = []
 srsly = [
     {file = "srsly-2.4.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:2d0236feafe3805b384532221596e6749a54d0ff10ba022b333dc1de7aa1b2f7"},
     {file = "srsly-2.4.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:f96af9fde9f58d5923091fa723fa0fed58a83781b98e143a5d1fac5e738b9f0d"},

@@ -24,6 +24,18 @@ def hello_world():
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--wsgi-self", type=str)
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        help="increase output verbosity",
+        action="store_true",
+    )
+
+    args = parser.parse_args()
+
     logging.basicConfig(
         filename="lm_serve.log",
         format=(
@@ -31,14 +43,9 @@ if __name__ == "__main__":
             " %(message)s"
         ),
         datefmt="%Y-%m-%d %H:%M:%S",
-        level=logging.ERROR,
+        level=logging.INFO if args.verbose else logging.ERROR,
         filemode="w",
     )
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--wsgi-self", type=str)
-
-    args = parser.parse_args()
 
     wsgi_config = ResourceHandler.load(fpath=args.wsgi_self)
     wsgi_re = ConfigFactory.create_config(args=wsgi_config)
