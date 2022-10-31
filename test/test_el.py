@@ -8,13 +8,11 @@ import yaml
 
 from lm_service.linking import (
     EntityLinker,
+    EntityLinkerManager,
     PhraseMapper,
     iterate_over_linkers,
     link_candidate_entity,
     link_over_phrases,
-    normalize_bern_entity,
-    phrase_to_spacy_basic_entities,
-    query_bern,
 )
 from lm_service.onto import MuIndex
 from lm_service.text import (
@@ -105,7 +103,7 @@ class TestEL(unittest.TestCase):
         # phrase index set
 
         bern_normalized = [
-            normalize_bern_entity(item)
+            EntityLinkerManager._normalize_bern_entity(item)
             for item in self.response_bern["annotations"]
         ]
 
@@ -135,7 +133,6 @@ class TestEL(unittest.TestCase):
         )
 
     def test_iterate_linking_bern(self):
-        foo_link = lambda p: self.response_bern["annotations"]
         text = "Diabetic ulcers are related to burns."
         phrases = normalize_text(text, self.nlp)
 
@@ -149,9 +146,18 @@ class TestEL(unittest.TestCase):
 
         ecl = candidate_depot.unfold_conjunction()
 
+        elm = EntityLinkerManager(
+            {
+                EntityLinker.BERN_V2: {
+                    "url": "http://bern2.korea.ac.kr/plain",
+                    "text_field": "text",
+                }
+            }
+        )
+        elm.set_linker_type(EntityLinker.BERN_V2)
+
         map_eindex_entity, map_c2e = link_over_phrases(
-            phrases=phrases,
-            ecl=ecl,
+            phrases=phrases, ecl=ecl, elm=elm
         )
 
         map_eindex_entity_str = to_dict(map_eindex_entity)
@@ -337,15 +343,20 @@ class TestEL(unittest.TestCase):
             phrases, self.nlp, self.rules, window_size=2
         )
 
-        phrase_entities_foos: dict = {
-            EntityLinker.BERN_V2: lambda p: self.response_bern["annotations"],
-        }
+        elm = EntityLinkerManager(
+            {
+                EntityLinker.BERN_V2: {
+                    "url": "http://bern2.korea.ac.kr/plain",
+                    "text_field": "text",
+                }
+            },
+        )
 
         map_eindex_entity, map_c2e = iterate_over_linkers(
             phrases=phrases,
             ecl=ecl,
             map_muindex_candidate=map_muindex_candidate,
-            linkers=phrase_entities_foos,
+            elm=elm,
         )
 
         map_eindex_entity_str = to_dict(map_eindex_entity)
@@ -424,13 +435,18 @@ class TestEL(unittest.TestCase):
 
         text = " ".join(phrases)
 
-        response_bern = query_bern(text)
-        # response_bern = self.r_bern_multiphrase
+        elm = EntityLinkerManager(
+            {
+                EntityLinker.BERN_V2: {
+                    "url": "http://bern2.korea.ac.kr/plain",
+                    "text_field": "text",
+                }
+            }
+        )
 
-        bern_normalized = [
-            normalize_bern_entity(item)
-            for item in response_bern["annotations"]
-        ]
+        elm.set_linker_type(EntityLinker.BERN_V2)
+        response_bern = elm.query(text)
+        bern_normalized = elm.normalize(response_bern)
 
         pm = PhraseMapper(phrases)
 
@@ -554,12 +570,18 @@ class TestEL(unittest.TestCase):
 
         ecl = candidate_depot.unfold_conjunction()
 
-        # phrase index set
-        from lm_service.linking import normalize_fishing_entity
+        elm = EntityLinkerManager(
+            {
+                EntityLinker.FISHING: {
+                    "url": "http://",
+                    "text_field": "text",
+                }
+            }
+        )
 
-        normalized = [
-            normalize_fishing_entity(item) for item in response["entities"]
-        ]
+        elm.set_linker_type(EntityLinker.FISHING)
+
+        normalized = elm.normalize(response)
 
         pm = PhraseMapper([text])
 

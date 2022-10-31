@@ -12,8 +12,6 @@ from lm_service.linking import (
     EntityLinker,
     iterate_over_linkers,
     link_unlinked_entities,
-    query_bern,
-    query_fishing,
 )
 from lm_service.onto import MuIndex, SimplifiedCandidate
 from lm_service.text import normalize_text, phrases_to_triples
@@ -53,9 +51,7 @@ def to_dict(obj):
         return obj
 
 
-def text_to_rel_graph(text, nlp, rules, config=None):
-    if config is None:
-        config = {"linkers": list()}
+def text_to_rel_graph(text, nlp, rules, elm):
 
     phrases = normalize_text(text, nlp)
 
@@ -67,7 +63,7 @@ def text_to_rel_graph(text, nlp, rules, config=None):
         phrases=phrases,
         ecl=ecl,
         map_muindex_candidate=map_muindex_candidate,
-        linkers=config["linkers"],
+        elm=elm,
     )
 
     map_eindex_entity, map_c2e = link_unlinked_entities(

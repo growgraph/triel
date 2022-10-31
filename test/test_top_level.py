@@ -6,7 +6,7 @@ import coreferee
 import spacy
 import yaml
 
-from lm_service.linking import EntityLinker
+from lm_service.linking import EntityLinker, EntityLinkerManager
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 
@@ -16,6 +16,13 @@ class TestREL(unittest.TestCase):
 
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
+    conf = {
+        "BERN_V2": {
+            "url": "http://bern2.korea.ac.kr/plain",
+            "text_field": "text",
+        }
+    }
+    elm = EntityLinkerManager(conf)
 
     def test_iterate_linking_bern(self):
         text = "Diabetic ulcers are related to burns."
@@ -25,8 +32,7 @@ class TestREL(unittest.TestCase):
         #     " velocity method while others that are seen to transit their"
         #     " parent stars have measures of their physical size."
         # )
-        config = {"linkers": [EntityLinker.BERN_V2, EntityLinker.LOCAL_NON_EL]}
-        response = text_to_rel_graph(text, self.nlp, self.rules, config=config)
+        response = text_to_rel_graph(text, self.nlp, self.rules, self.elm)
         response_jsonlike = cast_response_to_unfolded(
             response, cast_triple_version="v1"
         )

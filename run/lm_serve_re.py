@@ -10,7 +10,7 @@ from flask_restful import Api
 from graph_cast.db.factory import ConfigFactory
 from graph_cast.util import ResourceHandler
 
-from lm_service.linking import EntityLinker
+from lm_service.linking import EntityLinkerManager
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 app = Flask(__name__)
@@ -35,6 +35,12 @@ if __name__ == "__main__":
         action="store_true",
     )
 
+    parser.add_argument(
+        "--entity-linker-config",
+        type=str,
+        help="entity linker config as json or yaml",
+    )
+
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -55,6 +61,9 @@ if __name__ == "__main__":
     nlp.add_pipe("coreferee")
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
+
+    elm = EntityLinkerManager(args.entity_linker_config)
+
     print(" re model loaded")
 
     @app.route(wsgi_re.path, methods=["POST"])
@@ -64,11 +73,7 @@ if __name__ == "__main__":
             logger.info(request.json)
             json_data = request.json
             text = json_data["text"]
-            config = {
-                "linkers": [EntityLinker.FISHING, EntityLinker.LOCAL_NON_EL]
-            }
-
-            response = text_to_rel_graph(text, nlp, rules, config=config)
+            response = text_to_rel_graph(text, nlp, rules, elm)
             response_jsonlike = cast_response_to_unfolded(
                 response, cast_triple_version="v1"
             )

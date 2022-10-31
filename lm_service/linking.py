@@ -17,34 +17,24 @@ from lm_service.util import Timer
 
 logger = logging.getLogger(__name__)
 
-# only v2 is supported by the API
-api_spec = {
-    "v1": {
-        "url": "https://bern.korea.ac.kr/plain",
-        "text_field": "sample_text",
-    },
-    "v2": {"url": "http://bern2.korea.ac.kr/plain", "text_field": "text"},
-    "fishing": {
-        "url": "http://192.168.1.197:8090/service/disambiguate",
-        "text_field": "text",
-        "extra_args": {
-            "language": {"lang": "en"},
-            "mentions": ["ner", "wikipedia"],
-        },
-    },
-}
-
 
 class EntityCandidateAlignmentError(Exception):
     pass
 
 
+class EntityLinkerKindNotSpecified(Exception):
+    pass
+
+
+class EntityLinkerTypeNotAvailable(Exception):
+    pass
+
+
 class EntityLinker(str, Enum):
     BERN_V2 = "BERN_V2"
-    SPACY_NAIVE_WIKI = "SPACY_NAIVE_WIKI"
+    FISHING = "FISHING"
     SPACY_BASIC = "SPACY_BASIC"
     LOCAL_NON_EL = "LOCAL_NON_EL"
-    FISHING = "FISHING"
 
 
 ent_db_type_local_gg = "ent_db_type_local_gg"
@@ -91,93 +81,8 @@ def interval_inclusion_metric(x, y):
     return (xb - xa) / int_size if int_size > 0 else 0
 
 
-def normalize_bern_entity(
-    item, prob_thr=0.8
-) -> tuple[Entity | None, tuple | None]:
-    if len(item["id"]) > 0 and (
-        item["prob"] > prob_thr if "prob" in item else True
-    ):
-        item_spec = item["id"][0].split(":")
-        try:
-            db_type, item_id = item_spec
-        except:
-            logger.warning(
-                " non standard bern entity (does not look like"
-                f" `<ent_type>:<id>` : {item}"
-            )
-            item_id = item["id"][0]
-            db_type = None
-        return Entity(
-            linker_type=EntityLinker.BERN_V2,
-            ent_type=item["obj"],
-            ent_db_type=db_type,
-            id=item_id,
-        ), (item["span"]["begin"], item["span"]["end"])
-    else:
-        return None, None
-
-
-def normalize_fishing_entity(
-    item, prob_thr=0.4
-) -> tuple[Entity | None, tuple | None]:
-    if (
-        item["confidence_score"] > prob_thr
-        if "confidence_score" in item
-        else True
-    ):
-        if "wikidataId" in item:
-            db_type = "wikidataId"
-            item_id = item["wikidataId"]
-        elif "wikipediaExternalRef" in item:
-            db_type = "wikipediaExternalRef"
-            item_id = item["wikipediaExternalRef"]
-        else:
-            logger.warning(
-                " non standard fishing entity (does not look like"
-                f" `<ent_type>:<id>` : {item}"
-            )
-            return None, None
-        return Entity(
-            linker_type=EntityLinker.FISHING,
-            ent_db_type=db_type,
-            id=item_id,
-        ), (item["offsetStart"], item["offsetEnd"])
-    else:
-        return None, None
-
-
-def normalize_naive_wiki_entity_linker(
-    item,
-) -> tuple[Entity | None, tuple | None]:
-    """
-    spacy-entity-linker package
-
-    :param item:
-    :return:
-    """
-    if item.get_url():
-        span = item.get_span()
-        item_id = item.get_url().split("/")[-1]
-
-        try:
-            ee = next(iter(item.get_categories()))
-            ent_type = ee.get_url().split("/")[-1]
-        except:
-            ent_type = None
-        return Entity(
-            linker_type=EntityLinker.SPACY_NAIVE_WIKI,
-            ent_db_type="wikidata",
-            ent_type=ent_type,
-            id=item_id,
-            description=item.get_description(),
-            original_form=item.get_original_alias(),
-        ), (span.start_char, span.end_char)
-
-    else:
-        return None, None
-
-
 def phrase_to_spacy_basic_entities(phrase=None, rdoc=None, nlp=None):
+    # TODO add to EntityLinkerManager
     if rdoc is None:
         rdoc = nlp(phrase)
     ents0 = (item for item in rdoc if item.ent_type != 0)
@@ -197,34 +102,6 @@ def phrase_to_spacy_basic_entities(phrase=None, rdoc=None, nlp=None):
     return ents_split
 
 
-def normalize_spacy_basic(
-    item: list[Token],
-) -> tuple[Entity | None, tuple | None]:
-    """
-
-    :param item:
-    :return:
-    """
-    if item:
-        span = item[0].idx, item[-1].idx + len(item[-1].text)
-        original_form = " ".join([x.text for x in item]).lower()
-        e_id = hashme(original_form)
-        ent_type = str(item[0].ent_type)
-
-        return (
-            Entity(
-                linker_type=EntityLinker.SPACY_BASIC,
-                ent_db_type="basic",
-                ent_type=ent_type,
-                original_form=original_form,
-                id=e_id,
-            ),
-            span,
-        )
-    else:
-        return None, None
-
-
 def link_unlinked_entities(
     map_eindex_entity: dict[str, Entity],
     map_c2e: list[tuple[MuIndex, str]],
@@ -239,8 +116,6 @@ def link_unlinked_entities(
     :return:
         i_e -> e ; i_e -> i_mu
     """
-
-    # create entities for unlinked candidates (for some candidates entities were not found)
 
     mentions_not_in_entities = set(map_muindex_candidate) - set(
         c for c, e in map_c2e
@@ -309,94 +184,26 @@ def link_candidate_entity(
     return map_candidate2entity
 
 
-entity_normalized_foo_map = {
-    EntityLinker.BERN_V2: normalize_bern_entity,
-    EntityLinker.SPACY_NAIVE_WIKI: normalize_naive_wiki_entity_linker,
-    EntityLinker.SPACY_BASIC: normalize_spacy_basic,
-    EntityLinker.FISHING: normalize_fishing_entity,
-}
-
-phrase_entities_foos: dict = {
-    EntityLinker.BERN_V2: lambda p: query_bern(p, "v2")["annotations"],
-    EntityLinker.FISHING: lambda p: query_fishing(p)["entities"],
-}
-
-
-def link_over_phrases(
-    phrases,
-    ecl,
-    link_foo_kwargs=None,
-    map_eindex_entity=None,
-    map_c2e=None,
-    etype=EntityLinker.BERN_V2,
-) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
-    """
-
-    :param phrases:
-    :param ecl:
-    :param link_foo: function, maps a phrase to a list of entities
-    :param link_foo_kwargs:
-    :param map_eindex_entity:
-    :param map_c2e:
-    :param etype:
-    :return:
-        s_e -> e ; i_c -> i_se
-    """
-    if link_foo_kwargs is None:
-        link_foo_kwargs = dict()
-    if map_eindex_entity is None:
-        map_eindex_entity = dict()
-    if map_c2e is None:
-        map_c2e = list()
-
-    foo_normalize = entity_normalized_foo_map[etype]
-    link_foo = phrase_entities_foos[etype]
-    sep = " "
-    text = sep.join(phrases)
-    pm = PhraseMapper(phrases, sep)
-
-    response = link_foo(text, **link_foo_kwargs)
-    entity_pack = [foo_normalize(item) for item in response]  # type: ignore
-    entity_pack = [
-        (x, y) for x, y in entity_pack if x is not None and y is not None
-    ]
-
-    entity_pack_per_phrase: defaultdict[
-        int, list[tuple[str, tuple[int, int]]]
-    ] = defaultdict(list)
-
-    for e, span in entity_pack:
-        ip, (ia, ib) = pm.span(span)
-        entity_pack_per_phrase[ip] += [(e.hash, (ia, ib))]
-
-    map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
-    map_eindex_entity = {
-        **map_eindex_entity,
-        **{e.hash: e for e, _ in entity_pack},
-    }
-    return map_eindex_entity, map_c2e
-
-
 def iterate_over_linkers(
     phrases: list[str],
     ecl: ExtCandidateList,
     map_muindex_candidate: dict[MuIndex, Candidate],
-    linkers: list,
+    elm: EntityLinkerManager,
 ) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
 
     map_eindex_entity: dict[str, Entity] = {}
     map_c2e: list[tuple[MuIndex, str]] = []
 
-    for link_mode in linkers:
+    for link_mode in elm.linker_types:
+        elm.set_linker_type(link_mode)
         with Timer() as t_linking:
-
             try:
                 map_eindex_entity, map_c2e = link_over_phrases(
                     phrases=phrases,
                     ecl=ecl,
+                    elm=elm,
                     map_eindex_entity=map_eindex_entity,
                     map_c2e=map_c2e,
-                    etype=link_mode,
                 )
             except Exception as e:
                 logger.error(
@@ -417,20 +224,208 @@ def iterate_over_linkers(
     return map_eindex_entity, map_c2e
 
 
-def query_bern(text, version="v2"):
-    url = api_spec[version]["url"]
-    text_field = api_spec[version]["text_field"]
-    return requests.post(url, json={text_field: text}, verify=False).json()
+@dataclasses.dataclass()
+class LinkerConfig(JSONWizard):
+    """
+    represents a token in dep tree
+    """
+
+    class _(JSONWizard.Meta):
+        key_transform_with_dump = "SNAKE"
+
+    url: str
+    text_field: str
+    extra_args: dict = dataclasses.field(default_factory=dict)
 
 
-def query_fishing(text):
-    key = "fishing"
-    url = api_spec[key]["url"]
-    text_field = api_spec[key]["text_field"]
-    extras = api_spec[key]["extra_args"]
-    return requests.post(
-        url, json={text_field: text, **extras}, verify=False
-    ).json()
+class EntityLinkerManager:
+    def __init__(self, linking_config):
+        self.configs: dict[EntityLinker, LinkerConfig] = {
+            k: LinkerConfig(**v) for k, v in linking_config.items()
+        }
+        self.current_kind: EntityLinker | None = None
+
+    @property
+    def linker_types(self):
+        return self.configs.keys()
+
+    def set_linker_type(self, ltype: EntityLinker):
+        if ltype in self.configs:
+            self.current_kind = ltype
+        else:
+            raise EntityLinkerTypeNotAvailable(
+                f" linker type {ltype} was not provided with a config"
+            )
+
+    def query(self, text):
+        return EntityLinkerManager.query0(
+            text,
+            self.configs[self.current_kind].text_field,
+            self.configs[self.current_kind].url,
+            self.configs[self.current_kind].extra_args,
+        )
+
+    def query_and_normalize(self, text):
+        r = self.query(text)
+        epack = self.normalize(r)
+        return epack
+
+    @staticmethod
+    def query0(text, text_field, url, extras):
+        # TODO error code processing
+        return requests.post(
+            url,
+            json={text_field: text, **extras},
+            verify=False,
+        ).json()
+
+    def normalize(self, response):
+        if self.current_kind == EntityLinker.BERN_V2:
+            ents = response["annotations"]
+            return [
+                EntityLinkerManager._normalize_bern_entity(item)
+                for item in ents
+            ]
+        elif self.current_kind == EntityLinker.FISHING:
+            ents = response["entities"]
+            return [
+                EntityLinkerManager._normalize_fishing_entity(item)
+                for item in ents
+            ]
+        # elif self.current_kind == EntityLinker.SPACY_BASIC:
+        #     return EntityLinkerManager._normalize_spacy_basic(response)
+        else:
+            return None, None
+
+    @staticmethod
+    def _normalize_bern_entity(
+        item, prob_thr=0.8
+    ) -> tuple[Entity | None, tuple | None]:
+        if len(item["id"]) > 0 and (
+            item["prob"] > prob_thr if "prob" in item else True
+        ):
+            item_spec = item["id"][0].split(":")
+            try:
+                db_type, item_id = item_spec
+            except:
+                logger.warning(
+                    " non standard bern entity (does not look like"
+                    f" `<ent_type>:<id>` : {item}"
+                )
+                item_id = item["id"][0]
+                db_type = None
+            return Entity(
+                linker_type=EntityLinker.BERN_V2,
+                ent_type=item["obj"],
+                ent_db_type=db_type,
+                id=item_id,
+            ), (item["span"]["begin"], item["span"]["end"])
+        else:
+            return None, None
+
+    @staticmethod
+    def _normalize_fishing_entity(
+        item, prob_thr=0.4
+    ) -> tuple[Entity | None, tuple | None]:
+        if (
+            item["confidence_score"] > prob_thr
+            if "confidence_score" in item
+            else True
+        ):
+            if "wikidataId" in item:
+                db_type = "wikidataId"
+                item_id = item["wikidataId"]
+            elif "wikipediaExternalRef" in item:
+                db_type = "wikipediaExternalRef"
+                item_id = item["wikipediaExternalRef"]
+            else:
+                logger.warning(
+                    " non standard fishing entity (does not look like"
+                    f" `<ent_type>:<id>` : {item}"
+                )
+                return None, None
+            return Entity(
+                linker_type=EntityLinker.FISHING,
+                ent_db_type=db_type,
+                id=item_id,
+            ), (item["offsetStart"], item["offsetEnd"])
+        else:
+            return None, None
+
+    @staticmethod
+    def _normalize_spacy_basic(
+        item: list[Token],
+    ) -> tuple[Entity | None, tuple | None]:
+        """
+
+        :param item:
+        :return:
+        """
+        if item:
+            span = item[0].idx, item[-1].idx + len(item[-1].text)
+            original_form = " ".join([x.text for x in item]).lower()
+            e_id = hashme(original_form)
+            ent_type = str(item[0].ent_type)
+
+            return (
+                Entity(
+                    linker_type=EntityLinker.SPACY_BASIC,
+                    ent_db_type="basic",
+                    ent_type=ent_type,
+                    original_form=original_form,
+                    id=e_id,
+                ),
+                span,
+            )
+        else:
+            return None, None
+
+
+def link_over_phrases(
+    phrases,
+    ecl,
+    elm: EntityLinkerManager,
+    map_eindex_entity=None,
+    map_c2e=None,
+) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
+    """
+
+    :param phrases:
+    :param ecl:
+    :param elm:
+    :param map_eindex_entity:
+    :param map_c2e:
+    :return:
+        s_e -> e ; i_c -> i_se
+    """
+    if map_eindex_entity is None:
+        map_eindex_entity = dict()
+    if map_c2e is None:
+        map_c2e = list()
+
+    sep = " "
+    text = sep.join(phrases)
+    pm = PhraseMapper(phrases, sep)
+
+    entity_pack = elm.query_and_normalize(text)
+    entity_pack = [
+        (x, y) for x, y in entity_pack if x is not None and y is not None
+    ]
+
+    entity_pack_per_phrase: defaultdict[
+        int, list[tuple[str, tuple[int, int]]]
+    ] = defaultdict(list)
+
+    for e, span in entity_pack:
+        ip, (ia, ib) = pm.span(span)
+        entity_pack_per_phrase[ip] += [(e.hash, (ia, ib))]
+
+    map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
+    map_eindex_entity = {
+        **map_eindex_entity,
+        **{e.hash: e for e, _ in entity_pack},
+    }
+    return map_eindex_entity, map_c2e
 
 
 class PhraseMapper:
