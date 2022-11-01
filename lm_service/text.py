@@ -26,7 +26,9 @@ def normalize_text(text, nlp, head=None) -> list[str]:
     phrases_original = normalize_input_text(text, terminal_full_stop=True)
     if head is not None:
         phrases_original = phrases_original[:head]
-    phrases = [transform_advcl(nlp, p) for p in phrases_original]
+    phrases = []
+    for p in phrases_original:
+        phrases += transform_advcl(nlp, p)
     return phrases
 
 
@@ -60,7 +62,7 @@ def phrases_to_triples_stage_a(
 
 
 def phrases_to_triples(
-    phrases,
+    phrases: list[str],
     nlp,
     rules,
     window_size,
@@ -200,7 +202,10 @@ def phrases_to_triples(
             )
             logger.error(f" Dangling metatriples : {failing_deq}")
             for iphrase in failing_phrases:  # type: ignore
-                logger.error(f" failing phrase : <B>{phrases[iphrase]}<E>")
+                if iphrase < len(phrases):
+                    logger.error(f" failing phrase : <B>{phrases[iphrase]}<E>")
+                else:
+                    logger.error(f" iphrase not even in phrases index (!)")
             break
             # raise ValueError(f"Deq is stuck in a loop: {deq_striples_meta}")
 

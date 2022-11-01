@@ -2,7 +2,6 @@
 test candidate extraction
 """
 
-import hashlib
 import logging
 import os
 import pkgutil
@@ -50,18 +49,20 @@ class TestR(unittest.TestCase):
         " ESA's Cosmic Vision science programme.",
     ]
 
-    def test_relation_candidates(self):
-        for phrase in self.documents:
-            chash = hashlib.sha256(phrase.encode("utf-8")).hexdigest()
-            rdoc, nx_graph = phrase_to_deptree(self.nlp, phrase)
-            plot_graph(nx_graph, self.figs_path, f"{chash[:6]}")
-            mod_phrase, mod_graph = transform_advcl(
-                self.nlp, phrase, debug=True
-            )
-            rdoc, mod_graph = phrase_to_deptree(self.nlp, mod_phrase)
-            plot_graph(mod_graph, self.figs_path, f"{chash[:6]}_mod")
-            print(phrase)
-            print(mod_phrase)
+    def test_transform_advcl(self):
+        phrase = (
+            "Launched on 18 December 2019, "
+            "it is the first Small-class mission in "
+            "ESA's Cosmic Vision science programme."
+        )
+        out = transform_advcl(self.nlp, phrase)
+        self.assertEqual(
+            out,
+            [
+                "It is the first Small - class mission in ESA 's Cosmic Vision"
+                " science programme launched on 18 December 2019 ."
+            ],
+        )
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ import logging
 import sys
 import unittest
 
-from lm_service.preprocessing import normalize_input_text, transform_advcl
+from lm_service.preprocessing import normalize_input_text
 
 logger = logging.getLogger(__name__)
 
@@ -49,21 +49,6 @@ class TestPreprocessing(unittest.TestCase):
             [
                 "Launched on 18 December 2019 , it is the first Small-class"
                 " mission in ESA's Cosmic Vision science programme .",
-            ],
-        )
-
-    @unittest.skip("for now")
-    def test_transform_advcl(self):
-        phrase = (
-            "Launched on 18 December 2019, "
-            "it is the first Small-class mission in "
-            "ESA's Cosmic Vision science programme."
-        )
-        out = transform_advcl(phrase)
-        self.assertEqual(
-            out,
-            [
-                "=",
             ],
         )
 

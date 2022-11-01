@@ -79,7 +79,7 @@ if __name__ == "__main__":
         " ".join(normalize_input_text(p, terminal_full_stop=True))
         for p in phrases
     ]
-    phrases = [transform_advcl(nlp, p) for p in phrases]
+    phrases = [p for phrase0 in phrases for p in transform_advcl(nlp, phrase0)]
 
     for phrase in phrases:
         main(phrase, nlp)

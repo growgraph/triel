@@ -39,7 +39,11 @@ class TestR(unittest.TestCase):
 
     def test_indexing(self):
         fragment = self.phrases[:2]
-        fragment = [transform_advcl(self.nlp, p) for p in fragment]
+        fragment = [
+            p
+            for phrase0 in fragment
+            for p in transform_advcl(self.nlp, phrase0)
+        ]
 
         fragment_joined = " ".join(fragment)
         graphs = {}

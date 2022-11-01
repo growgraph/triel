@@ -6,7 +6,7 @@ import coreferee
 import spacy
 import yaml
 
-from lm_service.linking import EntityLinker, EntityLinkerManager
+from lm_service.linking import EntityLinkerManager
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 

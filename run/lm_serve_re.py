@@ -49,8 +49,8 @@ if __name__ == "__main__":
             "%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s:"
             " %(message)s"
         ),
-        datefmt="%Y-%m-%d %H:%M:%S",
         level=logging.INFO if args.verbose else logging.ERROR,
+        datefmt="%Y-%m-%d %H:%M:%S",
         filemode="w",
     )
 
@@ -62,9 +62,8 @@ if __name__ == "__main__":
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    elm = EntityLinkerManager(args.entity_linker_config)
-
-    print(" re model loaded")
+    el_config = ResourceHandler.load(fpath=args.entity_linker_config)
+    elm = EntityLinkerManager(el_config)
 
     @app.route(wsgi_re.path, methods=["POST"])
     def re():
@@ -81,5 +80,7 @@ if __name__ == "__main__":
             jy = jsonify(response_jsonlike)
             return jy, 200
 
-    print(f" wsgi: host {wsgi_re.host}")
+    logger.info(f" wsgi: host {wsgi_re.host}")
+    logger.info(" re model loaded")
+
     app.run(port=wsgi_re.port, host=wsgi_re.host)

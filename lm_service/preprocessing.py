@@ -24,6 +24,7 @@ def split_tokens_into_phrases(tokens_list, terminal_puncts=None):
             # not token0[-1].isupper() and
             token1 in terminal_puncts
             and token2[0].isupper()
+            # and not token2[0].islower()
         ):
             phrases.append(cur_phrase)
             cur_phrase = []
@@ -56,15 +57,16 @@ def normalize_input_text(text, terminal_full_stop=True):
     return phrases
 
 
-def transform_advcl(nlp: Language, phrase, debug=False):
+def transform_advcl(nlp: Language, phrase) -> list[str]:
     """
-    it is assumed there are no fullstops
+        somehow coreference works better
     :param nlp:
     :param phrase:
     :return:
     """
 
     rdoc, graph = phrase_to_deptree(nlp, phrase)
+
     advcls = [
         u
         for u in graph.nodes()
@@ -128,11 +130,12 @@ def transform_advcl(nlp: Language, phrase, debug=False):
 
             graph = nx.relabel_nodes(graph, mapping)
 
-    phrase_rep = [graph.nodes[i]["text"] for i in sorted(graph.nodes)]
-    phrase_rep[0] = phrase_rep[0][0].capitalize() + phrase_rep[0][1:]
-    # TODO do not insert whitespace if in the original phrase there was no space
-    transformed_phrase = " ".join(phrase_rep)
-    if debug:
-        return transformed_phrase, graph
-    else:
-        return transformed_phrase
+    tphrases = []
+    sgraphs = sorted(
+        nx.weakly_connected_components(graph), key=lambda x: min(x)
+    )
+    for sg in sgraphs:
+        phrase_rep = [graph.nodes[i]["text"] for i in sorted(sg)]
+        phrase_rep[0] = phrase_rep[0][0].capitalize() + phrase_rep[0][1:]
+        tphrases += [" ".join(phrase_rep)]
+    return tphrases

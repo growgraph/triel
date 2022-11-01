@@ -9,7 +9,6 @@ from dataclass_wizard import JSONWizard
 from lm_service.hash import hashme
 from lm_service.linking import (
     Entity,
-    EntityLinker,
     iterate_over_linkers,
     link_unlinked_entities,
 )
