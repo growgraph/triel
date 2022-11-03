@@ -9,9 +9,9 @@ profile = "black"
 
 [tool.poetry]
 authors = ["Alexander Belikov <alexander@growgraph.dev>"]
-description = "Convert text to graphs. Create candidates. Use language models fo entity linking"
+description = "Convert text to graphs. Create candidates. Entity linking"
 name = "lm_service"
-version = "0.4.0"
+version = "0.4.1"
 
 [tool.poetry.dependencies]
 Flask = "^2.0.3"

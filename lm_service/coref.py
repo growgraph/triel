@@ -221,6 +221,7 @@ def coref_candidates(
     map_chain_to_most_specific: defaultdict[TokenIndexT, list[TokenIndexT]],
     token_dict: dict[TokenIndexT, Token],
 ) -> defaultdict[TokenIndexT, list[Candidate]]:
+
     map_token_specific_token = {
         i: sub_coreference(
             map_subbable_to_chain, map_chain_to_most_specific, i
@@ -248,7 +249,7 @@ def coref_candidates(
                     )
                 elif (
                     k not in map_icoref_source_target
-                ):  # the case when coref pointer is not a candidate
+                ):  # case when coref pointer is not a source/target candidate
                     ac = Candidate().from_tokens([token_dict[k]])
                     map_icoref_source_target[k] = k, ac
 
@@ -265,39 +266,48 @@ def coref_candidates(
     while deq and cnt < max_cnt:
         cnt += 1
         sroot, sigma_candidate = deq.popleft()
-        # indices that will be substituted using coreference
+        # indices to substitute using co-reference
         candidate_ix_subs = set(map_trunc) & set(sigma_candidate.stokens)
-        map_trunc_local_uniq: dict[TokenIndexT, list[TokenIndexT]] = dict()
-        subs_to_remove = set()
-        for sub in candidate_ix_subs:
-            if map_trunc[sub] in map_trunc_local_uniq.values():
-                subs_to_remove |= {sub}
-            else:
-                map_trunc_local_uniq[sub] = map_trunc[sub]
-        for sub in subs_to_remove:
-            sigma_candidate.remove(sub)
+
+        # supposed we 1->2; 2->3 substitution, at the iteration first remove 2->3 sub
+        map_trunc_local_uniq: dict[TokenIndexT, list[TokenIndexT]] = {
+            k: v for k, v in map_trunc.items() if k in candidate_ix_subs
+        }
+        domain = [
+            x for sublist in map_trunc_local_uniq.values() for x in sublist
+        ]
+        map_trunc_local_uniq = {
+            k: v for k, v in map_trunc_local_uniq.items() if k not in domain
+        }
+
+        # perform all independent subs
         if map_trunc_local_uniq:
-            for sub, iy_subs in map_trunc_local_uniq.items():
-                iy_subs = map_trunc[sub]
-                for y in iy_subs:
-                    sigma_copy = deepcopy(sigma_candidate)
-                    (
-                        iroot_new,
-                        sigma_candidate_substitution,
-                    ) = map_icoref_source_target[y]
-                    if not (
-                        set(sigma_copy.stokens)
-                        & set(sigma_candidate_substitution.stokens)
-                    ):
-                        # replace sub with sigma_candidate_substitution but only starting from token y and onwards
-                        # token y is a precise position given by
-                        sub_tree_cand = (
-                            sigma_candidate_substitution.from_subtree(y)
-                        )
-                        sigma_copy.replace_token_with_acandidate(
-                            sub, sub_tree_cand
-                        )
-                    deq.append((sroot, sigma_copy))
+            sorted_wrt_number_coref = sorted(
+                map_trunc_local_uniq.items(), key=lambda item: len(item[1])
+            )
+            sub = sorted_wrt_number_coref[0][0]
+            iy_subs = map_trunc[sub]
+            # coreference might contain references to several tokens
+            for y in iy_subs:
+                (
+                    iroot_new,
+                    sigma_candidate_substitution,
+                ) = map_icoref_source_target[y]
+                sigma_copy = deepcopy(sigma_candidate)
+                # do not substitute if sigma already contains parts of proposed sub
+                if not (
+                    set(sigma_copy.stokens)
+                    & set(sigma_candidate_substitution.stokens)
+                ):
+                    # replace sub with sigma_candidate_substitution view
+                    # the view is a subtree starting from token y and onwards
+                    sub_tree_cand = sigma_candidate_substitution.from_subtree(
+                        y
+                    )
+                    sigma_copy.replace_token_with_acandidate(
+                        sub, sub_tree_cand
+                    )
+                deq.append((sroot, sigma_copy))
         else:
             ecl_like[sroot] += [sigma_candidate.normalize().sort_index()]
     return ecl_like

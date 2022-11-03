@@ -381,10 +381,6 @@ class Candidate(AbsCandidate, JSONWizard):
     def empty(self):
         return len(self._tokens) == 0
 
-    @property
-    def contains_vb(self):
-        return any(t.tag_.startswith("VB") for t in self._tokens.values())
-
     def project_to_text(self):
         """
             see https://spacy.io/api/token#attributes
@@ -523,10 +519,20 @@ class Candidate(AbsCandidate, JSONWizard):
             except StopIteration:
                 of_index = i
 
-            if isinstance(i, tuple):
-                s0 = (of_index[0], of_index[1][:] + "a")
+            # compute suffix
+            derived_indices = [
+                y for _, y in self.token(of_index).successors if not is_int(y)
+            ]
+            if derived_indices:
+                max_index = max(x[-1] for x in derived_indices)
+                current_index = chr(ord(max_index) + 1)
             else:
-                s0 = of_index[:] + "a"
+                current_index = "a"
+
+            if isinstance(i, tuple):
+                s0 = (of_index[0], of_index[1][:] + current_index)
+            else:
+                s0 = of_index[:] + current_index
 
             of_token = Token(
                 s=s0,
