@@ -422,44 +422,50 @@ class Candidate(AbsCandidate, JSONWizard):
         j: TokenIndexT,
         sorter: dict[
             TokenIndexT | None,
-            tuple[float, TokenIndexT | None, TokenIndexT | None],
+            tuple[float, float],
         ],
     ):
-        succs = self.token(j).successors
+        """
+        sort tokens respecting the tree order: within each node sort succs wrt to token order
+        important to correctly account for sorting order when substitution (due to coref) occur
+        :param j:
+        :param sorter:
+        :return:
+        """
+        # TODO write a test
+        #
+        successors = self.token(j).successors
 
         # "of" exception => if j is "of" then force order
         if self.token(j).lower == "of" and self.token(j).tag_ == "IN":
-            sorted_succs = [j] + sorted(succs)
+            sorted_succs = [j] + sorted(successors)
         else:
-            sorted_succs = sorted(list(succs) + [j])
+            sorted_succs = sorted(list(successors) + [j])
 
-        value, left, right = sorter[j]
-        if left in sorter:
-            value_left, _, _ = sorter[left]
-        else:
-            value_left = value - (len(sorted_succs) + 1)
-        if right in sorter:
-            value_right, _, _ = sorter[right]
-        else:
-            value_right = value + (len(sorted_succs) + 1)
+        bnd_a, bnd_b = sorter[j]
 
-        delta = (value_right - value_left) / (len(sorted_succs) + 1)
+        interval = (bnd_b - bnd_a) / len(sorted_succs)
 
-        values = [
-            value_left + (k + 1) * delta for k in range(len(sorted_succs))
-        ]
-        working_sorted = [left] + sorted_succs + [right]  # type: ignore
-        for a, b, c, value in zip(
-            working_sorted, working_sorted[1:], working_sorted[2:], values
+        values = [bnd_a + k * interval for k in range(len(sorted_succs) + 1)]
+
+        for b, ba, bb in zip(
+            sorted_succs,
+            values,
+            values[1:],
         ):
-            sorter[b] = value, a, c
-        for s in succs:
+            sorter[b] = ba, bb
+        for s in successors:
             self._sort_wrt_tree(s, sorter)
 
     def sort_index(self):
-        proposed_sorter = {self.sroot: (0, None, None)}
+        proposed_sorter = {self.sroot: (0, len(self))}
         self._sort_wrt_tree(self.sroot, sorter=proposed_sorter)
-        self._index_vec = sorted(proposed_sorter, key=proposed_sorter.get)
+        self._index_vec = [
+            x
+            for x, _ in sorted(
+                proposed_sorter.items(), key=lambda item: item[1][0]
+            )
+        ]
         return self
 
     def insert_before(self, ac: Candidate, s: TokenIndexT):
