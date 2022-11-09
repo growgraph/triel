@@ -100,8 +100,6 @@ class TestEL(unittest.TestCase):
 
         ecl = candidate_depot.unfold_conjunction()
 
-        # phrase index set
-
         bern_normalized = [
             EntityLinkerManager._normalize_bern_entity(item)
             for item in self.response_bern["annotations"]
@@ -196,7 +194,6 @@ class TestEL(unittest.TestCase):
 
     @unittest.skip("obsolete")
     def test_iterate_naive_wiki_linking(self):
-
         text = "Diabetic ulcers are related to burns."
 
         phrases = normalize_text(text, self.nlp)
@@ -267,7 +264,6 @@ class TestEL(unittest.TestCase):
 
     @unittest.skip("obsolete")
     def test_iterate_spacy(self):
-
         text = (
             "Cheops ( CHaracterising ExOPlanets Satellite ) is a European"
             " space telescope to determine the size of known extrasolar"
@@ -331,13 +327,9 @@ class TestEL(unittest.TestCase):
         self.assertEqual(map_c2e, map_c2e_ref)
 
     def test_iterate_over_linkers(self):
-
         text = "Diabetic ulcers are related to burns."
 
         phrases = normalize_text(text, self.nlp)
-
-        if "entityLinker" not in self.nlp.pipe_names:
-            self.nlp.add_pipe("entityLinker", last=True)
 
         global_triples, map_muindex_candidate, ecl = phrases_to_triples(
             phrases, self.nlp, self.rules, window_size=2

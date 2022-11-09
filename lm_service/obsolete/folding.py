@@ -74,7 +74,6 @@ def fold_graph(
     local_root: Optional[int],
     rules,
 ) -> nx.DiGraph:
-
     vprops = graph.nodes[v]
     vflag = get_flag(vprops, rules)
 

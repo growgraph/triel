@@ -285,7 +285,6 @@ def compute_distances(
     dict[tuple[TokenIndexT, TokenIndexT], int],
     dict[tuple[TokenIndexT, TokenIndexT], int],
 ]:
-
     # (u, v) : distance
     distance_directed: dict[tuple[TokenIndexT, TokenIndexT], int] = {
         (i, v): ll
@@ -397,7 +396,6 @@ def derive_targets_per_relaton(
     target_candidate_roots: list[TokenIndexT],
     distance_directed: dict[tuple[TokenIndexT, TokenIndexT], int],
 ) -> dict[TokenIndexT, set[TokenIndexT]]:
-
     # find targets per relation; targets are down the tree
     dist_to_targets: dict[TokenIndexT, dict[TokenIndexT, int]] = {
         r: {

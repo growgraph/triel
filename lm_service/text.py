@@ -133,7 +133,6 @@ def phrases_to_triples(
         else:
             raise TypeError("Unknown TokenIndexT subtype")
         for srunning in range(len(global_ecl[s])):
-
             if current_relation.has_prepositions():
                 relation_redux = [
                     align_relation_to_target(relations[r], tprime, megagraph)

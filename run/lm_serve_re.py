@@ -25,7 +25,6 @@ def hello_world():
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--wsgi-self", type=str)
     parser.add_argument(

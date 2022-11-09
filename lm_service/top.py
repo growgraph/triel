@@ -51,7 +51,6 @@ def to_dict(obj):
 
 
 def text_to_rel_graph(text, nlp, rules, elm):
-
     phrases = normalize_text(text, nlp)
 
     global_triples, map_muindex_candidate, ecl = phrases_to_triples(

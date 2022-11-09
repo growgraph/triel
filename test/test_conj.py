@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class TestR(unittest.TestCase):
-
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     path = Path(__file__).parent
 

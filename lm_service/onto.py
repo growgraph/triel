@@ -654,7 +654,6 @@ class Candidate(AbsCandidate, JSONWizard):
         pass
 
     def to_nx_graph(self, offset=0, use_successors=True):
-
         # i -> s, inverse to _index_set
 
         s2index = {s: j + offset for j, s in enumerate(self._index_vec)}

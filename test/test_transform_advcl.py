@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 class TestR(unittest.TestCase):
-
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     path = Path(__file__).parent
 
@@ -41,12 +40,16 @@ class TestR(unittest.TestCase):
     phrases = normalize_input_text(text, terminal_full_stop=False)
     documents = [
         "The medium was affected by the near-field radiation",
-        "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
-        " telescope to determine the size of known extrasolar planets,"
-        " which will allow the estimation of their mass, density,"
-        " composition and their formation.",
-        "Launched on 18 December 2019, it is the first Small-class mission in"
-        " ESA's Cosmic Vision science programme.",
+        (
+            "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+            " telescope to determine the size of known extrasolar planets,"
+            " which will allow the estimation of their mass, density,"
+            " composition and their formation."
+        ),
+        (
+            "Launched on 18 December 2019, it is the first Small-class mission"
+            " in ESA's Cosmic Vision science programme."
+        ),
     ]
 
     def test_transform_advcl(self):

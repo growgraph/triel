@@ -9,12 +9,13 @@ logger = logging.getLogger(__name__)
 
 
 class TestR(unittest.TestCase):
-
     nlp = spacy.load("en_core_web_trf")
 
     phrases = [
-        "Peter would have caught the fish with a fishing rod, if not the"
-        " darkness. ",
+        (
+            "Peter would have caught the fish with a fishing rod, if not the"
+            " darkness. "
+        ),
     ]
 
     def test_excise(self):

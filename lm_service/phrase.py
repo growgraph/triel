@@ -24,7 +24,6 @@ from lm_service.relation import (
 def phrase_to_triples(
     phrase, nlp, rules, filter_pronouns=True
 ) -> Tuple[List[TripleCandidate], List[Tuple[str, str, str]], nx.DiGraph]:
-
     logger.info(f"{phrase}")
 
     rdoc, graph = phrase_to_deptree(nlp, phrase)

@@ -29,7 +29,6 @@ logger = logging.getLogger(__name__)
 
 
 class TestR(unittest.TestCase):
-
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     path = Path(__file__).parent
 
@@ -44,15 +43,16 @@ class TestR(unittest.TestCase):
     phrases = normalize_input_text(text, terminal_full_stop=False)
     documents = [
         "The medium was affected by the near-field radiation",
-        "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
-        " telescope to determine the size of known extrasolar planets,"
-        " which will allow the estimation of their mass, density,"
-        " composition and their formation.",
+        (
+            "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+            " telescope to determine the size of known extrasolar planets,"
+            " which will allow the estimation of their mass, density,"
+            " composition and their formation."
+        ),
         "He treated her unfairly.",
     ]
 
     def test_relation_candidates(self):
-
         piles = []
         for document in self.documents:
             rdoc, graph = phrase_to_deptree(self.nlp, document)
@@ -84,7 +84,6 @@ class TestR(unittest.TestCase):
         )
 
     def test_st_candidates(self):
-
         piles = []
         for document in self.documents:
             rdoc, graph = phrase_to_deptree(self.nlp, document)
@@ -138,7 +137,6 @@ class TestR(unittest.TestCase):
         )
 
     def test_relation_subtree_dfs(self):
-
         piles = []
         vertices_of_interest = [3, 22, 1]
         vertices_of_interest = [deque([(x, 0)]) for x in vertices_of_interest]

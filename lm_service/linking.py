@@ -190,7 +190,6 @@ def iterate_over_linkers(
     map_muindex_candidate: dict[MuIndex, Candidate],
     elm: EntityLinkerManager,
 ) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
-
     map_eindex_entity: dict[str, Entity] = {}
     map_c2e: list[tuple[MuIndex, str]] = []
 

@@ -159,7 +159,6 @@ def render_coref_candidate_map(
 def render_coref_maps_wrapper(
     rdoc, map_tree_subtree_index=None
 ) -> tuple[defaultdict[int, list[int]], defaultdict[int, list[int]]]:
-
     coref_graph = render_coref_graph(rdoc)
     if map_tree_subtree_index is not None:
         coref_graph = nx.relabel_nodes(coref_graph, map_tree_subtree_index)
@@ -221,7 +220,6 @@ def coref_candidates(
     map_chain_to_most_specific: defaultdict[TokenIndexT, list[TokenIndexT]],
     token_dict: dict[TokenIndexT, Token],
 ) -> defaultdict[TokenIndexT, list[Candidate]]:
-
     map_token_specific_token = {
         i: sub_coreference(
             map_subbable_to_chain, map_chain_to_most_specific, i

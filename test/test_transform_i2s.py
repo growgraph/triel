@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 class TestTransforms(unittest.TestCase):
-
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
     def test_relation_candidates(self):
