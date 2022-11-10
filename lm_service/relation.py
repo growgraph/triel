@@ -386,7 +386,9 @@ def derive_sources_per_relation(
     decision = decision[decision["ud"].eq(mask_ud)]
 
     sources_per_relation = (
-        decision.groupby("r").apply(lambda x: set(x["s"])).to_dict()
+        decision.groupby("r", group_keys=False)
+        .apply(lambda x: set(x["s"]))
+        .to_dict()
     )
     return sources_per_relation
 
