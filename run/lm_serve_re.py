@@ -56,6 +56,8 @@ if __name__ == "__main__":
     wsgi_config = ResourceHandler.load(fpath=args.wsgi_self)
     wsgi_re = ConfigFactory.create_config(args=wsgi_config)
 
+    spacy.prefer_gpu()
+
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
