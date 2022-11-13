@@ -309,10 +309,10 @@ class EntityLinkerManager:
             except:
                 logger.warning(
                     " non standard bern entity (does not look like"
-                    f" `<ent_type>:<id>` : {item}"
+                    f" `<ent_type>:<id>` : {item}. NB: most likely CUI-less"
+                    " entity"
                 )
-                item_id = item["id"][0]
-                db_type = None
+                return None, None
             return Entity(
                 linker_type=EntityLinker.BERN_V2,
                 ent_type=item["obj"],
