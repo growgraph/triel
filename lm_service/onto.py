@@ -218,9 +218,10 @@ class SimplifiedCandidate(JSONWizard):
     text: str | None = None
     role: str | None = None
 
-    def set_role(self, s: str):
-        self.role = s
-        return self
+    def get_copy_with_role(self, role: str):
+        c = dataclasses.replace(self)
+        c.role = role
+        return c
 
 
 @dataclasses.dataclass(repr=False)

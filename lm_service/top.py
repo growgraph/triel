@@ -100,9 +100,9 @@ def cast_triple(
             "triple_index": mu,
             "triple": tuple(  # type: ignore
                 [
-                    s.set_role("source"),
-                    r.set_role("relation"),
-                    t.set_role("target"),
+                    s.get_copy_with_role("source"),
+                    r.get_copy_with_role("relation"),
+                    t.get_copy_with_role("target"),
                 ]
             ),
         }
