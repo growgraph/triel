@@ -1,0 +1,67 @@
+{
+  "triples": [
+    {
+      "triple_index": {
+        "hash": "36dc4e2a7d2eae685d047bca0bc144bc9d95049b"
+      },
+      "triple": [
+        {
+          "hash": "c621319201d349cb4f42aabedbea2c73a1419b98",
+          "text": "diabetic ulcers",
+          "role": "source"
+        },
+        {
+          "hash": "dda96135ac461d989729db27e63bdf3f88b724e3",
+          "text": "is related to",
+          "role": "relation"
+        },
+        {
+          "hash": "0547fec2c8f9153e2ea5619090155c87fddf806b",
+          "text": "burns",
+          "role": "target"
+        }
+      ]
+    }
+  ],
+  "map_mention_entity": [
+    {
+      "mention": {
+        "hash": "c621319201d349cb4f42aabedbea2c73a1419b98",
+        "text": "diabetic ulcers"
+      },
+      "entity": {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D017719",
+        "hash": "BERN_V2/mesh/D017719",
+        "ent_type": "disease"
+      }
+    },
+    {
+      "mention": {
+        "hash": "0547fec2c8f9153e2ea5619090155c87fddf806b",
+        "text": "burns"
+      },
+      "entity": {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D002056",
+        "hash": "BERN_V2/mesh/D002056",
+        "ent_type": "disease"
+      }
+    },
+    {
+      "mention": {
+        "hash": "dda96135ac461d989729db27e63bdf3f88b724e3",
+        "text": "is related to"
+      },
+      "entity": {
+        "linker_type": "LOCAL_NON_EL",
+        "ent_db_type": "ent_db_type_local_gg",
+        "id": "66de09af2a6e83890584e90ccb54a611894c3260",
+        "hash": "LOCAL_NON_EL/ent_db_type_local_gg/66de09af2a6e83890584e90ccb54a611894c3260",
+        "original_form": "be related to"
+      }
+    }
+  ]
+}

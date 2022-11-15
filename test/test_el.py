@@ -1,10 +1,14 @@
+import argparse
+import os
 import pkgutil
 import unittest
 from collections import defaultdict
+from pprint import pprint
 
 import coreferee
 import spacy
 import yaml
+from graph_cast.util import ResourceHandler, equals
 
 from lm_service.linking import (
     EntityLinker,
@@ -24,6 +28,7 @@ from lm_service.top import to_dict
 
 
 class TestEL(unittest.TestCase):
+    cpath = os.path.dirname(os.path.realpath(__file__))
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
 
@@ -85,6 +90,10 @@ class TestEL(unittest.TestCase):
             },
         ]
     }
+
+    def __init__(self, reset):
+        super().__init__()
+        self.reset = reset
 
     def test_bern(self):
         text = "Diabetic ulcers are related to burns."
@@ -351,50 +360,28 @@ class TestEL(unittest.TestCase):
             elm=elm,
         )
 
-        map_eindex_entity_str = to_dict(map_eindex_entity)
+        if not self.reset:
+            ref = ResourceHandler.load(
+                f"test.reference.el", f"iterate_over_linkers.json"
+            )
+            flag = equals(to_dict(map_eindex_entity), ref["map_eindex_entity"])
+            if not flag:
+                pprint(to_dict(map_eindex_entity))
+                pprint(ref["map_eindex_entity"])
+            self.assertTrue(flag)
 
-        map_eindex_entity_ref, map_c2e_ref = (
-            {
-                "BERN_V2/mesh/D017719": {
-                    "linker_type": "BERN_V2",
-                    "ent_db_type": "mesh",
-                    "id": "D017719",
-                    "hash": "BERN_V2/mesh/D017719",
-                    "ent_type": "disease",
-                },
-                "BERN_V2/mesh/D002056": {
-                    "linker_type": "BERN_V2",
-                    "ent_db_type": "mesh",
-                    "id": "D002056",
-                    "hash": "BERN_V2/mesh/D002056",
-                    "ent_type": "disease",
-                },
-                "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3": {
-                    "linker_type": "LOCAL_NON_EL",
-                    "ent_db_type": "ent_db_type_local_gg",
-                    "id": "dda96135ac461d989729db27e63bdf3f88b724e3",
-                    "hash": "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3",
-                    "original_form": "is related to",
-                },
-            },
-            [
-                (
-                    MuIndex(meta=False, phrase=0, token="001", running=0),
-                    "BERN_V2/mesh/D017719",
-                ),
-                (
-                    MuIndex(meta=False, phrase=0, token="005", running=0),
-                    "BERN_V2/mesh/D002056",
-                ),
-                (
-                    MuIndex(meta=False, phrase=0, token="002", running=9),
-                    "LOCAL_NON_EL/ent_db_type_local_gg/dda96135ac461d989729db27e63bdf3f88b724e3",
-                ),
-            ],
-        )
+            self.assertEqual(to_dict(map_c2e), ref["map_c2e"])
 
-        self.assertEqual(map_eindex_entity_str, map_eindex_entity_ref)
-        self.assertEqual(map_c2e, map_c2e_ref)
+        else:
+            ResourceHandler.dump(
+                {
+                    "map_eindex_entity": to_dict(map_eindex_entity),
+                    "map_c2e": to_dict(map_c2e),
+                },
+                os.path.join(
+                    self.cpath, "reference/el/iterate_over_linkers.json"
+                ),
+            )
 
     def test_phrasemapper(self):
         pretext = (
@@ -600,6 +587,21 @@ class TestEL(unittest.TestCase):
             ],
         )
 
+    def runTest(self):
+        self.test_iterate_over_linkers()
+        self.test_iterate_linking_bern()
+        self.test_qb()
+        self.test_bern()
+        self.test_fishing()
+        self.test_phrasemapper()
+
 
 if __name__ == "__main__":
-    unittest.main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--reset", action="store_true", help="reset test results"
+    )
+    args = parser.parse_args()
+    suite = unittest.TestSuite()
+    suite.addTest(TestEL(args.reset))
+    unittest.TextTestRunner(verbosity=2).run(suite)

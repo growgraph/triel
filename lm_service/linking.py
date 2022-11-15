@@ -9,6 +9,7 @@ import numpy as np
 import requests
 from dataclass_wizard import JSONWizard
 from spacy.tokens import Token
+from wordfreq import zipf_frequency
 
 from lm_service.hash import hashme
 from lm_service.onto import Candidate, MuIndex
@@ -106,12 +107,14 @@ def link_unlinked_entities(
     map_eindex_entity: dict[str, Entity],
     map_c2e: list[tuple[MuIndex, str]],
     map_muindex_candidate: dict[MuIndex, Candidate],
+    n_token_min=3,
 ) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
     """
 
     :param map_eindex_entity:
     :param map_muindex_candidate:
     :param map_c2e:
+    :param n_token_min: min number of tokens to compute hash (could be more if they are infrequent)
 
     :return:
         i_e -> e ; i_e -> i_mu
@@ -123,15 +126,34 @@ def link_unlinked_entities(
 
     for i_mu in mentions_not_in_entities:
         c = map_muindex_candidate[i_mu]
-        original_form = " ".join(c.project_to_text()).lower()
+        lemmatized = [x.lemma for x in c.tokens]
 
-        e_id = c.hashme()
+        zipf_freqs = [
+            zipf_frequency(
+                word,
+                "en",
+            )
+            for word in lemmatized
+        ]
+        index_zipf_metric = sorted(enumerate(zipf_freqs), key=lambda x: x[1])
+        n_tokens = max(
+            [
+                len([item for item in index_zipf_metric if item[1] < 5.6]),
+                n_token_min,
+            ]
+        )
+        lucky_indices = [k for k, _ in index_zipf_metric[:n_tokens]]
+        least_frequent = [
+            w for j, w in enumerate(lemmatized) if j in lucky_indices
+        ]
+        least_frequent_phrase = " ".join(least_frequent)
+        e_id = hashme(" ".join(least_frequent))
 
         new_entity = Entity(
             linker_type=EntityLinker.LOCAL_NON_EL,
             ent_db_type=ent_db_type_local_gg,
             id=e_id,
-            original_form=original_form,
+            original_form=least_frequent_phrase,
         )
         map_c2e += [(i_mu, new_entity.hash)]
         map_eindex_entity[new_entity.hash] = new_entity
