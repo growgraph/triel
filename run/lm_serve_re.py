@@ -49,7 +49,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logging.basicConfig(
-        filename="lm_serve.log",
+        filename="lm_serve_re.log",
         format=(
             "%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s:"
             " %(message)s"
@@ -93,4 +93,4 @@ if __name__ == "__main__":
 
     logger.info(f" wsgi: host {wsgi_re.host}")
     logger.info(" re model loaded")
-    serve(app, host=wsgi_re.host, port=wsgi_re.port)
+    serve(app, host=wsgi_re.host, port=wsgi_re.port, threads=args.threads)
