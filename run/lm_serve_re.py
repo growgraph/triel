@@ -9,6 +9,7 @@ from flask import Flask, jsonify, request
 from flask_restful import Api
 from graph_cast.db.factory import ConfigFactory
 from graph_cast.util import ResourceHandler
+from waitress import serve
 
 from lm_service.linking import EntityLinkerManager
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
@@ -83,5 +84,4 @@ if __name__ == "__main__":
 
     logger.info(f" wsgi: host {wsgi_re.host}")
     logger.info(" re model loaded")
-
-    app.run(port=wsgi_re.port, host=wsgi_re.host)
+    serve(app, host=wsgi_re.host, port=wsgi_re.port)

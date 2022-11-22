@@ -31,7 +31,7 @@ repos:
 #          - --module lm_service
         exclude: ^test/
         args: [--show-error-codes]
-        additional_dependencies: ['types-requests']
+        additional_dependencies: ['types-requests', 'types-waitress']
 
 
 #  - repo: https://github.com/pre-commit/mirrors-pylint
