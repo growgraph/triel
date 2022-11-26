@@ -8,7 +8,7 @@ import networkx as nx
 
 from lm_service.onto import Candidate, MuIndex, Relation, TokenIndexT
 from lm_service.piles import CandidatePile, ExtCandidateList
-from lm_service.preprocessing import normalize_input_text, transform_advcl
+from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
 from lm_service.relation import (
     align_relation_to_target,
     form_triples,
@@ -28,7 +28,14 @@ def normalize_text(text, nlp, head=None) -> list[str]:
         phrases_original = phrases_original[:head]
     phrases = []
     for p in phrases_original:
-        phrases += transform_advcl(nlp, p)
+        try:
+            sphrases = pivot_around_advcl(nlp, p)
+        except Exception as e:
+            logger.error(
+                f" exception {e}; pivot_around_advcl failed on <fail>{p}<fail>"
+            )
+            sphrases = [p]
+        phrases += sphrases
     return phrases
 
 
@@ -335,6 +342,7 @@ def phrases_to_basis_triples(
         ) = text_to_compound_index_graph(nlp, phrase, initial_phrase_index=k)
 
         if plot_path is not None:
+            logger.info(f"{k}, {phrase}")
             plot_graph(graph_relabeled, plot_path, f"phrase_{k}_full")
 
         pile, candidate_depot0, mod_graph = graph_to_candidate_pile(

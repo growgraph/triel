@@ -7,7 +7,7 @@ import coreferee
 import spacy
 
 from lm_service.coref import render_coref_graph
-from lm_service.preprocessing import normalize_input_text, transform_advcl
+from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
 from lm_service.relation import text_to_compound_index_graph
 from lm_service.util import plot_graph
 
@@ -88,7 +88,9 @@ if __name__ == "__main__":
         " ".join(normalize_input_text(p, terminal_full_stop=True))
         for p in phrases
     ]
-    phrases = [p for phrase0 in phrases for p in transform_advcl(nlp, phrase0)]
+    phrases = [
+        p for phrase0 in phrases for p in pivot_around_advcl(nlp, phrase0)
+    ]
 
     for phrase in phrases:
         main(phrase, nlp)

@@ -13,7 +13,7 @@ import spacy
 import yaml
 
 from lm_service.graph import phrase_to_deptree
-from lm_service.preprocessing import normalize_input_text, transform_advcl
+from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
 from lm_service.util import plot_graph
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class TestR(unittest.TestCase):
             "it is the first Small-class mission in "
             "ESA's Cosmic Vision science programme."
         )
-        out = transform_advcl(self.nlp, phrase)
+        out = pivot_around_advcl(self.nlp, phrase)
         self.assertEqual(
             out,
             [

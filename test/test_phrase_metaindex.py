@@ -16,7 +16,7 @@ from lm_service.coref import (
     render_coref_maps_wrapper,
 )
 from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
-from lm_service.preprocessing import normalize_input_text, transform_advcl
+from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
 from lm_service.relation import graph_to_candidate_pile
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ class TestR(unittest.TestCase):
         fragment = [
             p
             for phrase0 in fragment
-            for p in transform_advcl(self.nlp, phrase0)
+            for p in pivot_around_advcl(self.nlp, phrase0)
         ]
 
         fragment_joined = " ".join(fragment)

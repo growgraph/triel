@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 
 import networkx as nx
@@ -7,6 +8,8 @@ from spacy import Language
 from unidecode import unidecode
 
 from lm_service.graph import get_subtree_wrapper, phrase_to_deptree
+
+logger = logging.getLogger(__name__)
 
 
 def split_tokens_into_phrases(tokens_list, terminal_puncts=None):
@@ -40,7 +43,16 @@ def normalize_input_text(text, terminal_full_stop=True):
     :param terminal_full_stop: add terminal full stop to each phrase, or not
     :return:
     """
+
+    # cast possible diacritics to ascii
     text = unidecode(text)
+
+    # deal with double backslash
+    text = bytes(text, "utf-8").decode("unicode_escape")
+
+    # to get rid of all whitespace-like
+
+    text = re.sub(r"\s+", " ", text)
 
     # split if word or punctuation
     # regex
@@ -57,9 +69,10 @@ def normalize_input_text(text, terminal_full_stop=True):
     return phrases
 
 
-def transform_advcl(nlp: Language, phrase) -> list[str]:
+def pivot_around_advcl(nlp: Language, phrase) -> list[str]:
     """
-        somehow coreference works better
+        coreference works better after pivot_around_advcl is applied
+        idea take advcl component and move complement to the end of the subtree with advcl root
     :param nlp:
     :param phrase:
     :return:
@@ -110,7 +123,7 @@ def transform_advcl(nlp: Language, phrase) -> list[str]:
                 list(range(adv_nodes[0], adv_nodes[0] + len(adv_nodes)))
                 != adv_nodes
             ):
-                raise Exception(" subtree nodes are not a sequence")
+                raise Exception(f" subtree nodes are not a sequence {phrase}")
             if (
                 list(range(next_nodes[0], next_nodes[0] + len(next_nodes)))
                 != next_nodes
