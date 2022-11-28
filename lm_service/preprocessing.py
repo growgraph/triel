@@ -48,7 +48,12 @@ def normalize_input_text(text, terminal_full_stop=True):
     text = unidecode(text)
 
     # deal with double backslash
-    text = bytes(text, "utf-8").decode("unicode_escape")
+    try:
+        text = bytes(text, "utf-8").decode("unicode_escape")
+    except:
+        # TODO breaking example : text =  'The program is freely available at \\url{http://graphics.med.yale.edu/cgi-bin/lib_comp.pl}.'
+        # in \\url is interpreted as the beginning of escape sequence
+        pass
 
     # to get rid of all whitespace-like
 
