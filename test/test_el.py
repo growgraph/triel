@@ -130,11 +130,11 @@ class TestEL(unittest.TestCase):
             [
                 (
                     MuIndex(meta=False, phrase=0, token="001", running=0),
-                    "BERN_V2/mesh/D017719",
+                    "BERN_V2.mesh.D017719",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="005", running=0),
-                    "BERN_V2/mesh/D002056",
+                    "BERN_V2.mesh.D002056",
                 ),
             ],
         )
@@ -171,29 +171,29 @@ class TestEL(unittest.TestCase):
 
         map_eindex_entity_str_ref, map_c2e_ref = (
             {
-                "BERN_V2/mesh/D017719": {
+                "BERN_V2.mesh.D017719": {
                     "linker_type": "BERN_V2",
                     "ent_db_type": "mesh",
                     "id": "D017719",
-                    "hash": "BERN_V2/mesh/D017719",
+                    "hash": "BERN_V2.mesh.D017719",
                     "ent_type": "disease",
                 },
-                "BERN_V2/mesh/D002056": {
+                "BERN_V2.mesh.D002056": {
                     "linker_type": "BERN_V2",
                     "ent_db_type": "mesh",
                     "id": "D002056",
-                    "hash": "BERN_V2/mesh/D002056",
+                    "hash": "BERN_V2.mesh.D002056",
                     "ent_type": "disease",
                 },
             },
             [
                 (
                     MuIndex(meta=False, phrase=0, token="001", running=0),
-                    "BERN_V2/mesh/D017719",
+                    "BERN_V2.mesh.D017719",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="005", running=0),
-                    "BERN_V2/mesh/D002056",
+                    "BERN_V2.mesh.D002056",
                 ),
             ],
         )
@@ -443,19 +443,19 @@ class TestEL(unittest.TestCase):
             [
                 (
                     MuIndex(meta=False, phrase=0, token="001", running=0),
-                    "BERN_V2/mesh/D017719",
+                    "BERN_V2.mesh.D017719",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="005", running=0),
-                    "BERN_V2/mesh/D002056",
+                    "BERN_V2.mesh.D002056",
                 ),
                 (
                     MuIndex(meta=False, phrase=1, token="003", running=0),
-                    "BERN_V2/mesh/D009369",
+                    "BERN_V2.mesh.D009369",
                 ),
                 (
                     MuIndex(meta=False, phrase=1, token="006", running=0),
-                    "BERN_V2/mesh/D001120",
+                    "BERN_V2.mesh.D001120",
                 ),
             ],
         )
@@ -578,11 +578,11 @@ class TestEL(unittest.TestCase):
             [
                 (
                     MuIndex(meta=False, phrase=0, token="001", running=0),
-                    "FISHING/wikidataId/Q2078852",
+                    "FISHING.wikidataId.Q2078852",
                 ),
                 (
                     MuIndex(meta=False, phrase=0, token="006", running=0),
-                    "FISHING/wikidataId/Q170518",
+                    "FISHING.wikidataId.Q170518",
                 ),
             ],
         )

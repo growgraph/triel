@@ -60,7 +60,7 @@ class Entity(JSONWizard):
     description: str | None = None
 
     def __post_init__(self):
-        self.hash = f"{self.linker_type}/{self.ent_db_type}/{self.id}"
+        self.hash = f"{self.linker_type}.{self.ent_db_type}.{self.id}"
 
     def as_dict(self):
         return {
