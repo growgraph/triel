@@ -699,8 +699,22 @@ def sieve_sources_targets(
     return sources, targets
 
 
-def text_to_compound_index_graph(nlp, text, initial_phrase_index):
+def text_to_compound_index_graph(
+    nlp, text, initial_phrase_index, single_phrase_mode=False
+):
     rdoc, graph = phrase_to_deptree(nlp, text)
+
+    if single_phrase_mode and nx.number_weakly_connected_components(graph) > 1:
+        components = sorted(
+            nx.weakly_connected_components(graph), key=lambda x: len(x)
+        )
+        sg = nx.subgraph(graph, components[-1])
+        logger.warning(
+            f" with single_phrase_mode from text <fail>{text}<fail> only"
+            f" largest component [representing {sg.size()}/{graph.size()}] was"
+            " kept."
+        )
+        graph = sg
 
     # cast index to compound index
     map_tree_subtree_index = graph_component_maps(graph, initial_phrase_index)

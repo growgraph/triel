@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+import string
 from abc import ABC
 from collections import deque
 from copy import deepcopy
@@ -646,7 +647,9 @@ class Candidate(AbsCandidate, JSONWizard):
 
     def drop_punct(self):
         drop_aux_indices = [
-            j for j, t in self._tokens.items() if t.dep_ == "punct"
+            j
+            for j, t in self._tokens.items()
+            if t.dep_ == "punct" and t.tag_ in string.punctuation
         ]
         self.drop_tokens(drop_aux_indices)
         return self

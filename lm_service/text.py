@@ -339,7 +339,9 @@ def phrases_to_basis_triples(
             graph_relabeled,
             rdoc,
             map_tree_subtree_index,
-        ) = text_to_compound_index_graph(nlp, phrase, initial_phrase_index=k)
+        ) = text_to_compound_index_graph(
+            nlp, phrase, initial_phrase_index=k, single_phrase_mode=True
+        )
 
         if plot_path is not None:
             logger.info(f"{k}, {phrase}")

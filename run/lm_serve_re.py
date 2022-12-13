@@ -1,7 +1,6 @@
 import argparse
 import logging
 import pkgutil
-import sys
 
 import coreferee
 import spacy
@@ -57,10 +56,6 @@ if __name__ == "__main__":
         level=logging.INFO if args.verbose else logging.ERROR,
         datefmt="%Y-%m-%d %H:%M:%S",
         filemode="w",
-    )
-    logging.basicConfig(
-        level=logging.INFO,
-        stream=sys.stdout,
     )
 
     wsgi_config = ResourceHandler.load(fpath=args.wsgi_self)

@@ -267,7 +267,7 @@ def coref_candidates(
         # indices to substitute using co-reference
         candidate_ix_subs = set(map_trunc) & set(sigma_candidate.stokens)
 
-        # supposed we 1->2; 2->3 substitution, at the iteration first remove 2->3 sub
+        # suppose we have 1->2; 2->3 substitution, first do 2->3 sub
         map_trunc_local_uniq: dict[TokenIndexT, list[TokenIndexT]] = {
             k: v for k, v in map_trunc.items() if k in candidate_ix_subs
         }
@@ -307,5 +307,13 @@ def coref_candidates(
                     )
                 deq.append((sroot, sigma_copy))
         else:
-            ecl_like[sroot] += [sigma_candidate.normalize().sort_index()]
+            try:
+                sigma_new = sigma_candidate.normalize().sort_index()
+            except:
+                logger.warning(
+                    "sigma_candidate.normalize().sort_index() failed for for"
+                    f" {sigma_candidate}"
+                )
+                sigma_new = sigma_candidate
+            ecl_like[sroot] += [sigma_new]
     return ecl_like

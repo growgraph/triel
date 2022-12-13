@@ -8,6 +8,7 @@ import pkgutil
 import sys
 import unittest
 from pathlib import Path
+from pprint import pprint
 
 import spacy
 import yaml
@@ -37,20 +38,21 @@ class TestR(unittest.TestCase):
 
     nlp = spacy.load("en_core_web_trf")
 
-    phrases = normalize_input_text(text, terminal_full_stop=False)
-    documents = [
-        "The medium was affected by the near-field radiation",
-        (
-            "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
-            " telescope to determine the size of known extrasolar planets,"
-            " which will allow the estimation of their mass, density,"
-            " composition and their formation."
-        ),
-        (
-            "Launched on 18 December 2019, it is the first Small-class mission"
-            " in ESA's Cosmic Vision science programme."
-        ),
-    ]
+    def test_normalize_input_text(self):
+        documents = [
+            (
+                "The program is freely available at"
+                " \\url{http://graphics.med.yale.edu/cgi-bin/lib_comp.pl}."
+            ),
+            (
+                "Launched on 18 December 2019, it is the first Small-class"
+                " mission in ESA's Cosmic Vision science programme."
+            ),
+        ]
+        for d in documents:
+            phrases = normalize_input_text(d, terminal_full_stop=False)
+            print(len(phrases))
+            pprint(phrases)
 
     def test_transform_advcl(self):
         phrase = (

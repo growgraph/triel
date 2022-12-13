@@ -51,26 +51,20 @@ def normalize_input_text(text, terminal_full_stop=True):
     try:
         text = bytes(text, "utf-8").decode("unicode_escape")
     except:
-        # TODO breaking example : text =  'The program is freely available at \\url{http://graphics.med.yale.edu/cgi-bin/lib_comp.pl}.'
+        # TODO breaking example :
+        #  text =  'The program is freely available at \\url{http://graphics.med.yale.edu/cgi-bin/lib_comp.pl}.'
         # in \\url is interpreted as the beginning of escape sequence
-        pass
+        logger.warning(f" unicode decoding failed; latex in text")
 
-    # to get rid of all whitespace-like
-
+    # condense white spaces
     text = re.sub(r"\s+", " ", text)
 
-    # split if word or punctuation
-    # regex
-    # 1. keep floats together
-    # 2. word with apostrophe or dash is considered as a whole
-    # 3. .,!?;:\()<>
-    pat = r"\d+(?:[.,]\d+)?|[\w\'\-\/]+|[.,!?;:\\(\)<>%]"
-    tokenized_agg = re.findall(pat, text)
-
-    phrases = split_tokens_into_phrases(tokenized_agg)
-    if not terminal_full_stop:
-        phrases = [ph[:-1] for ph in phrases]
-    phrases = [" ".join(ph) for ph in phrases]
+    # split on .!? if followed by a capital and not preceded by a capital
+    pat = r"(?<=[^A-Z][.!?])\s*(?=[A-Z])"
+    phrases = re.split(pat, text)
+    # trim initial/terminal whitespaces
+    trip_whitespace = re.compile(r"^[\s+]+|[\s+]+$")
+    phrases = [trip_whitespace.sub("", p) for p in phrases]
     return phrases
 
 
