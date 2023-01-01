@@ -1,4 +1,6 @@
 import logging
+import os
+import pathlib
 import pkgutil
 import sys
 import unittest
@@ -7,16 +9,9 @@ import coreferee
 import spacy
 import yaml
 
-from lm_service.coref import (
-    coref_candidates,
-    graph_component_maps,
-    render_coref_maps_wrapper,
-    sub_coreference,
-)
-from lm_service.graph import phrase_to_deptree
-from lm_service.onto import Token, apply_map
-from lm_service.relation import text_to_compound_index_graph
-from lm_service.text import phrases_to_basis_triples
+from lm_service.piles import ExtCandidateList
+from lm_service.relation import text_to_coref_sourcetarget
+from lm_service.text import phrases_to_triples_stage_a
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +19,22 @@ logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
 
 
 class TestCoref(unittest.TestCase):
-    phrase = (
-        "Although he was very busy with his work, Peter Brown had had enough"
-        " of it. He and his wife decided they needed a holiday. They travelled"
-        " to Spain because they loved the country very much."
+    figs_folder = "./.figs"
+    current_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), figs_folder
+    )
+    pathlib.Path(current_path).mkdir(parents=True, exist_ok=True)
+
+    path = pathlib.Path(__file__).parent
+    fig_path = os.path.join(path, figs_folder)
+
+    phrases = (
+        (
+            "Although he was very busy with his work, Peter Brown had had"
+            " enough of it."
+        ),
+        "He and his wife decided they needed a holiday.",
+        "They travelled to Spain because they loved the country very much.",
     )
 
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
@@ -99,52 +106,30 @@ class TestCoref(unittest.TestCase):
         (
             striples,
             striples_meta,
-            candidate_depot,
             relations,
-            _,
-        ) = phrases_to_basis_triples(self.nlp, self.rules, [self.phrase])
-
-        (
-            graph_relabeled,
-            rdoc,
-            map_tree_subtree_index,
-        ) = text_to_compound_index_graph(
-            self.nlp, self.phrase, initial_phrase_index=0
+            ext_cand_list,
+            megagraph,
+        ) = phrases_to_triples_stage_a(
+            self.phrases, self.nlp, self.rules, plot_path=self.fig_path
         )
 
-        # coref maps
-        (
-            map_subbable_to_chain,
-            map_chain_to_most_specific,
-        ) = render_coref_maps_wrapper(rdoc)
+        global_ecl = ExtCandidateList()
 
-        (
-            map_subbable_to_chain_str,
-            map_chain_to_most_specific_str,
-        ) = apply_map(
-            [map_subbable_to_chain, map_chain_to_most_specific],
-            map_tree_subtree_index,
-        )
-
-        ecl = candidate_depot.unfold_conjunction()
-
-        tokens = [
-            Token(
-                **graph_relabeled.nodes[i],
-                successors=graph_relabeled.successors(i),
-                predecessors=graph_relabeled.predecessors(i),
+        window_size = 5
+        window_size = min([window_size, len(self.phrases)])
+        nmax = len(self.phrases) - window_size + 1
+        for i in range(nmax):
+            fragment = " ".join(self.phrases[i : i + window_size])
+            ext_cand_list.set_filter(lambda x: i <= x[0] < i + window_size)
+            ncp = text_to_coref_sourcetarget(
+                self.nlp, fragment, ext_cand_list, initial_phrase_index=i
             )
-            for i in graph_relabeled.nodes()
-        ]
 
-        token_dict = {t.s: t for t in tokens}
+            for key, candidate_list in ncp.items():
+                for c in candidate_list:
+                    global_ecl.append(key, c)
 
-        ncp = coref_candidates(
-            ecl,
-            map_subbable_to_chain_str,
-            map_chain_to_most_specific_str,
-            token_dict,
-        )
+        global_ecl.filter_out_pronouns()
 
         ncp_ref = [
             ((0, "001"), [[(0, "009"), (0, "010")]]),

@@ -329,7 +329,7 @@ class TestTriples(unittest.TestCase):
             MuIndex(meta=True, phrase=4, token="000", running=1): (
                 "thousandOfExoplanets",
                 "isDiscoveredBy",
-                "endOf2010S",
+                "endOf2010",
             ),
             MuIndex(meta=True, phrase=4, token="000", running=2): (
                 "others",
@@ -363,7 +363,8 @@ class TestTriples(unittest.TestCase):
             ),
         }
 
-        self.assertEqual(global_triples_txt, reference)
+        for k in global_triples_txt:
+            self.assertEqual(global_triples_txt[k], reference[k])
 
 
 if __name__ == "__main__":

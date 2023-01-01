@@ -1,7 +1,6 @@
 import hashlib
 import os
 import pathlib
-from pathlib import Path
 
 import coreferee
 import spacy
@@ -13,14 +12,14 @@ from lm_service.util import plot_graph
 
 
 def main(phrase, nlp):
-    figs_folder = "./figs"
+    figs_folder = "./.figs"
     current_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), figs_folder
     )
     pathlib.Path(current_path).mkdir(parents=True, exist_ok=True)
 
-    path = Path(__file__).parent
-    fig_path = os.path.join(path, "figs")
+    path = pathlib.Path(__file__).parent
+    fig_path = os.path.join(path, figs_folder)
 
     chash = hashlib.sha256(phrase.encode("utf-8")).hexdigest()
     (
@@ -85,12 +84,13 @@ if __name__ == "__main__":
     ]
 
     phrases = [
-        " ".join(normalize_input_text(p, terminal_full_stop=True))
+        " ".join(normalize_input_text(p, terminal_full_stop=False))
         for p in phrases
     ]
-    phrases = [
-        p for phrase0 in phrases for p in pivot_around_advcl(nlp, phrase0)
+
+    phrases2 = [
+        " ".join(pivot_around_advcl(nlp, phrase0)) for phrase0 in phrases
     ]
 
-    for phrase in phrases:
+    for phrase in phrases2:
         main(phrase, nlp)

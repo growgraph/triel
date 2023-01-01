@@ -649,7 +649,8 @@ class Candidate(AbsCandidate, JSONWizard):
         drop_aux_indices = [
             j
             for j, t in self._tokens.items()
-            if t.dep_ == "punct" and t.tag_ in string.punctuation
+            if t.dep_ == "punct"
+            and (t.tag_ in string.punctuation or t.text in string.punctuation)
         ]
         self.drop_tokens(drop_aux_indices)
         return self
