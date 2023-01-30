@@ -54,7 +54,7 @@ def normalize_input_text(text, terminal_full_stop=True):
         # TODO breaking example :
         #  text =  'The program is freely available at \\url{http://graphics.med.yale.edu/cgi-bin/lib_comp.pl}.'
         # in \\url is interpreted as the beginning of escape sequence
-        logger.warning(f" unicode decoding failed; latex in text")
+        logger.warning(" unicode decoding failed; latex in text")
 
     # condense white spaces
     text = re.sub(r"\s+", " ", text)
@@ -63,8 +63,8 @@ def normalize_input_text(text, terminal_full_stop=True):
     pat = r"(?<=[^A-Z][.!?])\s*(?=[A-Z])"
     phrases = re.split(pat, text)
     # trim initial/terminal whitespaces
-    trip_whitespace = re.compile(r"^[\s+]+|[\s+]+$")
-    phrases = [trip_whitespace.sub("", p) for p in phrases]
+    trim_whitespace = re.compile(r"^[\s+]+|[\s+]+$")
+    phrases = [trim_whitespace.sub("", p) for p in phrases]
     return phrases
 
 

@@ -35,10 +35,10 @@ class EntityLinker(str, Enum):
     BERN_V2 = "BERN_V2"
     FISHING = "FISHING"
     SPACY_BASIC = "SPACY_BASIC"
-    LOCAL_NON_EL = "LOCAL_NON_EL"
+    GG = "GG"
 
 
-ent_db_type_local_gg = "ent_db_type_local_gg"
+ent_db_type_gg_verbatim = "verbatim"
 
 
 @dataclasses.dataclass(repr=False)
@@ -150,8 +150,8 @@ def link_unlinked_entities(
         e_id = hashme(" ".join(least_frequent))
 
         new_entity = Entity(
-            linker_type=EntityLinker.LOCAL_NON_EL,
-            ent_db_type=ent_db_type_local_gg,
+            linker_type=EntityLinker.GG,
+            ent_db_type=ent_db_type_gg_verbatim,
             id=e_id,
             original_form=least_frequent_phrase,
         )
