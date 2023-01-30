@@ -47,7 +47,7 @@ class TestREL(unittest.TestCase):
 
         if not self.reset:
             ref = ResourceHandler.load(
-                f"test.reference.el", f"iterate_linking_bern.json"
+                "test.reference.el", f"iterate_linking_bern.json"
             )
             self.assertEqual(response_jsonlike, ref)
 

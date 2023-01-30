@@ -1,39 +1,39 @@
 {
-  "map_eindex_entity": {
-    "BERN_V2.mesh.D017719": {
-      "linker_type": "BERN_V2",
-      "ent_db_type": "mesh",
-      "id": "D017719",
-      "hash": "BERN_V2.mesh.D017719",
-      "ent_type": "disease"
+    "map_eindex_entity": {
+        "BERN_V2.mesh.D017719": {
+            "linker_type": "BERN_V2",
+            "ent_db_type": "mesh",
+            "id": "D017719",
+            "hash": "BERN_V2.mesh.D017719",
+            "ent_type": "disease"
+        },
+        "BERN_V2.mesh.D002056": {
+            "linker_type": "BERN_V2",
+            "ent_db_type": "mesh",
+            "id": "D002056",
+            "hash": "BERN_V2.mesh.D002056",
+            "ent_type": "disease"
+        },
+        "GG.verbatim.66de09af2a6e83890584e90ccb54a611894c3260": {
+            "linker_type": "GG",
+            "ent_db_type": "verbatim",
+            "id": "66de09af2a6e83890584e90ccb54a611894c3260",
+            "hash": "GG.verbatim.66de09af2a6e83890584e90ccb54a611894c3260",
+            "original_form": "be related to"
+        }
     },
-    "BERN_V2.mesh.D002056": {
-      "linker_type": "BERN_V2",
-      "ent_db_type": "mesh",
-      "id": "D002056",
-      "hash": "BERN_V2.mesh.D002056",
-      "ent_type": "disease"
-    },
-    "GG.verbatim.66de09af2a6e83890584e90ccb54a611894c3260": {
-      "linker_type": "GG",
-      "ent_db_type": "verbatim",
-      "id": "66de09af2a6e83890584e90ccb54a611894c3260",
-      "hash": "GG.verbatim.66de09af2a6e83890584e90ccb54a611894c3260",
-      "original_form": "be related to"
-    }
-  },
-  "map_c2e": [
-    [
-      "0|0|1|0",
-      "BERN_V2.mesh.D017719"
-    ],
-    [
-      "0|0|5|0",
-      "BERN_V2.mesh.D002056"
-    ],
-    [
-      "0|0|2|9",
-      "GG.verbatim.66de09af2a6e83890584e90ccb54a611894c3260"
+    "map_c2e": [
+        [
+            "0|0|1|0",
+            "BERN_V2.mesh.D017719"
+        ],
+        [
+            "0|0|5|0",
+            "BERN_V2.mesh.D002056"
+        ],
+        [
+            "0|0|2|9",
+            "GG.verbatim.66de09af2a6e83890584e90ccb54a611894c3260"
+        ]
     ]
-  ]
 }
