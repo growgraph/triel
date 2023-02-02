@@ -55,7 +55,7 @@ if __name__ == "__main__":
         ),
         level=logging.INFO if args.verbose else logging.ERROR,
         datefmt="%Y-%m-%d %H:%M:%S",
-        filemode="w",
+        filemode="a",
     )
 
     wsgi_config = ResourceHandler.load(fpath=args.wsgi_self)
