@@ -31,6 +31,10 @@ class EntityLinkerTypeNotAvailable(Exception):
     pass
 
 
+class EntityLinkerFailed(Exception):
+    pass
+
+
 class EntityLinker(str, Enum):
     BERN_V2 = "BERN_V2"
     FISHING = "FISHING"
@@ -234,6 +238,9 @@ def iterate_over_linkers(
                 logger.error(f" <exception_start>: {e} <exception_end>")
 
                 logger.error(f" ex : {phrases}")
+                raise EntityLinkerFailed(
+                    f" EntityLinker.{link_mode} failed, possibly down"
+                )
 
         logger.info(
             f" linking for {link_mode} took {t_linking.elapsed:.2f} sec"
@@ -313,8 +320,6 @@ class EntityLinkerManager:
                 EntityLinkerManager._normalize_fishing_entity(item)
                 for item in ents
             ]
-        # elif self.current_kind == EntityLinker.SPACY_BASIC:
-        #     return EntityLinkerManager._normalize_spacy_basic(response)
         else:
             return None, None
 

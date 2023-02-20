@@ -11,7 +11,7 @@ from graph_cast.db.factory import ConfigFactory
 from graph_cast.util import ResourceHandler
 from waitress import serve
 
-from lm_service.linking import EntityLinkerManager
+from lm_service.linking import EntityLinkerFailed, EntityLinkerManager
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 app = Flask(__name__)
@@ -78,7 +78,10 @@ if __name__ == "__main__":
             logger.info(request.json)
             json_data = request.json
             text = json_data["text"]
-            response = text_to_rel_graph(text, nlp, rules, elm)
+            try:
+                response = text_to_rel_graph(text, nlp, rules, elm)
+            except EntityLinkerFailed as e:
+                return {"error": str(e)}, 500
             response_jsonlike = cast_response_to_unfolded(
                 response, cast_triple_version="v1"
             )
