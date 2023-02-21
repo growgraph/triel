@@ -749,7 +749,10 @@ def text_to_coref_sourcetarget(
         map_chain_to_most_specific,
     ) = render_coref_maps_wrapper(rdoc)
 
-    (map_subbable_to_chain_str, map_chain_to_most_specific_str,) = apply_map(
+    (
+        map_subbable_to_chain_str,
+        map_chain_to_most_specific_str,
+    ) = apply_map(
         [map_subbable_to_chain, map_chain_to_most_specific],
         map_tree_subtree_index,
     )
