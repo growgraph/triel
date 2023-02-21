@@ -385,11 +385,16 @@ def derive_sources_per_relation(
 
     decision = decision[decision["ud"].eq(mask_ud)]
 
-    sources_per_relation = (
-        decision.groupby("r", group_keys=False)
-        .apply(lambda x: set(x["s"]))
-        .to_dict()
-    )
+    if decision.empty:
+        sources_per_relation: dict[TokenIndexT, set[TokenIndexT]] = {
+            t: set() for t in relation_candidate_roots
+        }
+    else:
+        sources_per_relation = (
+            decision.groupby("r", group_keys=False)
+            .apply(lambda x: set(x["s"]))
+            .to_dict()
+        )
     return sources_per_relation
 
 
@@ -620,8 +625,14 @@ def form_triples(
     relation_sroots = set(pile.relations.sroots)
 
     for sroot in pile.relations.sroots:
-        sources = sources_per_relation[sroot]
-        targets = targets_per_relation[sroot]
+        try:
+            sources = sources_per_relation[sroot]
+        except:
+            sources = set()
+        try:
+            targets = targets_per_relation[sroot]
+        except:
+            targets = set()
         if not sources:
             sources = rel_sources_per_relation[sroot]
         if not targets:
