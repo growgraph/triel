@@ -222,25 +222,13 @@ def iterate_over_linkers(
     for link_mode in elm.linker_types:
         elm.set_linker_type(link_mode)
         with Timer() as t_linking:
-            try:
-                map_eindex_entity, map_c2e = link_over_phrases(
-                    phrases=phrases,
-                    ecl=ecl,
-                    elm=elm,
-                    map_eindex_entity=map_eindex_entity,
-                    map_c2e=map_c2e,
-                )
-            except Exception as e:
-                logger.error(
-                    f"in iterate_over_linkers, linker {link_mode} failed."
-                )
-
-                logger.error(f" <exception_start>: {e} <exception_end>")
-
-                logger.error(f" ex : {phrases}")
-                raise EntityLinkerFailed(
-                    f" EntityLinker.{link_mode} failed, possibly down"
-                )
+            map_eindex_entity, map_c2e = link_over_phrases(
+                phrases=phrases,
+                ecl=ecl,
+                elm=elm,
+                map_eindex_entity=map_eindex_entity,
+                map_c2e=map_c2e,
+            )
 
         logger.info(
             f" linking for {link_mode} took {t_linking.elapsed:.2f} sec"
@@ -288,6 +276,7 @@ class EntityLinkerManager:
     def query(self, text):
         return EntityLinkerManager.query0(
             text,
+            self.current_kind,
             self.configs[self.current_kind].text_field,
             self.configs[self.current_kind].url,
             self.configs[self.current_kind].extra_args,
@@ -299,13 +288,18 @@ class EntityLinkerManager:
         return epack
 
     @staticmethod
-    def query0(text, text_field, url, extras):
-        # TODO error code processing
-        return requests.post(
+    def query0(text, kind, text_field, url, extras):
+        q = requests.post(
             url,
             json={text_field: text, **extras},
             verify=False,
-        ).json()
+        )
+        if q.status_code != 200:
+            raise EntityLinkerFailed(
+                f" EntityLinker.{kind} failed, possibly down :"
+                f" {q.status_code} {q.json()}"
+            )
+        return q.json()
 
     def normalize(self, response):
         if self.current_kind == EntityLinker.BERN_V2:
@@ -442,9 +436,15 @@ def link_over_phrases(
         int, list[tuple[str, tuple[int, int]]]
     ] = defaultdict(list)
 
-    for e, span in entity_pack:
-        ip, (ia, ib) = pm.span(span)
-        entity_pack_per_phrase[ip] += [(e.hash, (ia, ib))]
+    for entity, span in entity_pack:
+        try:
+            ip, (ia, ib) = pm.span(span)
+            entity_pack_per_phrase[ip] += [(entity.hash, (ia, ib))]
+        except ValueError as ex:
+            logger.error(
+                f"{ex} : span (mapping) for {entity.hash} was not computed"
+                " correctly"
+            )
 
     map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
     map_eindex_entity = {
