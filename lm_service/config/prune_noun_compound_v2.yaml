@@ -3,6 +3,9 @@ sourcetarget:
     -   -   how: startswith
             key: tag_
             value: NN
+        -   how: __ne__
+            key: dep_
+            value: compound
     -   -   key: tag_
             value: PRP
     -   -   key: tag_
@@ -78,6 +81,10 @@ sourcetarget:
             value: CD
         -   key: dep_
             value: nummod
+    -   -   key: tag_
+            value: IN
+        -   key: dep_
+            value: nmod
     -   -   how: startswith
             key: tag_
             value: VB

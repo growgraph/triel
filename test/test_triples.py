@@ -196,14 +196,7 @@ class TestTriples(unittest.TestCase):
             triples_projected[key] = [tri.project_to_text() for tri in triples]
 
         reference = {
-            "near-field": [
-                (
-                    "medium",
-                    "isAffectedBy",
-                    # "nearFieldRadiation" # should be
-                    "radiation",
-                )
-            ],
+            "near-field": [("medium", "isAffectedBy", "nearFieldRadiation")],
             "cheops0_trunc": [
                 ("CHEOPS", "is", "europeanSpaceTelescope"),
                 (
