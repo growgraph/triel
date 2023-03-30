@@ -161,10 +161,9 @@ class TestEL(unittest.TestCase):
                 }
             }
         )
-        elm.set_linker_type(EntityLinker.BERN_V2)
 
         map_eindex_entity, map_c2e = link_over_phrases(
-            phrases=phrases, ecl=ecl, elm=elm
+            link_mode=EntityLinker.BERN_V2, phrases=phrases, ecl=ecl, elm=elm
         )
 
         map_eindex_entity_str = to_dict(map_eindex_entity)
@@ -201,140 +200,6 @@ class TestEL(unittest.TestCase):
         self.assertEqual(map_eindex_entity_str, map_eindex_entity_str_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
-    @unittest.skip("obsolete")
-    def test_iterate_naive_wiki_linking(self):
-        text = "Diabetic ulcers are related to burns."
-
-        phrases = normalize_text(text, self.nlp)
-
-        if "entityLinker" not in self.nlp.pipe_names:
-            self.nlp.add_pipe("entityLinker", last=True)
-
-        foo_link = lambda p: self.nlp(p)._.linkedEntities
-
-        (
-            striples,
-            striples_meta,
-            candidate_depot,
-            relations,
-            _,
-        ) = phrases_to_basis_triples(self.nlp, self.rules, phrases)
-
-        ecl = candidate_depot.unfold_conjunction()
-
-        map_eindex_entity = {}
-        map_c2e = []
-        map_eindex_entity, map_c2e = link_over_phrases(
-            phrases=phrases,
-            ecl=ecl,
-            map_eindex_entity=map_eindex_entity,
-            map_c2e=map_c2e,
-            etype=EntityLinker.SPACY_NAIVE_WIKI,
-        )
-
-        map_eindex_entity_str = to_dict(map_eindex_entity)
-
-        map_eindex_entity_ref, map_c2e_ref = (
-            {
-                "SPACY_NAIVE_WIKI/wikidata/Q6452285": {
-                    "linker_type": "SPACY_NAIVE_WIKI",
-                    "ent_db_type": "wikidata",
-                    "id": "Q6452285",
-                    "hash": "SPACY_NAIVE_WIKI/wikidata/Q6452285",
-                    "original_form": "ulcer",
-                    "description": "type of cutaneous condition",
-                },
-                "SPACY_NAIVE_WIKI/wikidata/Q170518": {
-                    "linker_type": "SPACY_NAIVE_WIKI",
-                    "ent_db_type": "wikidata",
-                    "id": "Q170518",
-                    "hash": "SPACY_NAIVE_WIKI/wikidata/Q170518",
-                    "original_form": "burns",
-                    "description": (
-                        "injury to flesh or skin, often caused by excessive"
-                        " heat"
-                    ),
-                },
-            },
-            [
-                (
-                    MuIndex(meta=False, phrase=0, token="001", running=0),
-                    "SPACY_NAIVE_WIKI/wikidata/Q6452285",
-                ),
-                (
-                    MuIndex(meta=False, phrase=0, token="005", running=0),
-                    "SPACY_NAIVE_WIKI/wikidata/Q170518",
-                ),
-            ],
-        )
-
-        self.assertEqual(map_eindex_entity_str, map_eindex_entity_ref)
-        self.assertEqual(map_c2e, map_c2e_ref)
-
-    @unittest.skip("obsolete")
-    def test_iterate_spacy(self):
-        text = (
-            "Cheops ( CHaracterising ExOPlanets Satellite ) is a European"
-            " space telescope to determine the size of known extrasolar"
-            " planets , which will allow the estimation of their mass ,"
-            " density , composition and their formation."
-        )
-
-        phrases = normalize_text(text, self.nlp)
-
-        (
-            striples,
-            striples_meta,
-            candidate_depot,
-            relations,
-            _,
-        ) = phrases_to_basis_triples(self.nlp, self.rules, phrases)
-
-        ecl = candidate_depot.unfold_conjunction()
-
-        map_eindex_entity, map_c2e = link_over_phrases(
-            phrases=phrases,
-            ecl=ecl,
-            link_foo_kwargs={"nlp": self.nlp},
-            etype=EntityLinker.SPACY_BASIC,
-        )
-
-        map_eindex_entity_str = to_dict(map_eindex_entity)
-
-        map_eindex_entity_ref, map_c2e_ref = (
-            {
-                "SPACY_BASIC/basic/e50064e29b1d2f3fe19cd61ba0b6b7144069c90f": {
-                    "linker_type": "SPACY_BASIC",
-                    "ent_db_type": "basic",
-                    "id": "e50064e29b1d2f3fe19cd61ba0b6b7144069c90f",
-                    "hash": "SPACY_BASIC/basic/e50064e29b1d2f3fe19cd61ba0b6b7144069c90f",
-                    "ent_type": "386",
-                    "original_form": "cheops",
-                },
-                "SPACY_BASIC/basic/c93ca73f8d770c25597bb877021545d719bf1e4d": {
-                    "linker_type": "SPACY_BASIC",
-                    "ent_db_type": "basic",
-                    "id": "c93ca73f8d770c25597bb877021545d719bf1e4d",
-                    "hash": "SPACY_BASIC/basic/c93ca73f8d770c25597bb877021545d719bf1e4d",
-                    "ent_type": "381",
-                    "original_form": "european",
-                },
-            },
-            [
-                (
-                    MuIndex(meta=False, phrase=0, token="000", running=0),
-                    "SPACY_BASIC/basic/e50064e29b1d2f3fe19cd61ba0b6b7144069c90f",
-                ),
-                (
-                    MuIndex(meta=False, phrase=0, token="010", running=0),
-                    "SPACY_BASIC/basic/c93ca73f8d770c25597bb877021545d719bf1e4d",
-                ),
-            ],
-        )
-
-        self.assertEqual(map_eindex_entity_str, map_eindex_entity_ref)
-        self.assertEqual(map_c2e, map_c2e_ref)
-
     def test_iterate_over_linkers(self):
         text = "Diabetic ulcers are related to burns."
 
@@ -353,11 +218,11 @@ class TestEL(unittest.TestCase):
             },
         )
 
-        map_eindex_entity, map_c2e = iterate_over_linkers(
+        map_eindex_entity, map_c2e, report = iterate_over_linkers(
             phrases=phrases,
             ecl=ecl,
             map_muindex_candidate=map_muindex_candidate,
-            elm=elm,
+            entity_linker_manager=elm,
         )
 
         if not self.reset:
@@ -423,9 +288,9 @@ class TestEL(unittest.TestCase):
             }
         )
 
-        elm.set_linker_type(EntityLinker.BERN_V2)
-        response_bern = elm.query(text)
-        bern_normalized = elm.normalize(response_bern)
+        linker_type = EntityLinker.BERN_V2
+        response_bern = elm.query(text, linker_type)
+        bern_normalized = elm.normalize(response_bern, linker_type)
 
         pm = PhraseMapper(phrases)
 
@@ -558,9 +423,8 @@ class TestEL(unittest.TestCase):
             }
         )
 
-        elm.set_linker_type(EntityLinker.FISHING)
-
-        normalized = elm.normalize(response)
+        linker_type = EntityLinker.FISHING
+        normalized = elm.normalize(response, linker_type)
 
         pm = PhraseMapper([text])
 

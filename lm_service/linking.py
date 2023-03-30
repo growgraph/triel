@@ -2,13 +2,17 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+import os
 from collections import defaultdict
 from enum import Enum
+from functools import partial
 
 import numpy as np
 import requests
 from dataclass_wizard import JSONWizard
+from pathos.pools import ProcessPool
 from spacy.tokens import Token
+from suthing import secure_it, time_it
 from wordfreq import zipf_frequency
 
 from lm_service.hash import hashme
@@ -214,25 +218,32 @@ def iterate_over_linkers(
     phrases: list[str],
     ecl: ExtCandidateList,
     map_muindex_candidate: dict[MuIndex, Candidate],
-    elm: EntityLinkerManager,
+    entity_linker_manager: EntityLinkerManager,
 ) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
+    # tuple[dict[str, Entity], list[tuple[MuIndex, str]], dict[str, float]]:
+
     map_eindex_entity: dict[str, Entity] = {}
     map_c2e: list[tuple[MuIndex, str]] = []
 
-    for link_mode in elm.linker_types:
-        elm.set_linker_type(link_mode)
-        with Timer() as t_linking:
-            map_eindex_entity, map_c2e = link_over_phrases(
+    deco_link_over_phrases = time_it(secure_it(link_over_phrases))
+
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+    with ProcessPool() as pool:
+        rets = pool.map(
+            partial(
+                deco_link_over_phrases,
                 phrases=phrases,
                 ecl=ecl,
-                elm=elm,
-                map_eindex_entity=map_eindex_entity,
-                map_c2e=map_c2e,
-            )
-
-        logger.info(
-            f" linking for {link_mode} took {t_linking.elapsed:.2f} sec"
+                elm=entity_linker_manager,
+            ),
+            list(entity_linker_manager.linker_types),
         )
+
+    for ret in rets:
+        map_eindex_entity0, map_c2e0 = ret.ret
+        map_c2e += map_c2e0
+        map_eindex_entity.update(map_eindex_entity0)
 
     map_eindex_entity, map_c2e = link_unlinked_entities(
         map_eindex_entity, map_c2e, map_muindex_candidate
@@ -251,6 +262,7 @@ class LinkerConfig(JSONWizard):
 
     url: str
     text_field: str
+    threshold: float = 0.8
     extra_args: dict = dataclasses.field(default_factory=dict)
 
 
@@ -259,11 +271,10 @@ class EntityLinkerManager:
         self.configs: dict[EntityLinker, LinkerConfig] = {
             k: LinkerConfig(**v) for k, v in linking_config.items()
         }
-        self.current_kind: EntityLinker | None = None
 
     @property
     def linker_types(self):
-        return self.configs.keys()
+        return list(self.configs.keys())
 
     def set_linker_type(self, ltype: EntityLinker):
         if ltype in self.configs:
@@ -273,18 +284,18 @@ class EntityLinkerManager:
                 f" linker type {ltype} was not provided with a config"
             )
 
-    def query(self, text):
+    def query(self, text, link_mode):
         return EntityLinkerManager.query0(
             text,
-            self.current_kind,
-            self.configs[self.current_kind].text_field,
-            self.configs[self.current_kind].url,
-            self.configs[self.current_kind].extra_args,
+            link_mode,
+            self.configs[link_mode].text_field,
+            self.configs[link_mode].url,
+            self.configs[link_mode].extra_args,
         )
 
-    def query_and_normalize(self, text):
-        r = self.query(text)
-        epack = self.normalize(r)
+    def query_and_normalize(self, text, link_mode):
+        r = self.query(text, link_mode)
+        epack = self.normalize(r, link_mode)
         return epack
 
     @staticmethod
@@ -301,14 +312,16 @@ class EntityLinkerManager:
             )
         return q.json()
 
-    def normalize(self, response):
-        if self.current_kind == EntityLinker.BERN_V2:
+    def normalize(self, response, link_mode):
+        if link_mode == EntityLinker.BERN_V2:
             ents = response["annotations"]
             return [
-                EntityLinkerManager._normalize_bern_entity(item)
+                EntityLinkerManager._normalize_bern_entity(
+                    item, prob_thr=self.configs[link_mode].threshold
+                )
                 for item in ents
             ]
-        elif self.current_kind == EntityLinker.FISHING:
+        elif link_mode == EntityLinker.FISHING:
             ents = response["entities"]
             return [
                 EntityLinkerManager._normalize_fishing_entity(item)
@@ -372,36 +385,9 @@ class EntityLinkerManager:
         else:
             return None, None
 
-    @staticmethod
-    def _normalize_spacy_basic(
-        item: list[Token],
-    ) -> tuple[Entity | None, tuple | None]:
-        """
-
-        :param item:
-        :return:
-        """
-        if item:
-            span = item[0].idx, item[-1].idx + len(item[-1].text)
-            original_form = " ".join([x.text for x in item]).lower()
-            e_id = hashme(original_form)
-            ent_type = str(item[0].ent_type)
-
-            return (
-                Entity(
-                    linker_type=EntityLinker.SPACY_BASIC,
-                    ent_db_type="basic",
-                    ent_type=ent_type,
-                    original_form=original_form,
-                    id=e_id,
-                ),
-                span,
-            )
-        else:
-            return None, None
-
 
 def link_over_phrases(
+    link_mode: EntityLinker,
     phrases,
     ecl,
     elm: EntityLinkerManager,
@@ -412,6 +398,7 @@ def link_over_phrases(
 
     :param phrases:
     :param ecl:
+    :param link_mode:
     :param elm:
     :param map_eindex_entity:
     :param map_c2e:
@@ -427,7 +414,7 @@ def link_over_phrases(
     text = sep.join(phrases)
     pm = PhraseMapper(phrases, sep)
 
-    entity_pack = elm.query_and_normalize(text)
+    entity_pack = elm.query_and_normalize(text, link_mode)
     entity_pack = [
         (x, y) for x, y in entity_pack if x is not None and y is not None
     ]

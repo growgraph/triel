@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-import time
 from collections import deque
-from random import random
 
 from dataclass_wizard import JSONWizard
+from graph_cast.util.timer import Timer
 
 from lm_service.hash import hashme
 from lm_service.linking import (
@@ -38,6 +37,7 @@ class RELResponse(JSONWizard):
     eindex_entity: dict[str, Entity]
     muindex_eindex: list[tuple[MuIndex, str]]
     muindex_candidate: dict[str, SimplifiedCandidate]
+    report: dict = dataclasses.field(default_factory=lambda: dict())
 
 
 def to_dict(obj):
@@ -53,51 +53,34 @@ def to_dict(obj):
         return obj
 
 
-def wait_for_linkers(phrases, ecl, map_muindex_candidate, elm, cnt=2):
-    """
-    try callng linkers cnt + 1 times
-
-    :param phrases:
-    :param ecl:
-    :param map_muindex_candidate:
-    :param elm:
-    :param cnt:
-    :return:
-    """
-    while True:
-        try:
-            return iterate_over_linkers(
-                phrases=phrases,
-                ecl=ecl,
-                map_muindex_candidate=map_muindex_candidate,
-                elm=elm,
-            )
-        except EntityLinkerFailed as e:
-            if cnt > 0:
-                logger.error(f" EntityLinkerFailed : {e}")
-                cnt -= 1
-                time.sleep(5 + 5 * random())
-            else:
-                raise e
-
-
-def text_to_rel_graph(text, nlp, rules, elm):
+def text_to_rel_graph(text, nlp, rules, elm, debug=False):
+    report = {}
     phrases = normalize_text(text, nlp)
 
-    global_triples, map_muindex_candidate, ecl = phrases_to_triples(
-        phrases, nlp, rules, window_size=2
-    )
+    with Timer() as time_triples:
+        global_triples, map_muindex_candidate, ecl = phrases_to_triples(
+            phrases, nlp, rules, window_size=2
+        )
 
-    map_eindex_entity, map_c2e = wait_for_linkers(
+    if debug:
+        report["triples"] = time_triples.elapsed
+
+    map_eindex_entity, map_c2e = iterate_over_linkers(
         phrases=phrases,
         ecl=ecl,
         map_muindex_candidate=map_muindex_candidate,
-        elm=elm,
+        entity_linker_manager=elm,
     )
+    # if debug:
+    #     report.update({f"linker:{k}": v for k, v in report_linking.items()})
 
-    map_eindex_entity, map_c2e = link_unlinked_entities(
-        map_eindex_entity, map_c2e, map_muindex_candidate
-    )
+    with Timer() as time_unlinked:
+        map_eindex_entity, map_c2e = link_unlinked_entities(
+            map_eindex_entity, map_c2e, map_muindex_candidate
+        )
+
+    if debug:
+        report["linker:unlinked"] = time_unlinked.elapsed
 
     map_muindex_candidate_simplified = {
         k: v.to_simplified() for k, v in map_muindex_candidate.items()
@@ -108,6 +91,7 @@ def text_to_rel_graph(text, nlp, rules, elm):
         eindex_entity=map_eindex_entity,
         muindex_eindex=map_c2e,
         muindex_candidate=map_muindex_candidate_simplified,
+        report=report,
     )
 
 
