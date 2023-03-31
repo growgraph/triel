@@ -89,16 +89,14 @@ class TestREL(unittest.TestCase):
 
         elm = EntityLinkerManager(self.conf)
 
-        response = text_to_rel_graph(
-            text, self.nlp, self.rules, elm, debug=True
-        )
+        response = text_to_rel_graph(text, self.nlp, self.rules, elm)
         response_jsonlike = cast_response_to_unfolded(
             response, cast_triple_version="v1"
         )
 
         if not self.reset:
             ref = ResourceHandler.load(
-                "test.reference.el", f"iterate_linking_bern.json"
+                "test.reference.el", "iterate_linking_bern.json"
             )
             self.assertEqual(response_jsonlike, ref)
 

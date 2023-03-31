@@ -12,7 +12,7 @@ import requests
 from dataclass_wizard import JSONWizard
 from pathos.pools import ProcessPool
 from spacy.tokens import Token
-from suthing import secure_it, time_it
+from suthing import Report, Return, secureit, timeit
 from wordfreq import zipf_frequency
 
 from lm_service.hash import hashme
@@ -219,18 +219,18 @@ def iterate_over_linkers(
     ecl: ExtCandidateList,
     map_muindex_candidate: dict[MuIndex, Candidate],
     entity_linker_manager: EntityLinkerManager,
-) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
-    # tuple[dict[str, Entity], list[tuple[MuIndex, str]], dict[str, float]]:
+) -> Return:
+    # tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
 
     map_eindex_entity: dict[str, Entity] = {}
     map_c2e: list[tuple[MuIndex, str]] = []
 
-    deco_link_over_phrases = time_it(secure_it(link_over_phrases))
+    deco_link_over_phrases = timeit(secureit(link_over_phrases))
 
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     with ProcessPool() as pool:
-        rets = pool.map(
+        rets: list[Return] = pool.map(
             partial(
                 deco_link_over_phrases,
                 phrases=phrases,
@@ -239,7 +239,6 @@ def iterate_over_linkers(
             ),
             list(entity_linker_manager.linker_types),
         )
-
     for ret in rets:
         map_eindex_entity0, map_c2e0 = ret.ret
         map_c2e += map_c2e0
@@ -248,7 +247,10 @@ def iterate_over_linkers(
     map_eindex_entity, map_c2e = link_unlinked_entities(
         map_eindex_entity, map_c2e, map_muindex_candidate
     )
-    return map_eindex_entity, map_c2e
+
+    ret0 = Return(ret=(map_eindex_entity, map_c2e), success=True)
+    ret0.update(rets)
+    return ret0
 
 
 @dataclasses.dataclass()

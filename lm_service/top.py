@@ -6,6 +6,7 @@ from collections import deque
 
 from dataclass_wizard import JSONWizard
 from graph_cast.util.timer import Timer
+from suthing import Report, Return, secureit, timeit
 
 from lm_service.hash import hashme
 from lm_service.linking import (
@@ -37,7 +38,6 @@ class RELResponse(JSONWizard):
     eindex_entity: dict[str, Entity]
     muindex_eindex: list[tuple[MuIndex, str]]
     muindex_candidate: dict[str, SimplifiedCandidate]
-    report: dict = dataclasses.field(default_factory=lambda: dict())
 
 
 def to_dict(obj):
@@ -53,46 +53,42 @@ def to_dict(obj):
         return obj
 
 
-def text_to_rel_graph(text, nlp, rules, elm, debug=False):
-    report = {}
+def text_to_rel_graph(text, nlp, rules, elm):
     phrases = normalize_text(text, nlp)
 
-    with Timer() as time_triples:
-        global_triples, map_muindex_candidate, ecl = phrases_to_triples(
-            phrases, nlp, rules, window_size=2
-        )
+    deco_phrases_to_triples = timeit(secureit(phrases_to_triples))
+    ret_triple: Return = deco_phrases_to_triples(
+        phrases, nlp, rules, window_size=2
+    )
 
-    if debug:
-        report["triples"] = time_triples.elapsed
+    global_triples, map_muindex_candidate, ecl = ret_triple.ret
 
-    map_eindex_entity, map_c2e = iterate_over_linkers(
+    ret_linking = iterate_over_linkers(
         phrases=phrases,
         ecl=ecl,
         map_muindex_candidate=map_muindex_candidate,
         entity_linker_manager=elm,
     )
-    # if debug:
-    #     report.update({f"linker:{k}": v for k, v in report_linking.items()})
 
-    with Timer() as time_unlinked:
-        map_eindex_entity, map_c2e = link_unlinked_entities(
-            map_eindex_entity, map_c2e, map_muindex_candidate
-        )
+    map_eindex_entity, map_c2e = ret_linking.ret
 
-    if debug:
-        report["linker:unlinked"] = time_unlinked.elapsed
+    map_eindex_entity, map_c2e = link_unlinked_entities(
+        map_eindex_entity, map_c2e, map_muindex_candidate
+    )
 
     map_muindex_candidate_simplified = {
         k: v.to_simplified() for k, v in map_muindex_candidate.items()
     }
 
-    return RELResponse(
+    rel = RELResponse(
         triples=global_triples,
         eindex_entity=map_eindex_entity,
         muindex_eindex=map_c2e,
         muindex_candidate=map_muindex_candidate_simplified,
-        report=report,
     )
+    r0 = Return(ret=rel)
+    r0.update([ret_linking, ret_triple])
+    return r0
 
 
 def cast_triple(

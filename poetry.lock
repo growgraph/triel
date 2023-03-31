@@ -2232,7 +2232,7 @@ pyyaml = "^6.0"
 type = "git"
 url = "ssh://git@github.com/growgraph/suthing.git"
 reference = "HEAD"
-resolved_reference = "c6bf961ae96f64842c2ac7bcf7e2d02dacc80fe0"
+resolved_reference = "0bbcd4d4c548707db364ddb13516d3d62348e2be"
 
 [[package]]
 name = "thinc"
