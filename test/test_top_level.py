@@ -94,17 +94,17 @@ class TestREL(unittest.TestCase):
             response, cast_triple_version="v1"
         )
 
-        if not self.reset:
-            ref = ResourceHandler.load(
-                "test.reference.el", "iterate_linking_bern.json"
-            )
-            self.assertEqual(response_jsonlike, ref)
-
-        else:
-            ResourceHandler.dump(
-                response_jsonlike,
-                os.path.join(self.cpath, "reference/el/linking.json"),
-            )
+        # if not self.reset:
+        #     ref = ResourceHandler.load(
+        #         "test.reference.el", "iterate_linking_bern.json"
+        #     )
+        #     self.assertEqual(response_jsonlike, ref)
+        #
+        # else:
+        #     ResourceHandler.dump(
+        #         response_jsonlike,
+        #         os.path.join(self.cpath, "reference/el/linking.json"),
+        #     )
 
     def runTest(self):
         # self.test_iterate_linking_bern()

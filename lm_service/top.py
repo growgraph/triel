@@ -5,8 +5,6 @@ import logging
 from collections import deque
 
 from dataclass_wizard import JSONWizard
-from graph_cast.util.timer import Timer
-from suthing import Report, Return, secureit, timeit
 
 from lm_service.hash import hashme
 from lm_service.linking import (
@@ -56,21 +54,16 @@ def to_dict(obj):
 def text_to_rel_graph(text, nlp, rules, elm):
     phrases = normalize_text(text, nlp)
 
-    deco_phrases_to_triples = timeit(secureit(phrases_to_triples))
-    ret_triple: Return = deco_phrases_to_triples(
+    global_triples, map_muindex_candidate, ecl = phrases_to_triples(
         phrases, nlp, rules, window_size=2
     )
 
-    global_triples, map_muindex_candidate, ecl = ret_triple.ret
-
-    ret_linking = iterate_over_linkers(
+    map_eindex_entity, map_c2e = iterate_over_linkers(
         phrases=phrases,
         ecl=ecl,
         map_muindex_candidate=map_muindex_candidate,
         entity_linker_manager=elm,
     )
-
-    map_eindex_entity, map_c2e = ret_linking.ret
 
     map_eindex_entity, map_c2e = link_unlinked_entities(
         map_eindex_entity, map_c2e, map_muindex_candidate
@@ -80,15 +73,12 @@ def text_to_rel_graph(text, nlp, rules, elm):
         k: v.to_simplified() for k, v in map_muindex_candidate.items()
     }
 
-    rel = RELResponse(
+    return RELResponse(
         triples=global_triples,
         eindex_entity=map_eindex_entity,
         muindex_eindex=map_c2e,
         muindex_candidate=map_muindex_candidate_simplified,
     )
-    r0 = Return(ret=rel)
-    r0.update([ret_linking, ret_triple])
-    return r0
 
 
 def cast_triple(
