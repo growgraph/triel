@@ -11,6 +11,7 @@ import numpy as np
 import requests
 from dataclass_wizard import JSONWizard
 from pathos.pools import ProcessPool
+from suthing import profile
 from wordfreq import zipf_frequency
 
 from lm_service.hash import hashme
@@ -211,11 +212,13 @@ def link_candidate_entity(
     return map_candidate2entity
 
 
+@profile
 def iterate_over_linkers(
     phrases: list[str],
     ecl: ExtCandidateList,
     map_muindex_candidate: dict[MuIndex, Candidate],
     entity_linker_manager: EntityLinkerManager,
+    **kwargs,
 ) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
     map_eindex_entity: dict[str, Entity] = dict()
     map_c2e: list[tuple[MuIndex, str]] = []
@@ -229,6 +232,7 @@ def iterate_over_linkers(
                 phrases=phrases,
                 ecl=ecl,
                 elm=entity_linker_manager,
+                **kwargs,
             ),
             list(entity_linker_manager.linker_types),
         )
@@ -378,6 +382,7 @@ class EntityLinkerManager:
             return None, None
 
 
+@profile(_argnames="link_mode")
 def link_over_phrases(
     link_mode: EntityLinker,
     phrases,
@@ -385,6 +390,7 @@ def link_over_phrases(
     elm: EntityLinkerManager,
     map_eindex_entity=None,
     map_c2e=None,
+    **kwargs,
 ) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
     """
 

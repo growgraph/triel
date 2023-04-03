@@ -5,6 +5,7 @@ import logging
 from collections import deque
 
 from dataclass_wizard import JSONWizard
+from suthing import profile
 
 from lm_service.hash import hashme
 from lm_service.linking import (
@@ -51,11 +52,12 @@ def to_dict(obj):
         return obj
 
 
-def text_to_rel_graph(text, nlp, rules, elm):
+@profile
+def text_to_rel_graph(text, nlp, rules, elm, **kwargs):
     phrases = normalize_text(text, nlp)
 
     global_triples, map_muindex_candidate, ecl = phrases_to_triples(
-        phrases, nlp, rules, window_size=2
+        phrases, nlp, rules, window_size=2, **kwargs
     )
 
     map_eindex_entity, map_c2e = iterate_over_linkers(
@@ -63,6 +65,7 @@ def text_to_rel_graph(text, nlp, rules, elm):
         ecl=ecl,
         map_muindex_candidate=map_muindex_candidate,
         entity_linker_manager=elm,
+        **kwargs,
     )
 
     map_eindex_entity, map_c2e = link_unlinked_entities(

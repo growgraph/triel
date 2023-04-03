@@ -218,7 +218,7 @@ class TestEL(unittest.TestCase):
             },
         )
 
-        map_eindex_entity, map_c2e, report = iterate_over_linkers(
+        map_eindex_entity, map_c2e = iterate_over_linkers(
             phrases=phrases,
             ecl=ecl,
             map_muindex_candidate=map_muindex_candidate,

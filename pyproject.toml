@@ -1,5 +1,9 @@
 [build-system]
 build-backend = "poetry.core.masonry.api"
+packages = [
+  {include = "lm_service"},
+  {include = "test"}
+]
 requires = ["poetry-core>=1.0.0"]
 
 [tool]
