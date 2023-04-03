@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-import time
 from collections import deque
-from random import random
 
 from dataclass_wizard import JSONWizard
+from suthing import profile
 
 from lm_service.hash import hashme
 from lm_service.linking import (
@@ -53,46 +52,20 @@ def to_dict(obj):
         return obj
 
 
-def wait_for_linkers(phrases, ecl, map_muindex_candidate, elm, cnt=2):
-    """
-    try callng linkers cnt + 1 times
-
-    :param phrases:
-    :param ecl:
-    :param map_muindex_candidate:
-    :param elm:
-    :param cnt:
-    :return:
-    """
-    while True:
-        try:
-            return iterate_over_linkers(
-                phrases=phrases,
-                ecl=ecl,
-                map_muindex_candidate=map_muindex_candidate,
-                elm=elm,
-            )
-        except EntityLinkerFailed as e:
-            if cnt > 0:
-                logger.error(f" EntityLinkerFailed : {e}")
-                cnt -= 1
-                time.sleep(5 + 5 * random())
-            else:
-                raise e
-
-
-def text_to_rel_graph(text, nlp, rules, elm):
+@profile
+def text_to_rel_graph(text, nlp, rules, elm, **kwargs):
     phrases = normalize_text(text, nlp)
 
     global_triples, map_muindex_candidate, ecl = phrases_to_triples(
-        phrases, nlp, rules, window_size=2
+        phrases, nlp, rules, window_size=2, **kwargs
     )
 
-    map_eindex_entity, map_c2e = wait_for_linkers(
+    map_eindex_entity, map_c2e = iterate_over_linkers(
         phrases=phrases,
         ecl=ecl,
         map_muindex_candidate=map_muindex_candidate,
-        elm=elm,
+        entity_linker_manager=elm,
+        **kwargs,
     )
 
     map_eindex_entity, map_c2e = link_unlinked_entities(

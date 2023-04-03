@@ -5,6 +5,7 @@ from collections import defaultdict, deque
 from itertools import product
 
 import networkx as nx
+from suthing import profile
 
 from lm_service.onto import Candidate, MuIndex, Relation, TokenIndexT
 from lm_service.piles import CandidatePile, ExtCandidateList
@@ -68,12 +69,9 @@ def phrases_to_triples_stage_a(
     return striples, striples_meta, relations, ext_cand_list, megagraph
 
 
+@profile
 def phrases_to_triples(
-    phrases: list[str],
-    nlp,
-    rules,
-    window_size,
-    plot_path=None,
+    phrases: list[str], nlp, rules, window_size, plot_path=None, **kwargs
 ) -> tuple[
     dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]],
     dict[MuIndex, Candidate],
