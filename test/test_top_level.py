@@ -2,14 +2,11 @@ import argparse
 import os
 import pkgutil
 import unittest
-from multiprocessing.managers import BaseManager
-from pprint import pprint
 
 import coreferee
 import spacy
 import yaml
 from graph_cast.util import ResourceHandler, equals
-from suthing import SProfiler
 
 from lm_service.linking import EntityLinkerManager
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
@@ -92,27 +89,11 @@ class TestREL(unittest.TestCase):
 
         elm = EntityLinkerManager(self.conf)
 
-        class LocalManager(BaseManager):
-            pass
-
-        def get_manager():
-            m = LocalManager()
-            m.start()
-            return m
-
-        LocalManager.register("SProfiler", SProfiler)
-
-        manager = get_manager()
-        sp = manager.SProfiler()
-
-        response = text_to_rel_graph(
-            text, self.nlp, self.rules, elm, _profiler=sp
-        )
+        response = text_to_rel_graph(text, self.nlp, self.rules, elm)
         response_jsonlike = cast_response_to_unfolded(
             response, cast_triple_version="v1"
         )
         print(response_jsonlike)
-        pprint(sp.view_stats())
 
         if not self.reset:
             ref = ResourceHandler.load(
