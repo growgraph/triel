@@ -43,7 +43,7 @@ pylint = "^2.14.5"
 python = ">=3.9,<3.11"
 pyyaml = "^6"
 simple-websocket = "^0.5.2"
-spacy = {extras = ["cuda11x"], version = "3.5"}
+spacy = {extras = ["cuda12x"], version = "3.5"}
 suthing = {git = "ssh://git@github.com/growgraph/suthing.git"}
 torch = "^1.13.0"
 torchtext = "^0.12.0"
@@ -52,3 +52,4 @@ types-waitress = "^2.1.4.3"
 viztracer = "^0.15.6"
 waitress = "^2.1.2"
 wordfreq = "^3.0.3"
+cupy-cuda12x = "^12.0.0"

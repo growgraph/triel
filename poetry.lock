@@ -368,23 +368,25 @@ files = [
 spacy = ">=3.0.0,<3.6.0"
 
 [[package]]
-name = "cupy-cuda11x"
-version = "11.6.0"
+name = "cupy-cuda12x"
+version = "12.0.0"
 description = "CuPy: NumPy & SciPy for GPU"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "cupy_cuda11x-11.6.0-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:1b9914f57868a1559e9bfabfbae8c724585914e8e1f277acb9cdb6aa0756eaa4"},
-    {file = "cupy_cuda11x-11.6.0-cp310-cp310-win_amd64.whl", hash = "sha256:ac8dd082ddb00996bc4d37cc5765907048f467aadb61bcbff25f3c2a88c50583"},
-    {file = "cupy_cuda11x-11.6.0-cp311-cp311-manylinux1_x86_64.whl", hash = "sha256:bf7496340dfbc2eaa3e0ebfd03c4ab8b1fc36d7d14f68718c33eeb395aaa6eed"},
-    {file = "cupy_cuda11x-11.6.0-cp311-cp311-win_amd64.whl", hash = "sha256:e3bbd55c26d60069d7e5af2200fb47e7c42ca6437acac297637a2d3c00f6fe46"},
-    {file = "cupy_cuda11x-11.6.0-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:0d7ebcfd7234946719ad28890593d9fc78fad5753ef4b073e0d7bdb7da2f5640"},
-    {file = "cupy_cuda11x-11.6.0-cp37-cp37m-win_amd64.whl", hash = "sha256:3bc3f81fbc5a86c7155c6036809f2ada4023fc0870dce158d3d9f6d0b575727f"},
-    {file = "cupy_cuda11x-11.6.0-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:1d6810568e683cb153972b3019ddb5efc369036511122117d9eda09cf84d1042"},
-    {file = "cupy_cuda11x-11.6.0-cp38-cp38-win_amd64.whl", hash = "sha256:31c1ec72ffe9ad6fda9fb0a2aff1fcca38da66a8e521e333bae0d67ebc80ead0"},
-    {file = "cupy_cuda11x-11.6.0-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:6a4822daadfce0464cb619099eb82c7ba30ae7755d6869ba5eba1c675a9eed67"},
-    {file = "cupy_cuda11x-11.6.0-cp39-cp39-win_amd64.whl", hash = "sha256:3d0f44d747b38ce2b213d64270265f953b68cf29860ec5fa65848b9faaea3fc1"},
+    {file = "cupy_cuda12x-12.0.0-cp310-cp310-manylinux2014_aarch64.whl", hash = "sha256:9262ff11d1805b2c786ba6779c3700d3b11825a2aadbc028955aa622604b06aa"},
+    {file = "cupy_cuda12x-12.0.0-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:b6b75b21b623ef8cda312642fa95a7af532ecf0d289cf37084d3e12c52790f80"},
+    {file = "cupy_cuda12x-12.0.0-cp310-cp310-win_amd64.whl", hash = "sha256:bef9a6eb60b581491c5585ac34b42012f84d69c55eb9fac68d45a89bbc4f9279"},
+    {file = "cupy_cuda12x-12.0.0-cp311-cp311-manylinux2014_aarch64.whl", hash = "sha256:c91dc53a903fb057fa4ce216c1c5d7cbc6e5821acd2194b3600ff7abdd7e9437"},
+    {file = "cupy_cuda12x-12.0.0-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:88725d8202c258b51852702fa16426fced1441a3d9873f27b1cafde7f64d5fa6"},
+    {file = "cupy_cuda12x-12.0.0-cp311-cp311-win_amd64.whl", hash = "sha256:cd8dcb4aa1ee0369d9d825ae42eab43d1419db4940415e1696ea05490ed7b5a9"},
+    {file = "cupy_cuda12x-12.0.0-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:3cb49982518103e0303a98f064b8d5a4b05f08322f78b46127f71b2d7853caac"},
+    {file = "cupy_cuda12x-12.0.0-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:0a9a6f0fdd06a66a4b04470cad9a503f5e7dc27432c89ee03e3be2f3279e4cae"},
+    {file = "cupy_cuda12x-12.0.0-cp38-cp38-win_amd64.whl", hash = "sha256:7fae713a6ffcfb69885a603596a02ea8594eaf983fdb4e79027a3efe713a1814"},
+    {file = "cupy_cuda12x-12.0.0-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:b0271a10d822755994cc452953db2d76a9b5c52ed6af430941b19f5b96ab2e17"},
+    {file = "cupy_cuda12x-12.0.0-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:d6c6be41d6d75e7f6bbd82f74e4006e9ff31da0d31e1cce6e054372f81e8bc5a"},
+    {file = "cupy_cuda12x-12.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:e8fd2632f5dea71a6c03f7b059029f9db4eb38a1431dbaa7f27d1350c8f4da46"},
 ]
 
 [package.dependencies]
@@ -1645,18 +1647,18 @@ tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
 name = "pylint"
-version = "2.17.1"
+version = "2.17.2"
 description = "python code static checker"
 category = "main"
 optional = false
 python-versions = ">=3.7.2"
 files = [
-    {file = "pylint-2.17.1-py3-none-any.whl", hash = "sha256:8660a54e3f696243d644fca98f79013a959c03f979992c1ab59c24d3f4ec2700"},
-    {file = "pylint-2.17.1.tar.gz", hash = "sha256:d4d009b0116e16845533bc2163493d6681846ac725eab8ca8014afb520178ddd"},
+    {file = "pylint-2.17.2-py3-none-any.whl", hash = "sha256:001cc91366a7df2970941d7e6bbefcbf98694e00102c1f121c531a814ddc2ea8"},
+    {file = "pylint-2.17.2.tar.gz", hash = "sha256:1b647da5249e7c279118f657ca28b6aaebb299f86bf92affc632acf199f7adbb"},
 ]
 
 [package.dependencies]
-astroid = ">=2.15.0,<=2.17.0-dev0"
+astroid = ">=2.15.2,<=2.17.0-dev0"
 colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
 dill = {version = ">=0.2", markers = "python_version < \"3.11\""}
 isort = ">=4.2.5,<6"
@@ -2083,7 +2085,6 @@ files = [
 
 [package.dependencies]
 catalogue = ">=2.0.6,<2.1.0"
-cupy-cuda11x = {version = ">=11.0.0,<12.0.0", optional = true, markers = "extra == \"cuda11x\""}
 cymem = ">=2.0.2,<2.1.0"
 jinja2 = "*"
 langcodes = ">=3.2.0,<4.0.0"
@@ -2844,4 +2845,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.11"
-content-hash = "ec459fc209c588ff3868e55eb80b58211dcb81d579a831d8631693fbbf075f0c"
+content-hash = "b8d371ba2ee3ae82910c7250e8b1bfc741f926ab8a7bfff04377e4ed780643e9"
