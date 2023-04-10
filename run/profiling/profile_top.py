@@ -50,22 +50,18 @@ def main():
     class LocalManager(BaseManager):
         pass
 
-    def get_manager():
-        m = LocalManager()
-        m.start()
-        return m
-
     LocalManager.register("SProfiler", SProfiler)
 
-    manager = get_manager()
-    sp = manager.SProfiler()
+    with LocalManager() as manager:
+        sp = manager.SProfiler()
 
-    response = text_to_rel_graph(text, nlp, rules, elm, _profiler=sp)
-    response_jsonlike = cast_response_to_unfolded(
-        response, cast_triple_version="v1"
-    )
+        response = text_to_rel_graph(text, nlp, rules, elm, _profiler=sp)
+        response_jsonlike = cast_response_to_unfolded(
+            response, cast_triple_version="v1"
+        )
+        stats = sp.view_stats()
     print(response_jsonlike)
-    pprint(sp.view_stats())
+    pprint(stats)
 
 
 if __name__ == "__main__":
