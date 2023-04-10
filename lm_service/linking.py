@@ -218,6 +218,7 @@ def iterate_over_linkers(
     ecl: ExtCandidateList,
     map_muindex_candidate: dict[MuIndex, Candidate],
     entity_linker_manager: EntityLinkerManager,
+    mp=True,
     **kwargs,
 ) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
     map_eindex_entity: dict[str, Entity] = dict()
@@ -236,6 +237,7 @@ def iterate_over_linkers(
             ),
             list(entity_linker_manager.linker_types),
         )
+
     for map_eindex_entity0, map_c2e0 in rets:
         map_c2e += map_c2e0
         map_eindex_entity.update(map_eindex_entity0)
@@ -289,7 +291,9 @@ class EntityLinkerManager:
             self.configs[link_mode].extra_args,
         )
 
-    def query_and_normalize(self, text, link_mode):
+    def query_and_normalize(
+        self, text, link_mode
+    ) -> list[tuple[Entity, tuple]]:
         r = self.query(text, link_mode)
         epack = self.normalize(r, link_mode)
         return epack
@@ -303,33 +307,50 @@ class EntityLinkerManager:
         )
         if q.status_code != 200:
             raise EntityLinkerFailed(
-                f" EntityLinker.{kind} failed, possibly down :"
-                f" {q.status_code} {q.json()}"
+                f" EntityLinker.{kind} failed, possibly down, code"
+                f" {q.status_code}"
             )
         return q.json()
 
-    def normalize(self, response, link_mode):
+    def normalize(self, response, link_mode) -> list[tuple[Entity, tuple]]:
         if link_mode == EntityLinker.BERN_V2:
-            ents = response["annotations"]
-            return [
-                EntityLinkerManager._normalize_bern_entity(
-                    item, prob_thr=self.configs[link_mode].threshold
-                )
-                for item in ents
-            ]
+            if "annotations" in response:
+                ents = response["annotations"]
+                normalized = [
+                    EntityLinkerManager._normalize_bern_entity(
+                        item, prob_thr=self.configs[link_mode].threshold
+                    )
+                    for item in ents
+                ]
+            else:
+                normalized = []
         elif link_mode == EntityLinker.FISHING:
-            ents = response["entities"]
-            return [
-                EntityLinkerManager._normalize_fishing_entity(item)
-                for item in ents
-            ]
+            if "entities" in response:
+                ents = response["entities"]
+                normalized = [
+                    EntityLinkerManager._normalize_fishing_entity(item)
+                    for item in ents
+                ]
+            else:
+                normalized = []
         else:
-            return None, None
+            normalized = []
+
+        entity_pack = [
+            (x, y) for x, y in normalized if x is not None and y is not None
+        ]
+        return entity_pack
 
     @staticmethod
     def _normalize_bern_entity(
         item, prob_thr=0.8
     ) -> tuple[Entity | None, tuple | None]:
+        """
+
+        :param item:
+        :param prob_thr:
+        :return:
+        """
         if len(item["id"]) > 0 and (
             item["prob"] > prob_thr if "prob" in item else True
         ):
@@ -388,8 +409,6 @@ def link_over_phrases(
     phrases,
     ecl,
     elm: EntityLinkerManager,
-    map_eindex_entity=None,
-    map_c2e=None,
     **kwargs,
 ) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
     """
@@ -398,24 +417,20 @@ def link_over_phrases(
     :param ecl:
     :param link_mode:
     :param elm:
-    :param map_eindex_entity:
-    :param map_c2e:
     :return:
         s_e -> e ; i_c -> i_se
     """
-    if map_eindex_entity is None:
-        map_eindex_entity = dict()
-    if map_c2e is None:
-        map_c2e = list()
+    map_eindex_entity: dict[str, Entity] = dict()
+    map_c2e: list[tuple[MuIndex, str]] = list()
 
     sep = " "
     text = sep.join(phrases)
     pm = PhraseMapper(phrases, sep)
-
-    entity_pack = elm.query_and_normalize(text, link_mode)
-    entity_pack = [
-        (x, y) for x, y in entity_pack if x is not None and y is not None
-    ]
+    try:
+        entity_pack = elm.query_and_normalize(text, link_mode)
+    except EntityLinkerFailed as e:
+        logging.error(f"EntityLinkerFailed es {e}")
+        entity_pack = list()
 
     entity_pack_per_phrase: defaultdict[
         int, list[tuple[str, tuple[int, int]]]
