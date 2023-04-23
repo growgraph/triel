@@ -218,7 +218,6 @@ def iterate_over_linkers(
     ecl: ExtCandidateList,
     map_muindex_candidate: dict[MuIndex, Candidate],
     entity_linker_manager: EntityLinkerManager,
-    mp=True,
     **kwargs,
 ) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
     map_eindex_entity: dict[str, Entity] = dict()

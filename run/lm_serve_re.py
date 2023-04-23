@@ -8,7 +8,7 @@ import yaml
 from flask import Flask, jsonify, request
 from flask_restful import Api
 from graph_cast.db.factory import ConfigFactory
-from graph_cast.util import ResourceHandler
+from suthing import FileHandle
 from waitress import serve
 
 from lm_service.linking import (
@@ -62,7 +62,7 @@ if __name__ == "__main__":
         filemode="a",
     )
 
-    wsgi_config = ResourceHandler.load(fpath=args.wsgi_self)
+    wsgi_config = FileHandle.load(fpath=args.wsgi_self)
     wsgi_re = ConfigFactory.create_config(args=wsgi_config)
 
     spacy.prefer_gpu()
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    el_config = ResourceHandler.load(fpath=args.entity_linker_config)
+    el_config = FileHandle.load(fpath=args.entity_linker_config)
     elm = EntityLinkerManager(el_config)
 
     @app.route(wsgi_re.path, methods=["POST"])

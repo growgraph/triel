@@ -5,7 +5,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import spacy
-from graph_cast.util import ResourceHandler
+from suthing import FileHandle
 
 from lm_service.onto import Candidate, Token
 
