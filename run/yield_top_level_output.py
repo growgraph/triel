@@ -119,7 +119,7 @@ def run():
         "created": "2015-01-01",
     }
     FileHandle.dump(
-        response_jsonlike,
+        [response_jsonlike],
         "/tmp/lm_top.json.gz",
     )
 
