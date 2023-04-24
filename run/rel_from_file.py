@@ -5,7 +5,7 @@ from pprint import pprint
 import coreferee
 import spacy
 import yaml
-from graph_cast.util import ResourceHandler
+from suthing import FileHandle
 
 from lm_service.linking import EntityLinkerManager
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
@@ -20,7 +20,7 @@ def main(fpath, entity_linker_config):
 
     elm = EntityLinkerManager(entity_linker_config)
 
-    text = ResourceHandler.load(fpath=fpath)["text"]
+    text = FileHandle.load(fpath=fpath)["text"]
     response = text_to_rel_graph(text, nlp, rules, elm)
     response_jsonlike = cast_response_to_unfolded(
         response, cast_triple_version="v1"

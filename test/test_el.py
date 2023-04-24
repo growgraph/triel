@@ -8,7 +8,7 @@ from pprint import pprint
 import coreferee
 import spacy
 import yaml
-from graph_cast.util import ResourceHandler, equals
+from suthing import FileHandle, equals
 
 from lm_service.linking import (
     EntityLinker,
@@ -226,7 +226,7 @@ class TestEL(unittest.TestCase):
         )
 
         if not self.reset:
-            ref = ResourceHandler.load(
+            ref = FileHandle.load(
                 f"test.reference.el", f"iterate_over_linkers.json"
             )
             flag = equals(to_dict(map_eindex_entity), ref["map_eindex_entity"])
@@ -238,7 +238,7 @@ class TestEL(unittest.TestCase):
             self.assertEqual(to_dict(map_c2e), ref["map_c2e"])
 
         else:
-            ResourceHandler.dump(
+            FileHandle.dump(
                 {
                     "map_eindex_entity": to_dict(map_eindex_entity),
                     "map_c2e": to_dict(map_c2e),

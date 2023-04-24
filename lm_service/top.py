@@ -90,8 +90,9 @@ def cast_triple(
         tuple[SimplifiedCandidate, SimplifiedCandidate, SimplifiedCandidate],
     ],
     cast_triple_version: str = "v0",
-):
+) -> dict:
     mu, (s, r, t) = item
+    result: dict
     if cast_triple_version == "v0":
         result = {
             "mu": mu,
@@ -174,6 +175,19 @@ def cast_response_to_unfolded(response: RELResponse, **kwargs):
                 )
                 logger.error(f" mu = {mu}, ei = {ei}")
 
-    triples_upd = [cast_triple(x, **kwargs) for x in triples_upd]  # type: ignore
-    r = to_dict({"triples": triples_upd, "map_mention_entity": mu_ei_grounded})
+    triples_upd: list[dict] = [cast_triple(x, **kwargs) for x in triples_upd]  # type: ignore
+
+    metamus = {t["triple_index"].hash for t in triples_upd}  # type: ignore
+    all_mus = {t.hash for item in triples_upd for t in item["triple"]}  # type: ignore
+    top_level_metamus = metamus - all_mus
+
+    top_level_mention = [{"hash": h} for h in top_level_metamus]
+
+    r = to_dict(
+        {
+            "triples": triples_upd,
+            "map_mention_entity": mu_ei_grounded,
+            "top_level_mention": top_level_mention,
+        }
+    )
     return r
