@@ -103,10 +103,6 @@ def run():
         " phylogenies to understand euthyneuran evolution."
     )
 
-    # text = "what"
-    # text = ""
-    # text = "John "
-
     elm = EntityLinkerManager(conf)
     response = text_to_rel_graph(text, nlp, rules, elm)
 
