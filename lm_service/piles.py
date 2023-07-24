@@ -4,7 +4,7 @@ import dataclasses
 from collections import defaultdict
 from copy import deepcopy
 
-from lm_service.onto import CandidateType, Token, TokenIndexT
+from lm_service.onto import Candidate, CandidateType, Token, TokenIndexT
 
 
 @dataclasses.dataclass(repr=False)
@@ -13,12 +13,12 @@ class CandidatePile:
     pile of candidates of one type
     """
 
-    _root_to_candidate: dict[TokenIndexT, CandidateType] = dataclasses.field(default_factory=dict)  # type: ignore
+    _root_to_candidate: dict[TokenIndexT, Candidate] = dataclasses.field(default_factory=dict)  # type: ignore
 
     def __len__(self) -> int:
         return len(self._root_to_candidate)
 
-    def __getitem__(self, key) -> CandidateType:
+    def __getitem__(self, key) -> Candidate:
         """
 
         :return: relation index in pile : relation tokens

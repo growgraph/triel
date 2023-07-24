@@ -1,6 +1,5 @@
 import argparse
 import os
-import pkgutil
 
 import coreferee
 import spacy
@@ -12,8 +11,7 @@ from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 cpath = os.path.dirname(os.path.realpath(__file__))
 
-fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
-rules = yaml.load(fp, Loader=yaml.FullLoader)
+rules = FileHandle.load("lm_service.config", "prune_noun_compound_v2.yaml")
 
 nlp = spacy.load("en_core_web_trf")
 nlp.add_pipe("coreferee")
