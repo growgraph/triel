@@ -30,7 +30,7 @@ pyinflect = "^0.5.1"
 python = ">=3.10,<3.12"
 pyyaml = "^6"
 simple-websocket = "^0.5.2"
-spacy = {extras = ["cuda11x"], version = "3.5"}
+spacy = {extras = ["cuda-autodetect"], version = "3.5"}
 suthing = {git = "ssh://git@github.com/growgraph/suthing.git", rev = "v0.2.2"}
 torch = "^1.13.0"
 torchtext = "^0.12.0"
