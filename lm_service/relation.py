@@ -392,7 +392,7 @@ def derive_sources_per_relation(
     else:
         sources_per_relation = (
             decision.groupby("r", group_keys=False)
-            .apply(lambda x: set(x["s"]))
+            .apply(lambda x: set(x["s"]))  # type: ignore
             .to_dict()
         )
     return sources_per_relation

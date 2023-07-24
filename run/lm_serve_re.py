@@ -1,6 +1,5 @@
 import argparse
 import logging
-import pkgutil
 
 import coreferee
 import spacy
@@ -69,8 +68,7 @@ if __name__ == "__main__":
 
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
-    rules = yaml.load(fp, Loader=yaml.FullLoader)
+    rules = FileHandle.load("lm_service.config", "prune_noun_compound_v2.yaml")
 
     el_config = FileHandle.load(fpath=args.entity_linker_config)
     elm = EntityLinkerManager(el_config)
