@@ -419,9 +419,11 @@ def derive_targets_per_relaton(
     }
 
     targets_per_relation: dict[TokenIndexT, set[TokenIndexT]] = {
-        r: {t for t, d in item.items() if d == min_dists[r] and t != r}
-        if item
-        else set()
+        r: (
+            {t for t, d in item.items() if d == min_dists[r] and t != r}
+            if item
+            else set()
+        )
         for r, item in dist_to_targets.items()
     }
     return targets_per_relation
@@ -474,9 +476,11 @@ def derive_relations_per_relation(
     }
 
     rel_targets_per_relation: dict[TokenIndexT, set[TokenIndexT]] = {
-        r: {t for t, d in item.items() if d == min_dists[r] and t != r}
-        if item
-        else set()
+        r: (
+            {t for t, d in item.items() if d == min_dists[r] and t != r}
+            if item
+            else set()
+        )
         for r, item in dist_rr.items()
     }
 
@@ -495,9 +499,11 @@ def derive_relations_per_relation(
     }
 
     rel_sources_per_relation: dict[TokenIndexT, set[TokenIndexT]] = {
-        r: {t for t, d in item.items() if d == min_dists[r] and t != r}
-        if item
-        else set()
+        r: (
+            {t for t, d in item.items() if d == min_dists[r] and t != r}
+            if item
+            else set()
+        )
         for r, item in dist_rr_rev.items()
     }
 
@@ -556,20 +562,20 @@ def graph_to_maps(
         relation_candidate_roots=relation_candidate_roots,
     )
 
-    targets_per_relation: dict[
-        TokenIndexT, set[TokenIndexT]
-    ] = derive_targets_per_relaton(
-        relation_candidate_roots, target_candidate_roots, distance_directed
+    targets_per_relation: dict[TokenIndexT, set[TokenIndexT]] = (
+        derive_targets_per_relaton(
+            relation_candidate_roots, target_candidate_roots, distance_directed
+        )
     )
 
-    sources_per_relation: dict[
-        TokenIndexT, set[TokenIndexT]
-    ] = derive_sources_per_relation(
-        relation_candidate_roots,
-        source_candidate_roots,
-        distance_undirected,
-        distance_levels,
-        pile.sources.roots,
+    sources_per_relation: dict[TokenIndexT, set[TokenIndexT]] = (
+        derive_sources_per_relation(
+            relation_candidate_roots,
+            source_candidate_roots,
+            distance_undirected,
+            distance_levels,
+            pile.sources.roots,
+        )
     )
 
     # make sure sources and targets are disjoint per relation

@@ -114,9 +114,9 @@ def phrases_to_triples(
     ] = defaultdict(list)
 
     # triple_index -> fundamental triple
-    fundamental_triples: dict[
-        MuIndex, tuple[MuIndex, MuIndex, MuIndex]
-    ] = dict()
+    fundamental_triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]] = (
+        dict()
+    )
 
     # iphrase -> meta triple
     meta_triples_aux: defaultdict[

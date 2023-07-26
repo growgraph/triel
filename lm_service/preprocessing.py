@@ -4,6 +4,7 @@ import logging
 import re
 
 import networkx as nx
+from pylatexenc.latex2text import LatexNodes2Text
 from spacy import Language
 from unidecode import unidecode
 
@@ -44,7 +45,9 @@ def normalize_input_text(text, terminal_full_stop=True):
     :return:
     """
 
+    text = LatexNodes2Text().latex_to_text(text)
     # cast possible diacritics to ascii
+
     text = unidecode(text)
 
     # deal with double backslash

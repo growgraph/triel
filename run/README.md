@@ -9,7 +9,7 @@ python -m run.generate_relation_dataset --head 5 --outpath ~/data/gg/experiments
 
 ## CUDA notes
 
-nvidia version 510 : 
+nvidia version 510 :  maybe 440???
 ```shell
 apt install nvidia-driver-510
 ```
