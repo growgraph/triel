@@ -45,29 +45,43 @@ def normalize_input_text(text, terminal_full_stop=True):
     :return:
     """
 
-    text = LatexNodes2Text().latex_to_text(text)
-    # cast possible diacritics to ascii
-
-    text = unidecode(text)
-
-    # deal with double backslash
-    try:
-        text = bytes(text, "utf-8").decode("unicode_escape")
-    except:
-        # TODO breaking example :
-        #  text =  'The program is freely available at \\url{http://graphics.med.yale.edu/cgi-bin/lib_comp.pl}.'
-        # in \\url is interpreted as the beginning of escape sequence
-        logger.warning(" unicode decoding failed; latex in text")
-
     # condense white spaces
     text = re.sub(r"\s+", " ", text)
 
     # split on .!? if followed by a capital and not preceded by a capital
     pat = r"(?<=[^A-Z][.!?])\s*(?=[A-Z])"
-    phrases = re.split(pat, text)
+    phrases_ = re.split(pat, text)
     # trim initial/terminal whitespaces
     trim_whitespace = re.compile(r"^[\s+]+|[\s+]+$")
-    phrases = [trim_whitespace.sub("", p) for p in phrases]
+    phrases_ = [trim_whitespace.sub("", p) for p in phrases_]
+
+    phrases = []
+    for p in phrases_:
+        try:
+            text = LatexNodes2Text().latex_to_text(p)
+        except:
+            logger.error(f" LatexNodes2Text could not process : {p}")
+            text = p
+
+        # cast possible diacritics to ascii
+        try:
+            text = unidecode(text)
+        except:
+            logger.error(f" unidecode failed on: {text}")
+
+        # deal with double backslash
+        try:
+            text = bytes(text, "utf-8").decode("unicode_escape")
+        except:
+            # TODO breaking example :
+            #  text =  'The program is freely available at \\url{http://graphics.med.yale.edu/cgi-bin/lib_comp.pl}.'
+            # in \\url is interpreted as the beginning of escape sequence
+            logger.error(
+                f"unicode decoding failed; more latex in text? {text}"
+            )
+
+        phrases += [text]
+
     return phrases
 
 
