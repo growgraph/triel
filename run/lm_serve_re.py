@@ -3,7 +3,6 @@ import logging
 
 import coreferee
 import spacy
-import yaml
 from flask import Flask, jsonify, request
 from flask_restful import Api
 from graph_cast.db.factory import ConfigFactory
@@ -48,6 +47,12 @@ if __name__ == "__main__":
         "--threads", type=int, default=8, help="number of concur threads"
     )
 
+    parser.add_argument(
+        "--gpu",
+        help="load spacy models to gpu",
+        action="store_true",
+    )
+
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -64,7 +69,8 @@ if __name__ == "__main__":
     wsgi_config = FileHandle.load(fpath=args.wsgi_self)
     wsgi_re = ConfigFactory.create_config(args=wsgi_config)
 
-    spacy.prefer_gpu()
+    if args.gpu:
+        spacy.prefer_gpu()
 
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
@@ -83,9 +89,9 @@ if __name__ == "__main__":
             try:
                 response = text_to_rel_graph(text, nlp, rules, elm)
             except EntityLinkerFailed as e:
-                return {"error": str(e)}, 500
+                return {"error": str(e)}, 502
             except EntityLinkerTypeNotAvailable as e:
-                return {"error": str(e)}, 500
+                return {"error": str(e)}, 501
             except Exception as e:
                 return {"error": str(e)}, 500
 
