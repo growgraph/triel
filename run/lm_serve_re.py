@@ -1,5 +1,7 @@
 import argparse
+import io
 import logging
+import traceback
 
 import coreferee
 import spacy
@@ -25,6 +27,13 @@ logger = logging.getLogger(__name__)
 @app.route("/")
 def hello_world():
     return "parse phrases into relations"
+
+
+def get_exception_traceback_str(exc: Exception) -> str:
+    # Ref: https://stackoverflow.com/a/76584117/
+    file = io.StringIO()
+    traceback.print_exception(exc, file=file)
+    return file.getvalue().rstrip()
 
 
 if __name__ == "__main__":
@@ -89,11 +98,11 @@ if __name__ == "__main__":
             try:
                 response = text_to_rel_graph(text, nlp, rules, elm)
             except EntityLinkerFailed as e:
-                return {"error": str(e)}, 502
+                return {"error": get_exception_traceback_str(e)}, 502
             except EntityLinkerTypeNotAvailable as e:
-                return {"error": str(e)}, 501
+                return {"error": get_exception_traceback_str(e)}, 501
             except Exception as e:
-                return {"error": str(e)}, 500
+                return {"error": get_exception_traceback_str(e)}, 500
 
             response_jsonlike = cast_response_to_unfolded(
                 response, cast_triple_version="v1"
