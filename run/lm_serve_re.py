@@ -6,6 +6,7 @@ import traceback
 import coreferee
 import spacy
 from flask import Flask, jsonify, request
+from flask_compress import Compress
 from flask_restful import Api
 from graph_cast.db.factory import ConfigFactory
 from suthing import FileHandle
@@ -19,6 +20,7 @@ from lm_service.linking import (
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 app = Flask(__name__)
+Compress(app)
 api = Api(app)
 
 logger = logging.getLogger(__name__)
