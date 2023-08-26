@@ -58,15 +58,21 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
         df_acc += [
             [
                 ix,
-                tuple(map_mu_index_triple[s].stokens)
-                if s in map_mu_index_triple
-                else tuple(s.to_tuple()),
-                tuple(map_mu_index_triple[r].stokens)
-                if r in map_mu_index_triple
-                else tuple(r.to_tuple()),
-                tuple(map_mu_index_triple[t].stokens)
-                if t in map_mu_index_triple
-                else tuple(t.to_tuple()),
+                (
+                    tuple(map_mu_index_triple[s].stokens)
+                    if s in map_mu_index_triple
+                    else tuple(s.to_tuple())
+                ),
+                (
+                    tuple(map_mu_index_triple[r].stokens)
+                    if r in map_mu_index_triple
+                    else tuple(r.to_tuple())
+                ),
+                (
+                    tuple(map_mu_index_triple[t].stokens)
+                    if t in map_mu_index_triple
+                    else tuple(t.to_tuple())
+                ),
                 *triples_text[mu_key],
             ]
         ]

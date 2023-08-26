@@ -4,6 +4,7 @@ import logging
 import re
 
 import networkx as nx
+from pylatexenc.latex2text import LatexNodes2Text
 from spacy import Language
 from unidecode import unidecode
 
@@ -45,37 +46,57 @@ def normalize_input_text(text, terminal_full_stop=True):
     """
 
     # cast possible diacritics to ascii
-    text = unidecode(text)
+    try:
+        text = unidecode(text)
+    except:
+        logger.error(f" unidecode failed on: {text}")
 
     # deal with double backslash
     try:
         text = bytes(text, "utf-8").decode("unicode_escape")
-    except:
+    except Exception as e:
         # TODO breaking example :
-        #  text =  'The program is freely available at \\url{http://graphics.med.yale.edu/cgi-bin/lib_comp.pl}.'
+        #  text =  "The program is freely available at \\url{http://graphics.med.yale.edu/cgi-bin/lib_comp.pl}."
         # in \\url is interpreted as the beginning of escape sequence
-        logger.warning(" unicode decoding failed; latex in text")
+        logger.error(
+            f"unicode decoding failed: {e}; more latex in text? {text}"
+        )
 
     # condense white spaces
     text = re.sub(r"\s+", " ", text)
 
     # split on .!? if followed by a capital and not preceded by a capital
     pat = r"(?<=[^A-Z][.!?])\s*(?=[A-Z])"
-    phrases = re.split(pat, text)
+    phrases_ = re.split(pat, text)
     # trim initial/terminal whitespaces
     trim_whitespace = re.compile(r"^[\s+]+|[\s+]+$")
-    phrases = [trim_whitespace.sub("", p) for p in phrases]
+    phrases_ = [trim_whitespace.sub("", p) for p in phrases_]
+
+    phrases = []
+    for ptext in phrases_:
+        try:
+            ptext = LatexNodes2Text().latex_to_text(ptext)
+        except Exception as e:
+            logger.error(
+                f" exception: {e}. LatexNodes2Text could not process : {ptext}"
+            )
+
+        phrases += [ptext]
+
     return phrases
 
 
-def pivot_around_advcl(nlp: Language, phrase) -> list[str]:
+def pivot_around_advcl(nlp: Language, phrase, max_symbols=600) -> list[str]:
     """
         coreference works better after pivot_around_advcl is applied
         idea take advcl component and move complement to the end of the subtree with advcl root
     :param nlp:
     :param phrase:
+    :param max_symbols:
     :return:
     """
+    if len(phrase) > max_symbols:
+        return []
 
     rdoc, graph = phrase_to_deptree(nlp, phrase)
 

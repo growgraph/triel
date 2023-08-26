@@ -428,9 +428,9 @@ class TestEL(unittest.TestCase):
 
         pm = PhraseMapper([text])
 
-        normalized_ip: defaultdict[
-            int, list[tuple[str, tuple[int, int]]]
-        ] = defaultdict(list)
+        normalized_ip: defaultdict[int, list[tuple[str, tuple[int, int]]]] = (
+            defaultdict(list)
+        )
         for e, span in normalized:
             ip, (ia, ib) = pm.span(span)
             normalized_ip[ip] += [(e.hash, (ia, ib))]

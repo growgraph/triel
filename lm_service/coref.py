@@ -86,9 +86,9 @@ def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
             "dep_": "chain",
             "chain": jchain,
         }
-        chain_state[
-            "label"
-        ] = f"{coref_chain}-*-{chain_state['tag_']}-{chain_state['dep_']}"
+        chain_state["label"] = (
+            f"{coref_chain}-*-{chain_state['tag_']}-{chain_state['dep_']}"
+        )
 
         vs_coref += [(coref_chain, chain_state)]
         es_coref.append((coref_root, coref_chain))
@@ -97,14 +97,15 @@ def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
             coref_blank = (-1, vertex_counter)
             blank_state: dict[str, Any] = {
                 "tag_": "coref",
-                "dep_": "blank"
-                + ("*" if kth == chain.most_specific_mention_index else ""),
+                "dep_": "blank" + (
+                    "*" if kth == chain.most_specific_mention_index else ""
+                ),
                 "most_specific": kth == chain.most_specific_mention_index,
                 "chain": jchain,
             }
-            blank_state[
-                "label"
-            ] = f"{coref_blank}-*-{blank_state['tag_']}-{blank_state['dep_']}"
+            blank_state["label"] = (
+                f"{coref_blank}-*-{blank_state['tag_']}-{blank_state['dep_']}"
+            )
 
             vs_coref += [(coref_blank, blank_state)]
             es_coref.append((coref_chain, coref_blank))
