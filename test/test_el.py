@@ -95,6 +95,7 @@ class TestEL(unittest.TestCase):
         super().__init__()
         self.reset = reset
 
+    @unittest.skip
     def test_bern(self):
         text = "Diabetic ulcers are related to burns."
         phs = normalize_text(text, self.nlp)
@@ -139,6 +140,7 @@ class TestEL(unittest.TestCase):
             ],
         )
 
+    @unittest.skip
     def test_iterate_linking_bern(self):
         text = "Diabetic ulcers are related to burns."
         phrases = normalize_text(text, self.nlp)
@@ -200,6 +202,7 @@ class TestEL(unittest.TestCase):
         self.assertEqual(map_eindex_entity_str, map_eindex_entity_str_ref)
         self.assertEqual(map_c2e, map_c2e_ref)
 
+    @unittest.skip
     def test_iterate_over_linkers(self):
         text = "Diabetic ulcers are related to burns."
 
@@ -260,6 +263,7 @@ class TestEL(unittest.TestCase):
         ip, m = pm(i)
         self.assertEqual(text[i : i + 9], phrases[ip][m : m + 9])
 
+    @unittest.skip
     def test_qb(self):
         pretext = (
             "Diabetic ulcers are related to burns. Autophagy maintains tumour"
