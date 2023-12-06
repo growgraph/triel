@@ -10,7 +10,7 @@ requires = ["poetry-core>=1.0.0"]
 authors = ["Alexander Belikov <alexander@growgraph.dev>"]
 description = "Convert text to graphs. Create candidates. Entity linking"
 name = "lm_service"
-version = "0.5.1"
+version = "0.5.2"
 
 [tool.poetry.dependencies]
 Flask = "^2.3.2"
@@ -21,7 +21,6 @@ aenum = "^3.1.11"
 coreferee = "^1.4.0"
 dataclass-wizard = "^0.22.1"
 flask-compress = "^1.13"
-graph-cast = {git = "ssh://git@github.com/growgraph/graph_cast.git", rev = "v0.11.4"}
 lemminflect = "^0.2.2"
 networkx = "^2.6.3"
 pandas = "^2.0.3"
@@ -34,7 +33,7 @@ pyyaml = "^6"
 requests = "^2.31.0"
 simple-websocket = "^0.5.2"
 spacy = {extras = ["cuda114"], version = "3.5"}
-suthing = {git = "ssh://git@github.com/growgraph/suthing.git", rev = "v0.2.2"}
+suthing = {git = "ssh://git@github.com/growgraph/suthing.git", rev = "v0.2.6"}
 torch = "^1.13.0"
 torchtext = "^0.12.0"
 viztracer = "^0.15.6"

@@ -8,8 +8,7 @@ import spacy
 from flask import Flask, jsonify, request
 from flask_compress import Compress
 from flask_restful import Api
-from graph_cast.db.factory import ConfigFactory
-from suthing import FileHandle
+from suthing import ConfigFactory, FileHandle
 from waitress import serve
 
 from lm_service.linking import (
@@ -78,7 +77,7 @@ if __name__ == "__main__":
     )
 
     wsgi_config = FileHandle.load(fpath=args.wsgi_self)
-    wsgi_re = ConfigFactory.create_config(args=wsgi_config)
+    wsgi_re = ConfigFactory.create_config(dict_like=wsgi_config)
 
     if args.gpu:
         spacy.prefer_gpu()
