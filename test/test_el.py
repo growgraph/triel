@@ -5,7 +5,6 @@ import unittest
 from collections import defaultdict
 from pprint import pprint
 
-import coreferee
 import spacy
 import yaml
 from suthing import FileHandle, equals
@@ -117,9 +116,9 @@ class TestEL(unittest.TestCase):
 
         pm = PhraseMapper([text])
 
-        bern_normalized_ip: defaultdict[
-            int, list[tuple[str, tuple[int, int]]]
-        ] = defaultdict(list)
+        bern_normalized_ip: defaultdict[int, list[tuple[str, tuple[int, int]]]] = (
+            defaultdict(list)
+        )
         for e, span in bern_normalized:
             ip, (ia, ib) = pm.span(span)
             bern_normalized_ip[ip] += [(e.hash, (ia, ib))]
@@ -229,9 +228,7 @@ class TestEL(unittest.TestCase):
         )
 
         if not self.reset:
-            ref = FileHandle.load(
-                f"test.reference.el", f"iterate_over_linkers.json"
-            )
+            ref = FileHandle.load("test.reference.el", "iterate_over_linkers.json")
             flag = equals(to_dict(map_eindex_entity), ref["map_eindex_entity"])
             if not flag:
                 pprint(to_dict(map_eindex_entity))
@@ -246,9 +243,7 @@ class TestEL(unittest.TestCase):
                     "map_eindex_entity": to_dict(map_eindex_entity),
                     "map_c2e": to_dict(map_c2e),
                 },
-                os.path.join(
-                    self.cpath, "reference/el/iterate_over_linkers.json"
-                ),
+                os.path.join(self.cpath, "reference/el/iterate_over_linkers.json"),
             )
 
     def test_phrasemapper(self):
@@ -298,9 +293,9 @@ class TestEL(unittest.TestCase):
 
         pm = PhraseMapper(phrases)
 
-        bern_normalized_ip: defaultdict[
-            int, list[tuple[str, tuple[int, int]]]
-        ] = defaultdict(list)
+        bern_normalized_ip: defaultdict[int, list[tuple[str, tuple[int, int]]]] = (
+            defaultdict(list)
+        )
         for e, span in bern_normalized:
             ip, (ia, ib) = pm.span(span)
             bern_normalized_ip[ip] += [(e.hash, (ia, ib))]
@@ -367,9 +362,7 @@ class TestEL(unittest.TestCase):
                     "weight": 0.14285714285714288,
                 },
                 {
-                    "category": (
-                        "Skin conditions resulting from physical factors"
-                    ),
+                    "category": ("Skin conditions resulting from physical factors"),
                     "page_id": 19985316,
                     "source": "wikipedia-en",
                     "weight": 0.14285714285714288,
@@ -466,9 +459,7 @@ class TestEL(unittest.TestCase):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--reset", action="store_true", help="reset test results"
-    )
+    parser.add_argument("--reset", action="store_true", help="reset test results")
     args = parser.parse_args()
     suite = unittest.TestSuite()
     suite.addTest(TestEL(args.reset))

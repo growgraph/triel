@@ -6,7 +6,7 @@ import logging
 import sys
 import unittest
 
-from lm_service.onto import AbsToken, apply_map, to_string
+from lm_service.onto import AbsToken, to_string
 
 logger = logging.getLogger(__name__)
 

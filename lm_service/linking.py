@@ -126,9 +126,7 @@ def link_unlinked_entities(
         i_e -> e ; i_e -> i_mu
     """
 
-    mentions_not_in_entities = set(map_muindex_candidate) - set(
-        c for c, e in map_c2e
-    )
+    mentions_not_in_entities = set(map_muindex_candidate) - set(c for c, e in map_c2e)
 
     for i_mu in mentions_not_in_entities:
         c = map_muindex_candidate[i_mu]
@@ -149,9 +147,7 @@ def link_unlinked_entities(
             ]
         )
         lucky_indices = [k for k, _ in index_zipf_metric[:n_tokens]]
-        least_frequent = [
-            w for j, w in enumerate(lemmatized) if j in lucky_indices
-        ]
+        least_frequent = [w for j, w in enumerate(lemmatized) if j in lucky_indices]
         least_frequent_phrase = " ".join(least_frequent)
         e_id = hashme(" ".join(least_frequent))
 
@@ -290,9 +286,7 @@ class EntityLinkerManager:
             self.configs[link_mode].extra_args,
         )
 
-    def query_and_normalize(
-        self, text, link_mode
-    ) -> list[tuple[Entity, tuple]]:
+    def query_and_normalize(self, text, link_mode) -> list[tuple[Entity, tuple]]:
         r = self.query(text, link_mode)
         epack = self.normalize(r, link_mode)
         return epack
@@ -306,8 +300,7 @@ class EntityLinkerManager:
         )
         if q.status_code != 200:
             raise EntityLinkerFailed(
-                f" EntityLinker.{kind} failed, possibly down, code"
-                f" {q.status_code}"
+                f" EntityLinker.{kind} failed, possibly down, code" f" {q.status_code}"
             )
         return q.json()
 
@@ -327,17 +320,14 @@ class EntityLinkerManager:
             if "entities" in response:
                 ents = response["entities"]
                 normalized = [
-                    EntityLinkerManager._normalize_fishing_entity(item)
-                    for item in ents
+                    EntityLinkerManager._normalize_fishing_entity(item) for item in ents
                 ]
             else:
                 normalized = []
         else:
             normalized = []
 
-        entity_pack = [
-            (x, y) for x, y in normalized if x is not None and y is not None
-        ]
+        entity_pack = [(x, y) for x, y in normalized if x is not None and y is not None]
         return entity_pack
 
     @staticmethod
@@ -376,11 +366,7 @@ class EntityLinkerManager:
     def _normalize_fishing_entity(
         item, prob_thr=0.4
     ) -> tuple[Entity | None, tuple | None]:
-        if (
-            item["confidence_score"] > prob_thr
-            if "confidence_score" in item
-            else True
-        ):
+        if item["confidence_score"] > prob_thr if "confidence_score" in item else True:
             if "wikidataId" in item:
                 db_type = "wikidataId"
                 item_id = item["wikidataId"]
@@ -431,9 +417,9 @@ def link_over_phrases(
         logging.error(f"EntityLinkerFailed es {e}")
         entity_pack = list()
 
-    entity_pack_per_phrase: defaultdict[
-        int, list[tuple[str, tuple[int, int]]]
-    ] = defaultdict(list)
+    entity_pack_per_phrase: defaultdict[int, list[tuple[str, tuple[int, int]]]] = (
+        defaultdict(list)
+    )
 
     for entity, span in entity_pack:
         try:
@@ -441,8 +427,7 @@ def link_over_phrases(
             entity_pack_per_phrase[ip] += [(entity.hash, (ia, ib))]
         except ValueError as ex:
             logger.error(
-                f"{ex} : span (mapping) for {entity.hash} was not computed"
-                " correctly"
+                f"{ex} : span (mapping) for {entity.hash} was not computed" " correctly"
             )
 
     map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
@@ -459,8 +444,8 @@ class PhraseMapper:
 
         self.tri = [0]
         acc = 0
-        for l in lens:
-            acc += l + len(sep)
+        for _len in lens:
+            acc += _len + len(sep)
             self.tri += [acc]
 
     def __call__(self, n):

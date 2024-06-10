@@ -7,7 +7,6 @@ from pathlib import Path
 from pprint import pprint
 from test.reference.distances import reference_distance
 
-import coreferee
 import spacy
 import yaml
 
@@ -37,7 +36,7 @@ class TestTriples(unittest.TestCase):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    with open(os.path.join(path, f"./data/cheops.txt"), "r") as f:
+    with open(os.path.join(path, "./data/cheops.txt"), "r") as f:
         text = f.read()
 
     nlp = spacy.load("en_core_web_trf")
@@ -102,17 +101,12 @@ class TestTriples(unittest.TestCase):
             # cast index to compound index
             map_tree_subtree_index = graph_component_maps(graph0)
             map_tree_subtree_index = {
-                k: AbsToken.ituple2stuple(v)
-                for k, v in map_tree_subtree_index.items()
+                k: AbsToken.ituple2stuple(v) for k, v in map_tree_subtree_index.items()
             }
 
-            graph_relabeled = relabel_nodes_and_key(
-                graph0, map_tree_subtree_index, "s"
-            )
+            graph_relabeled = relabel_nodes_and_key(graph0, map_tree_subtree_index, "s")
 
-            pile, _, mod_graph = graph_to_candidate_pile(
-                graph_relabeled, self.rules
-            )
+            pile, _, mod_graph = graph_to_candidate_pile(graph_relabeled, self.rules)
 
             g_undirected, g_reversed, g_weighted = generate_extra_graphs(
                 graph_relabeled
@@ -163,12 +157,9 @@ class TestTriples(unittest.TestCase):
             # cast index to compound index
             map_tree_subtree_index = graph_component_maps(graph)
             map_tree_subtree_index = {
-                k: AbsToken.ituple2stuple(v)
-                for k, v in map_tree_subtree_index.items()
+                k: AbsToken.ituple2stuple(v) for k, v in map_tree_subtree_index.items()
             }
-            graph_relabeled = relabel_nodes_and_key(
-                graph, map_tree_subtree_index, "s"
-            )
+            graph_relabeled = relabel_nodes_and_key(graph, map_tree_subtree_index, "s")
 
             # coref maps
             (

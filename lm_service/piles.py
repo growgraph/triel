@@ -13,7 +13,9 @@ class CandidatePile:
     pile of candidates of one type
     """
 
-    _root_to_candidate: dict[TokenIndexT, Candidate] = dataclasses.field(default_factory=dict)  # type: ignore
+    _root_to_candidate: dict[TokenIndexT, Candidate] = dataclasses.field(
+        default_factory=dict
+    )  # type: ignore
 
     def __len__(self) -> int:
         return len(self._root_to_candidate)
@@ -27,7 +29,7 @@ class CandidatePile:
         return self._root_to_candidate[key]
 
     def __repr__(self):
-        s = f""
+        s = ""
         for k, v in self._root_to_candidate.items():
             s += f"{k} : {v.__repr__()} \n"
         return s
@@ -70,9 +72,7 @@ class CandidatePile:
         self._root_to_candidate[r.root.s] = r
 
     def project_to_text(self):
-        return [
-            c.project_to_text_str() for c in self._root_to_candidate.values()
-        ]
+        return [c.project_to_text_str() for c in self._root_to_candidate.values()]
 
     def drop_amod_vbn(self):
         new = deepcopy(self)
@@ -112,8 +112,7 @@ class CandidatePile:
     def clean_dangling_edges(self):
         new = deepcopy(self)
         new._root_to_candidate = {
-            k: c.clean_dangling_edges()
-            for k, c in new._root_to_candidate.items()
+            k: c.clean_dangling_edges() for k, c in new._root_to_candidate.items()
         }
         return new
 
@@ -146,7 +145,9 @@ class ExtCandidateList:
 
     def __init__(self):
         self._filter = None
-        self._root_to_lists: defaultdict[TokenIndexT, list[CandidateType]] = defaultdict(list)  # type: ignore
+        self._root_to_lists: defaultdict[TokenIndexT, list[CandidateType]] = (
+            defaultdict(list)
+        )  # type: ignore
 
     def __len__(self) -> int:
         return sum(len(x) for x in self._root_to_lists.values())
@@ -166,8 +167,9 @@ class ExtCandidateList:
         return self._root_to_lists[item]
 
     def append(self, key, value: CandidateType):
-        if tuple(value.stokens) not in {
-            tuple(x.stokens) for x in self._root_to_lists[key]  # type: ignore
+        if tuple(value.stokens) not in {  # type: ignore
+            tuple(x.stokens)  # type: ignore
+            for x in self._root_to_lists[key]  # type: ignore
         }:
             self._root_to_lists[key] += [value]
 
@@ -175,17 +177,11 @@ class ExtCandidateList:
         if self._filter is None:
             return ((k, v) for k, v in self._root_to_lists.items())
         else:
-            return (
-                (k, v)
-                for k, v in self._root_to_lists.items()
-                if self._filter(k)
-            )
+            return ((k, v) for k, v in self._root_to_lists.items() if self._filter(k))
 
     def filter_out_pronouns(self):
         for k, vlist in self._root_to_lists.items():
-            self._root_to_lists[k] = [
-                item for item in vlist if not item.has_pronoun()
-            ]
+            self._root_to_lists[k] = [item for item in vlist if not item.has_pronoun()]
 
 
 @dataclasses.dataclass

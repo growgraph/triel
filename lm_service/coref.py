@@ -9,13 +9,8 @@ import networkx as nx
 from spacy.tokens import Doc
 
 from lm_service.graph import get_subtree_wrapper
-from lm_service.onto import (
-    Candidate,
-    Token,
-    TokenIndexT,
-    partition_conjunctive_wrapper,
-)
-from lm_service.piles import CandidatePile, ExtCandidateList
+from lm_service.onto import Candidate, Token, TokenIndexT
+from lm_service.piles import ExtCandidateList
 
 logger = logging.getLogger(__name__)
 
@@ -97,9 +92,8 @@ def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
             coref_blank = (-1, vertex_counter)
             blank_state: dict[str, Any] = {
                 "tag_": "coref",
-                "dep_": "blank" + (
-                    "*" if kth == chain.most_specific_mention_index else ""
-                ),
+                "dep_": "blank"
+                + ("*" if kth == chain.most_specific_mention_index else ""),
                 "most_specific": kth == chain.most_specific_mention_index,
                 "chain": jchain,
             }
@@ -114,9 +108,7 @@ def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
                 vs_coref += [
                     (
                         y,
-                        {
-                            "label": f"{y}-{rdoc[y].text}-{rdoc[y].tag_}-{rdoc[y].dep_}"
-                        },
+                        {"label": f"{y}-{rdoc[y].text}-{rdoc[y].tag_}-{rdoc[y].dep_}"},
                     )
                 ]
                 es_coref.append((coref_blank, y))
@@ -195,9 +187,7 @@ def sub_coreference(
         chains = map_subbable_to_chain[x]
         chains = [c for c in chains if c in map_chain_to_most_specific]
         if chains:
-            chains = sorted(
-                chains, key=lambda y: len(map_chain_to_most_specific[y])
-            )
+            chains = sorted(chains, key=lambda y: len(map_chain_to_most_specific[y]))
             r = map_chain_to_most_specific[chains[0]]
             if x in r:
                 return [x]
@@ -222,9 +212,7 @@ def coref_candidates(
     token_dict: dict[TokenIndexT, Token],
 ) -> defaultdict[TokenIndexT, list[Candidate]]:
     map_token_specific_token = {
-        i: sub_coreference(
-            map_subbable_to_chain, map_chain_to_most_specific, i
-        )
+        i: sub_coreference(map_subbable_to_chain, map_chain_to_most_specific, i)
         for i in map_subbable_to_chain
     }
 
@@ -234,18 +222,14 @@ def coref_candidates(
         i for subl in map_trunc.values() for i in subl
     }
 
-    map_icoref_source_target: dict[
-        TokenIndexT, tuple[TokenIndexT, Candidate]
-    ] = {}
+    map_icoref_source_target: dict[TokenIndexT, tuple[TokenIndexT, Candidate]] = {}
 
     # stoken -> atomic candidate
     for sroot, candidates in ext_candidate_list:
         for sigma_candidate in candidates:
             for k in all_coref_i:
                 if k in sigma_candidate.stokens:
-                    map_icoref_source_target[k] = sroot, deepcopy(
-                        sigma_candidate
-                    )
+                    map_icoref_source_target[k] = sroot, deepcopy(sigma_candidate)
                 elif (
                     k not in map_icoref_source_target
                 ):  # case when coref pointer is not a source/target candidate
@@ -272,9 +256,7 @@ def coref_candidates(
         map_trunc_local_uniq: dict[TokenIndexT, list[TokenIndexT]] = {
             k: v for k, v in map_trunc.items() if k in candidate_ix_subs
         }
-        domain = [
-            x for sublist in map_trunc_local_uniq.values() for x in sublist
-        ]
+        domain = [x for sublist in map_trunc_local_uniq.values() for x in sublist]
         map_trunc_local_uniq = {
             k: v for k, v in map_trunc_local_uniq.items() if k not in domain
         }
@@ -295,17 +277,12 @@ def coref_candidates(
                 sigma_copy = deepcopy(sigma_candidate)
                 # do not substitute if sigma already contains parts of proposed sub
                 if not (
-                    set(sigma_copy.stokens)
-                    & set(sigma_candidate_substitution.stokens)
+                    set(sigma_copy.stokens) & set(sigma_candidate_substitution.stokens)
                 ):
                     # replace sub with sigma_candidate_substitution view
                     # the view is a subtree starting from token y and onwards
-                    sub_tree_cand = sigma_candidate_substitution.from_subtree(
-                        y
-                    )
-                    sigma_copy.replace_token_with_acandidate(
-                        sub, sub_tree_cand
-                    )
+                    sub_tree_cand = sigma_candidate_substitution.from_subtree(y)
+                    sigma_copy.replace_token_with_acandidate(sub, sub_tree_cand)
                 deq.append((sroot, sigma_copy))
         else:
             try:

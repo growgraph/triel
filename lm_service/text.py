@@ -114,20 +114,16 @@ def phrases_to_triples(
     ] = defaultdict(list)
 
     # triple_index -> fundamental triple
-    fundamental_triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]] = (
-        dict()
-    )
+    fundamental_triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]] = dict()
 
     # iphrase -> meta triple
-    meta_triples_aux: defaultdict[
-        int, list[tuple[MuIndex, MuIndex, MuIndex]]
-    ] = defaultdict(list)
+    meta_triples_aux: defaultdict[int, list[tuple[MuIndex, MuIndex, MuIndex]]] = (
+        defaultdict(list)
+    )
 
     # triple_index -> meta triple
     meta_triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]] = dict()
-    relation_ecd: defaultdict[TokenIndexT, dict[int, Relation]] = defaultdict(
-        dict
-    )
+    relation_ecd: defaultdict[TokenIndexT, dict[int, Relation]] = defaultdict(dict)
 
     for s, r, t in striples:
         current_relation = relations[r]
@@ -158,8 +154,7 @@ def phrases_to_triples(
             else:
                 relation_index = relations[r].approximate_hash_int()
                 rt = [
-                    (relation_index, trunning)
-                    for trunning in range(len(global_ecl[t]))
+                    (relation_index, trunning) for trunning in range(len(global_ecl[t]))
                 ]
                 relation_ecd[r][relation_index] = relations[r]
 
@@ -209,7 +204,7 @@ def phrases_to_triples(
                 if iphrase < len(phrases):
                     logger.error(f" failing phrase : <B>{phrases[iphrase]}<E>")
                 else:
-                    logger.error(f" iphrase not even in phrases index (!)")
+                    logger.error(" iphrase not even in phrases index (!)")
             break
             # raise ValueError(f"Deq is stuck in a loop: {deq_striples_meta}")
 
@@ -218,30 +213,22 @@ def phrases_to_triples(
         if s in relations.sroots:
             r_current_index = relations[s].approximate_hash_int()
             if MuIndex(False, *s, r_current_index) in relation_triple_map:
-                sources_mu = [
-                    relation_triple_map[MuIndex(False, *s, r_current_index)]
-                ]
+                sources_mu = [relation_triple_map[MuIndex(False, *s, r_current_index)]]
             else:
                 deq_striples_meta.appendleft((s, r, t))
                 continue
         else:
-            sources_mu = [
-                MuIndex(False, *s, j) for j in range(len(global_ecl[s]))
-            ]
+            sources_mu = [MuIndex(False, *s, j) for j in range(len(global_ecl[s]))]
         if t in relations.sroots:
             r_current_index = relations[t].approximate_hash_int()
 
             if MuIndex(False, *t, r_current_index) in relation_triple_map:
-                targets_mu = [
-                    relation_triple_map[MuIndex(False, *t, r_current_index)]
-                ]
+                targets_mu = [relation_triple_map[MuIndex(False, *t, r_current_index)]]
             else:
                 deq_striples_meta.appendleft((s, r, t))
                 continue
         else:
-            targets_mu = [
-                MuIndex(False, *t, j) for j in range(len(global_ecl[t]))
-            ]
+            targets_mu = [MuIndex(False, *t, j) for j in range(len(global_ecl[t]))]
 
         if isinstance(r, str):
             iphrase = 0
@@ -266,9 +253,7 @@ def phrases_to_triples(
             k_tri_offset = (
                 len(fundamental_triples_aux[tri[1].phrase]) + k_tri_offset_meta
             )
-            meta_tri_index = MuIndex(
-                True, tri[1].phrase, "000", k_tri + k_tri_offset
-            )
+            meta_tri_index = MuIndex(True, tri[1].phrase, "000", k_tri + k_tri_offset)
             meta_triples[meta_tri_index] = tri
             # update relation -> triple map
             relation_triple_map[tri[1]] = meta_tri_index
@@ -386,9 +371,7 @@ def cast_simplified_triples_table(global_triples, map_mu_index_triple):
             if mu.meta:
                 return (
                     "(meta)"
-                    + map_mu_index_triple[
-                        global_triples[mu][1]
-                    ].project_to_text_str()
+                    + map_mu_index_triple[global_triples[mu][1]].project_to_text_str()
                 )
             else:
                 return map_mu_index_triple[mu].project_to_text_str()

@@ -2,11 +2,9 @@ import hashlib
 import os
 import pathlib
 
-import coreferee
 import spacy
 
 from lm_service.coref import render_coref_graph
-from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
 from lm_service.relation import text_to_compound_index_graph
 from lm_service.util import plot_graph
 

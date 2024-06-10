@@ -130,14 +130,10 @@ def graph_to_triples(
     for tri in itriples:
         s, r, t = tri
         for sprime, tprime in product(ncp[s], ncp[t]):
-            relation = align_relation_to_target(
-                pile.relations[r], tprime, graph
-            )
+            relation = align_relation_to_target(pile.relations[r], tprime, graph)
             # relation = pile.relations[r]
             triples += [
-                TripleCandidate(
-                    source=sprime, target=tprime, relation=relation
-                )
+                TripleCandidate(source=sprime, target=tprime, relation=relation)
             ]
 
     triples = sorted(

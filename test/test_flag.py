@@ -4,7 +4,6 @@ import sys
 import unittest
 from pathlib import Path
 
-import spacy
 import yaml
 
 from lm_service.folding import get_flag

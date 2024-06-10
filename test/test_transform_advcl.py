@@ -13,9 +13,7 @@ from pprint import pprint
 import spacy
 import yaml
 
-from lm_service.graph import phrase_to_deptree
 from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
-from lm_service.util import plot_graph
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +23,13 @@ class TestR(unittest.TestCase):
     path = Path(__file__).parent
 
     figs_folder = "./figs"
-    figs_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), figs_folder
-    )
+    figs_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), figs_folder)
     Path(figs_path).mkdir(parents=True, exist_ok=True)
 
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    with open(os.path.join(path, f"./data/cheops.txt"), "r") as f:
+    with open(os.path.join(path, "./data/cheops.txt"), "r") as f:
         text = f.read()
 
     nlp = spacy.load("en_core_web_trf")

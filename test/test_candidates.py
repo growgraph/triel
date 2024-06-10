@@ -35,7 +35,7 @@ class TestR(unittest.TestCase):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    with open(os.path.join(path, f"./data/cheops.txt"), "r") as f:
+    with open(os.path.join(path, "./data/cheops.txt"), "r") as f:
         text = f.read()
 
     nlp = spacy.load("en_core_web_trf")
@@ -144,9 +144,7 @@ class TestR(unittest.TestCase):
             rdoc, graph = phrase_to_deptree(self.nlp, document)
             ograph = graph.copy()
             cr = Relation()
-            find_subtree_dfs(
-                graph, ograph, deq, cr, rules=self.rules["relation"]
-            )
+            find_subtree_dfs(graph, ograph, deq, cr, rules=self.rules["relation"])
             cr.clean_dangling_edges().sort_index()
             piles += [cr]
 
@@ -271,9 +269,7 @@ class TestR(unittest.TestCase):
 
         ac.sort_index()
 
-        self.assertEqual(
-            ac.stokens, ["000", "015", "016", "017", "001", "002"]
-        )
+        self.assertEqual(ac.stokens, ["000", "015", "016", "017", "001", "002"])
 
 
 if __name__ == "__main__":

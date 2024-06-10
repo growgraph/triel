@@ -10,7 +10,6 @@ from suthing import profile
 from lm_service.hash import hashme
 from lm_service.linking import (
     Entity,
-    EntityLinkerFailed,
     iterate_over_linkers,
     link_unlinked_entities,
 )
@@ -129,9 +128,7 @@ def cast_response_to_unfolded(response: RELResponse, **kwargs):
                 MuIndex | SimplifiedCandidate,
             ],
         ]
-    ] = deque(
-        response.triples.items()
-    )  # type: ignore
+    ] = deque(response.triples.items())  # type: ignore
 
     triples_upd = []
 
@@ -170,9 +167,7 @@ def cast_response_to_unfolded(response: RELResponse, **kwargs):
                     }
                 ]
             except Exception as e:
-                logger.error(
-                    f"Exception in top.cast_response_to_unfolded : {e}"
-                )
+                logger.error(f"Exception in top.cast_response_to_unfolded : {e}")
                 logger.error(f" mu = {mu}, ei = {ei}")
 
     triples_upd: list[dict] = [cast_triple(x, **kwargs) for x in triples_upd]  # type: ignore

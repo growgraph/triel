@@ -88,7 +88,7 @@ class AbsToken(JSONWizard, ABC):
 
     def __repr__(self):
         content = [f" {k} : {v}" for k, v in self.__dict__.items()]
-        return f"Token fields:" + " |".join(content)
+        return "Token fields:" + " |".join(content)
 
     @classmethod
     def i2s(cls, i) -> str:
@@ -102,9 +102,7 @@ class AbsToken(JSONWizard, ABC):
             return f"{i:0{ConfigToken.representation_leading_zero}}"
         elif isinstance(i, str):
             return i
-        raise TypeError(
-            f" Token.i2s received i={i} of type {type(i)}, int expected."
-        )
+        raise TypeError(f" Token.i2s received i={i} of type {type(i)}, int expected.")
 
     @classmethod
     def ituple2stuple(cls, i) -> tuple[int, str]:
@@ -119,8 +117,7 @@ class AbsToken(JSONWizard, ABC):
                 return i[0], cls.i2s(i[1])
             raise ValueError(f"expected tuple of len 2, {i} received")
         raise TypeError(
-            f" Token.ituple2stuple received i={i} of type {type(i)}, tuple"
-            " expected."
+            f" Token.ituple2stuple received i={i} of type {type(i)}, tuple" " expected."
         )
 
 
@@ -146,9 +143,7 @@ class Token(AbsToken):
                 else set()
             )
             self.successors = (
-                set(self.i2s(i) for i in self.successors)
-                if self.successors
-                else set()
+                set(self.i2s(i) for i in self.successors) if self.successors else set()
             )
         elif isinstance(self.s, tuple):
             if not self.s[1]:
@@ -166,7 +161,7 @@ class Token(AbsToken):
 
     def __repr__(self):
         content = [f" {k} : {v}" for k, v in self.__dict__.items()]
-        return f"Token fields:" + " |".join(content)
+        return "Token fields:" + " |".join(content)
 
     def prior_s(self):
         if isinstance(self.s, tuple):
@@ -264,11 +259,7 @@ class Candidate(AbsCandidate, JSONWizard):
                 f" {str_pred} : succ > {str_succ}"
             ]
 
-        return (
-            f"{self.__class__.__name__} tokens : (\n\t"
-            + "|\n\t".join(content)
-            + ")"
-        )
+        return f"{self.__class__.__name__} tokens : (\n\t" + "|\n\t".join(content) + ")"
 
     def from_tokens(self, tokens: list[Token]):
         for t in tokens:
@@ -285,14 +276,10 @@ class Candidate(AbsCandidate, JSONWizard):
         return self
 
     def max_level(self) -> int:
-        return (
-            0 if self.empty else max(t._level for t in self._tokens.values())
-        )
+        return 0 if self.empty else max(t._level for t in self._tokens.values())
 
     def _recompute_root(self, robust_mode=True):
-        roots = [
-            k for k, v in self._tokens.items() if len(v.predecessors) == 0
-        ]
+        roots = [k for k, v in self._tokens.items() if len(v.predecessors) == 0]
         if len(roots) > 1:
             logger.error(f" {len(roots)} roots: dumping self")
             logger.error(
@@ -300,9 +287,7 @@ class Candidate(AbsCandidate, JSONWizard):
                 f" {' '.join([self.token(x).text for x in sorted(self.stokens)])}"
             )
             if robust_mode:
-                logger.error(
-                    f" robust_mode picking a root with a smaller index"
-                )
+                logger.error(" robust_mode picking a root with a smaller index")
                 root = sorted(roots)
                 acc = []
                 self._pick_successors(root[0], acc)
@@ -463,10 +448,7 @@ class Candidate(AbsCandidate, JSONWizard):
         proposed_sorter = {self.sroot: (0, len(self))}
         self._sort_wrt_tree(self.sroot, sorter=proposed_sorter)
         self._index_vec = [
-            x
-            for x, _ in sorted(
-                proposed_sorter.items(), key=lambda item: item[1][0]
-            )
+            x for x, _ in sorted(proposed_sorter.items(), key=lambda item: item[1][0])
         ]
         return self
 
@@ -611,9 +593,7 @@ class Candidate(AbsCandidate, JSONWizard):
             t = self._tokens[s]
             content += [f" {t.text}"]
 
-        return (
-            f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
-        )
+        return f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
 
     @property
     def lemmas(self):
@@ -621,26 +601,20 @@ class Candidate(AbsCandidate, JSONWizard):
 
     def drop_articles(self):
         # t.dep_ == "det" or t.tag_ != "DT"
-        drop_aux_indices = [
-            j for j, t in self._tokens.items() if t.dep_ == "det"
-        ]
+        drop_aux_indices = [j for j, t in self._tokens.items() if t.dep_ == "det"]
         self.drop_tokens(drop_aux_indices)
         return self
 
     def drop_amod_vbn(self):
         drop_aux_indices = [
-            j
-            for j, t in self._tokens.items()
-            if (t.dep_ == "amod" and t.tag_ == "VBN")
+            j for j, t in self._tokens.items() if (t.dep_ == "amod" and t.tag_ == "VBN")
         ]
         self.drop_tokens(drop_aux_indices)
         return self
 
     def drop_cc(self):
         drop_aux_indices = [
-            j
-            for j, t in self._tokens.items()
-            if (t.dep_ == "cc" and t.tag_ == "CC")
+            j for j, t in self._tokens.items() if (t.dep_ == "cc" and t.tag_ == "CC")
         ]
         self.drop_tokens(drop_aux_indices)
         return self
@@ -682,9 +656,7 @@ class Candidate(AbsCandidate, JSONWizard):
         ]
         g.add_nodes_from((i, props) for i, props, _ in vertex_desc)
         g.add_edges_from(
-            (i, j) if use_successors else (j, i)
-            for i, _, es in vertex_desc
-            for j in es
+            (i, j) if use_successors else (j, i) for i, _, es in vertex_desc for j in es
         )
         return g
 
@@ -703,10 +675,7 @@ class ACandidateKind(Enum):
 class Relation(Candidate):
     @property
     def passive(self):
-        flags = [
-            t.dep_ in ("auxpass", "ccomp", "acl")
-            for t in self._tokens.values()
-        ]
+        flags = [t.dep_ in ("auxpass", "ccomp", "acl") for t in self._tokens.values()]
         return any(flags)
 
     def has_prepositions(self):
@@ -722,9 +691,7 @@ class Relation(Candidate):
         """
 
         # drop all aux
-        drop_aux_indices = [
-            j for j, t in self._tokens.items() if t.dep_ == "aux"
-        ]
+        drop_aux_indices = [j for j, t in self._tokens.items() if t.dep_ == "aux"]
         self.drop_tokens(drop_aux_indices)
 
         if self.passive:
@@ -851,8 +818,7 @@ def to_string_keys(obj, func):
 def apply_map(obj, mapper):
     if isinstance(obj, dict):
         return {
-            apply_map(k, mapper): apply_map(item, mapper)
-            for k, item in obj.items()
+            apply_map(k, mapper): apply_map(item, mapper) for k, item in obj.items()
         }
     if isinstance(obj, list):
         return tuple(apply_map(item, mapper) for item in obj)

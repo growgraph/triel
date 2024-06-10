@@ -1,12 +1,10 @@
 import argparse
 import os
 
-import coreferee
 import spacy
-import yaml
-from suthing import FileHandle, equals
+from suthing import FileHandle
 
-from lm_service.linking import EntityLinkerFailed, EntityLinkerManager
+from lm_service.linking import EntityLinkerManager
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 cpath = os.path.dirname(os.path.realpath(__file__))
@@ -104,9 +102,7 @@ def run():
     elm = EntityLinkerManager(conf)
     response = text_to_rel_graph(text, nlp, rules, elm)
 
-    response_jsonlike = cast_response_to_unfolded(
-        response, cast_triple_version="v1"
-    )
+    response_jsonlike = cast_response_to_unfolded(response, cast_triple_version="v1")
 
     response_jsonlike["publication"] = {
         "arxiv": "current.123",

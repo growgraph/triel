@@ -19,13 +19,9 @@ def plot_graph(graph, path, name, plot_png=False, plot_pdf=True, prog="dot"):
     dot = to_agraph(graph)
     dot.layout("dot")
     if plot_png:
-        dot.draw(
-            path=os.path.join(path, f"{name}.png"), format="png", prog=prog
-        )
+        dot.draw(path=os.path.join(path, f"{name}.png"), format="png", prog=prog)
     if plot_pdf:
-        dot.draw(
-            path=os.path.join(path, f"{name}.pdf"), format="pdf", prog=prog
-        )
+        dot.draw(path=os.path.join(path, f"{name}.pdf"), format="pdf", prog=prog)
 
 
 def plot_leaves(metagraph, path, root_fname):

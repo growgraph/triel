@@ -1,8 +1,8 @@
 import logging
 
 from flask import Flask, jsonify, request
-from flask_restful import Api, reqparse
-from transformers import AutoModelForMaskedLM, AutoTokenizer, pipeline
+from flask_restful import Api
+from transformers import AutoTokenizer, pipeline
 
 app = Flask(__name__)
 api = Api(app)
@@ -10,33 +10,40 @@ api = Api(app)
 logger = logging.getLogger(__name__)
 
 
-@app.route("/")
-def hello_world():
-    return "score terms using lm"
+def main():
+    # model = AutoModelForMaskedLM.from_pretrained("xlm-roberta-base", output_hidden_states=True)
+    classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+    _ = AutoTokenizer.from_pretrained("xlm-roberta-base")
 
+    @app.route("/")
+    def hello_world():
+        return "score terms using lm"
 
-@app.route("/lmscore", methods=["POST"])
-def score():
-    if request.method == "POST":
-        logger.info(request)
-        logger.info(request.json)
-        json_data = request.json
-        # phrases = ["Cut three zuccini then fry them",
-        #            "John was cooking meat with vegetables",
-        #            "Alexander drove his Honda for 100 miles each day"]
-        # foci = ["zuccini", "John", "Honda"]
-        # categories = ["person", "vegetable", "car"]
-        phrases = json_data["phrases"]
-        foci = json_data["foci"]
-        categories = json_data["categories"]
+    @app.route("/lmscore", methods=["POST"])
+    def score():
+        if request.method == "POST":
+            logger.info(request)
+            logger.info(request.json)
+            json_data = request.json
+            # phrases = ["Cut three zuccini then fry them",
+            #            "John was cooking meat with vegetables",
+            #            "Alexander drove his Honda for 100 miles each day"]
+            # foci = ["zuccini", "John", "Honda"]
+            # categories = ["person", "vegetable", "car"]
+            phrases = json_data["phrases"]
+            foci = json_data["foci"]
+            categories = json_data["categories"]
 
-        report = []
-        for p, f in zip(phrases, foci):
-            candl = [f"{f} is a {c}" for c in categories]
-            r = classifier(p, candl)
-            report += [r]
+            report = []
+            for p, f in zip(phrases, foci):
+                candl = [f"{f} is a {c}" for c in categories]
+                r = classifier(p, candl)
+                report += [r]
 
-        return jsonify({"result": report}), 200
+            return jsonify({"result": report}), 200
+
+    print("models loaded")
+    app.run()
 
 
 if __name__ == "__main__":
@@ -54,10 +61,4 @@ if __name__ == "__main__":
 
     model = "facebook/bart-large-mnli"
 
-    # model = AutoModelForMaskedLM.from_pretrained("xlm-roberta-base", output_hidden_states=True)
-    classifier = pipeline(
-        "zero-shot-classification", model="facebook/bart-large-mnli"
-    )
-    tokenizer = AutoTokenizer.from_pretrained("xlm-roberta-base")
-    print("models loaded")
-    app.run()
+    main()

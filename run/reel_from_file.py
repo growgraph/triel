@@ -2,7 +2,6 @@ import argparse
 import pkgutil
 from pprint import pprint
 
-import coreferee
 import spacy
 import yaml
 from suthing import FileHandle
@@ -22,9 +21,7 @@ def main(fpath, entity_linker_config):
 
     text = FileHandle.load(fpath=fpath)["text"]
     response = text_to_rel_graph(text, nlp, rules, elm)
-    response_jsonlike = cast_response_to_unfolded(
-        response, cast_triple_version="v1"
-    )
+    response_jsonlike = cast_response_to_unfolded(response, cast_triple_version="v1")
     pprint(response_jsonlike)
 
 

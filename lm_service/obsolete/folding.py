@@ -59,9 +59,7 @@ def fold_graph_top(
 
     for root in roots:
         metagraph = nx.DiGraph()
-        gmetagraph.update(
-            fold_graph(nx_graph, metagraph, None, root, None, rules)
-        )
+        gmetagraph.update(fold_graph(nx_graph, metagraph, None, root, None, rules))
 
     return gmetagraph
 

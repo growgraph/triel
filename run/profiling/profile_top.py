@@ -1,9 +1,10 @@
+# pylint: disable=E1101
+
 import os
 import pkgutil
 from multiprocessing.managers import BaseManager
 from pprint import pprint
 
-import coreferee
 import spacy
 import yaml
 from suthing import SProfiler
@@ -23,12 +24,12 @@ def main():
 
     conf = {
         "BERN_V2": {
-            "url": "http://10.0.0.3:8888/plain",
+            "url": "http://192.168.1.11:8888/plain",
             "text_field": "text",
             "threshold": 0.75,
         },
         "FISHING": {
-            "url": "http://10.0.0.3:8090/service/disambiguate",
+            "url": "http://192.168.1.11:8090/service/disambiguate",
             "text_field": "text",
             "extra_args": {
                 "language": {"lang": "en"},

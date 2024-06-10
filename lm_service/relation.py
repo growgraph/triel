@@ -231,9 +231,7 @@ def graph_to_candidate_pile(
         robust_mode=robust_mode,
     )
 
-    source_candidates, target_candidates = sieve_sources_targets(
-        candidate_pile
-    )
+    source_candidates, target_candidates = sieve_sources_targets(candidate_pile)
 
     logger.info(f" relations: {relation_pile}")
 
@@ -263,10 +261,7 @@ def generate_extra_graphs(
     # distance wrt to weights defined in this way will be 0 for the same level
     # +1 or -1 for level k to k+1 and vice versa
     g_weighted.add_weighted_edges_from(
-        [
-            (u, v, g_reversed.edges[u, v]["weight"])
-            for u, v in g_reversed.edges
-        ],
+        [(u, v, g_reversed.edges[u, v]["weight"]) for u, v in g_reversed.edges],
         weight="weight",
     )
 
@@ -371,9 +366,7 @@ def derive_sources_per_relation(
     decision = decision.merge(targetlike_penalty, how="left", on="s")
     decision = decision[decision["ud"] != 0]
 
-    decision["mcost"] = (
-        decision["ud"] + decision["ld"] + decision["syn_penalty"]
-    )
+    decision["mcost"] = decision["ud"] + decision["ld"] + decision["syn_penalty"]
 
     # source decisions are based on mcost
 
@@ -414,8 +407,7 @@ def derive_targets_per_relaton(
     }
 
     min_dists: dict[TokenIndexT, int] = {
-        r: min(item.values()) if item else -1
-        for r, item in dist_to_targets.items()
+        r: min(item.values()) if item else -1 for r, item in dist_to_targets.items()
     }
 
     targets_per_relation: dict[TokenIndexT, set[TokenIndexT]] = {
@@ -429,9 +421,7 @@ def derive_targets_per_relaton(
     return targets_per_relation
 
 
-def align_relation_to_target(
-    r: Relation, t: SourceOrTarget, graph: nx.DiGraph
-):
+def align_relation_to_target(r: Relation, t: SourceOrTarget, graph: nx.DiGraph):
     """
     remove prepositions that on the path from relation to target
 
@@ -443,9 +433,7 @@ def align_relation_to_target(
     :return:
     """
     r = deepcopy(r)
-    preposition_tokens = [
-        t.s for t in r.tokens if t.dep_ == "prep" and t.tag_ == "IN"
-    ]
+    preposition_tokens = [t.s for t in r.tokens if t.dep_ == "prep" and t.tag_ == "IN"]
     for prep in preposition_tokens:
         try:
             path = nx.shortest_path(graph, r.sroot, t.sroot)
@@ -494,8 +482,7 @@ def derive_relations_per_relation(
     }
 
     min_dists: dict[TokenIndexT, int] = {
-        r: min(item.values()) if item else -1
-        for r, item in dist_rr_rev.items()
+        r: min(item.values()) if item else -1 for r, item in dist_rr_rev.items()
     }
 
     rel_sources_per_relation: dict[TokenIndexT, set[TokenIndexT]] = {
@@ -655,8 +642,7 @@ def form_triples(
                 if s != t:
                     if flag_only_relation_in_path:
                         if (
-                            s in pile.sources.sroots
-                            and t in pile.targets.sroots
+                            s in pile.sources.sroots and t in pile.targets.sroots
                             # s not in relation_sroots
                             # and t not in relation_sroots
                         ):
@@ -674,16 +660,12 @@ def form_triples(
                                 if rel_sources_per_relation[sroot]:
                                     # TODO clear up next-iter hack
                                     # currently only first element is used (in practice there should be only one)
-                                    s = next(
-                                        iter(rel_sources_per_relation[sroot])
-                                    )
+                                    s = next(iter(rel_sources_per_relation[sroot]))
                                 else:
                                     s = (0, "nil")
                             if set(path[index_sroot + 1 :]) & relation_sroots:
                                 if rel_targets_per_relation[sroot]:
-                                    t = next(
-                                        iter(rel_targets_per_relation[sroot])
-                                    )
+                                    t = next(iter(rel_targets_per_relation[sroot]))
                                 else:
                                     t = (0, "nil")
                             if s != (0, "nil") and t != (0, "nil"):
@@ -722,9 +704,7 @@ def text_to_compound_index_graph(
     rdoc, graph = phrase_to_deptree(nlp, text)
 
     if single_phrase_mode and nx.number_weakly_connected_components(graph) > 1:
-        components = sorted(
-            nx.weakly_connected_components(graph), key=lambda x: len(x)
-        )
+        components = sorted(nx.weakly_connected_components(graph), key=lambda x: len(x))
         sg = nx.subgraph(graph, components[-1])
         logger.warning(
             f" with single_phrase_mode from text <fail>{text}<fail> only"
@@ -811,9 +791,7 @@ def add_hash(triples_expanded):
                 "type": "source",
             },
             {
-                "hash": hashlib.sha256(
-                    relation_txt.encode("utf-8")
-                ).hexdigest(),
+                "hash": hashlib.sha256(relation_txt.encode("utf-8")).hexdigest(),
                 "text": relation_txt,
                 "type": "relation",
             },

@@ -3,7 +3,6 @@ import io
 import logging
 import traceback
 
-import coreferee
 import spacy
 from flask import Flask, jsonify, request
 from flask_compress import Compress

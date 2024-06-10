@@ -3,12 +3,11 @@ import os
 import pkgutil
 import unittest
 
-import coreferee
 import spacy
 import yaml
-from suthing import FileHandle, equals
+from suthing import FileHandle
 
-from lm_service.linking import EntityLinkerFailed, EntityLinkerManager
+from lm_service.linking import EntityLinkerManager
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 
@@ -66,17 +65,13 @@ class TestREL(unittest.TestCase):
         )
 
         if not self.reset:
-            ref = FileHandle.load(
-                "test.reference.el", "iterate_linking_bern.json"
-            )
+            ref = FileHandle.load("test.reference.el", "iterate_linking_bern.json")
             self.assertEqual(response_jsonlike, ref)
 
         else:
             FileHandle.dump(
                 response_jsonlike,
-                os.path.join(
-                    self.cpath, "reference/el/iterate_linking_bern.json"
-                ),
+                os.path.join(self.cpath, "reference/el/iterate_linking_bern.json"),
             )
 
     @unittest.skip("")
@@ -153,9 +148,7 @@ class TestREL(unittest.TestCase):
         )
 
         if not self.reset:
-            ref = FileHandle.load(
-                "test.reference.el", "iterate_linking_bern.json"
-            )
+            ref = FileHandle.load("test.reference.el", "iterate_linking_bern.json")
             self.assertEqual(response_jsonlike, ref)
 
         else:
@@ -171,9 +164,7 @@ class TestREL(unittest.TestCase):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--reset", action="store_true", help="reset test results"
-    )
+    parser.add_argument("--reset", action="store_true", help="reset test results")
     args = parser.parse_args()
     suite = unittest.TestSuite()
     suite.addTest(TestREL(args.reset))
