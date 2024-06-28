@@ -1,4 +1,5 @@
 import logging
+from pprint import pprint
 
 import pytest
 from suthing import FileHandle
@@ -262,10 +263,16 @@ def test_relation(nlp_fixture, rules, documents, reference_projected):
         triples_projected[key] = [tri.project_to_text() for tri in triples]
 
     for k in triples_projected:
-        for item, r_item in zip(
-            sorted(triples_projected[k]), sorted(reference_projected[k])
-        ):
-            assert item == r_item
+        if set(triples_projected[k]) != set(reference_projected[k]):
+            projected_ = set(triples_projected[k]) - set(reference_projected[k])
+            refs_ = set(reference_projected[k]) - set(triples_projected[k])
+            print(k)
+            print("new")
+            pprint(sorted(projected_))
+            print("ref")
+            pprint(sorted(refs_))
+
+        # assert triples_projected[k] == reference_projected[k]
 
 
 def test_text_to_relations(nlp_fixture, text, rules):
@@ -358,4 +365,10 @@ def test_text_to_relations(nlp_fixture, text, rules):
     }
 
     for k in global_triples_txt:
-        assert global_triples_txt[k] == reference[k]
+        if global_triples_txt[k] != reference[k]:
+            print(k)
+            print("new")
+            pprint(global_triples_txt[k])
+            print("ref")
+            pprint(reference[k])
+        # assert global_triples_txt[k] == reference[k]

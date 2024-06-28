@@ -39,6 +39,7 @@ spacy = {extras = ["cuda114"], version = "3.5"}
 suthing = {git = "ssh://git@github.com/growgraph/suthing.git", rev = "v0.2.8"}
 torch = "^1.13.0"
 torchtext = "^0.12.0"
+transformers = "^4.42.2"
 viztracer = "^0.15.6"
 waitress = "^2.1.2"
 wordfreq = "^3.0.3"
