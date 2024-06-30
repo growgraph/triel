@@ -1,4 +1,5 @@
 import pathlib
+from pprint import pprint
 
 import click
 import requests
@@ -14,16 +15,17 @@ import suthing
 def run(host, port, service, input_path, output):
     inp = suthing.FileHandle.load(fpath=input_path)
     if service == "bern":
-        ext = "plain"
+        route = "plain"
     elif service == "fishing":
-        ext = "service/disambiguate"
+        route = "service/disambiguate"
     elif service == "pelinker":
-        ext = "pelinker"
+        route = "pelinker"
     else:
         raise ValueError(f"unsupported service {service}")
 
-    url = f"http://{host}:{port}/{ext}"
+    url = f"http://{host}:{port}/{route}"
     r = requests.post(url, json={"text": inp["text"]}, verify=False).json()
+    pprint(r)
     if output:
         suthing.FileHandle.dump(r, output.as_posix())
 

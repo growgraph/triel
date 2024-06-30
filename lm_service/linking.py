@@ -9,13 +9,12 @@ from functools import partial
 
 import numpy as np
 import requests
-from dataclass_wizard import JSONWizard
 from pathos.pools import ProcessPool
 from suthing import profile
 from wordfreq import zipf_frequency
 
 from lm_service.hash import hashme
-from lm_service.onto import Candidate, MuIndex
+from lm_service.onto import BaseDataclass, Candidate, MuIndex
 from lm_service.piles import ExtCandidateList
 
 logger = logging.getLogger(__name__)
@@ -42,21 +41,14 @@ class EntityLinker(str, Enum):
     FISHING = "FISHING"
     SPACY_BASIC = "SPACY_BASIC"
     GG = "GG"
+    PELINKER = "PELINKER"
 
 
 ent_db_type_gg_verbatim = "verbatim"
 
 
-@dataclasses.dataclass(repr=False)
-class Entity(JSONWizard):
-    """
-    represents a token in dep tree
-    """
-
-    class _(JSONWizard.Meta):
-        key_transform_with_dump = "SNAKE"
-        skip_defaults = True
-
+@dataclasses.dataclass
+class Entity(BaseDataclass):
     linker_type: EntityLinker
     ent_db_type: str
     id: str
@@ -208,87 +200,36 @@ def link_candidate_entity(
     return map_candidate2entity
 
 
-@profile
-def iterate_over_linkers(
-    phrases: list[str],
-    ecl: ExtCandidateList,
-    map_muindex_candidate: dict[MuIndex, Candidate],
-    entity_linker_manager: EntityLinkerManager,
-    **kwargs,
-) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
-    map_eindex_entity: dict[str, Entity] = dict()
-    map_c2e: list[tuple[MuIndex, str]] = []
+@dataclasses.dataclass
+class EntityLinkerManager(BaseDataclass):
+    linkers: list[APISpec] = dataclasses.field(default_factory=lambda: [])
 
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-    with ProcessPool() as pool:
-        rets = pool.map(
-            partial(
-                link_over_phrases,
-                phrases=phrases,
-                ecl=ecl,
-                elm=entity_linker_manager,
-                **kwargs,
-            ),
-            list(entity_linker_manager.linker_types),
-        )
-
-    for map_eindex_entity0, map_c2e0 in rets:
-        map_c2e += map_c2e0
-        map_eindex_entity.update(map_eindex_entity0)
-
-    map_eindex_entity, map_c2e = link_unlinked_entities(
-        map_eindex_entity, map_c2e, map_muindex_candidate
-    )
-
-    return map_eindex_entity, map_c2e
-
-
-@dataclasses.dataclass()
-class LinkerConfig(JSONWizard):
-    """
-    represents a token in dep tree
-    """
-
-    class _(JSONWizard.Meta):
-        key_transform_with_dump = "SNAKE"
-
-    url: str
-    text_field: str
-    threshold: float = 0.8
-    extra_args: dict = dataclasses.field(default_factory=dict)
-
-
-class EntityLinkerManager:
-    def __init__(self, linking_config):
-        self.configs: dict[EntityLinker, LinkerConfig] = {
-            k: LinkerConfig(**v) for k, v in linking_config.items()
+    def __post_init__(self):
+        self._map_linker_ix = {
+            EntityLinker(item.keyword): j for j, item in enumerate(self.linkers)
         }
 
     @property
     def linker_types(self):
-        return list(self.configs.keys())
+        return sorted(self._map_linker_ix.keys())
 
-    def set_linker_type(self, ltype: EntityLinker):
-        if ltype in self.configs:
-            self.current_kind = ltype
-        else:
-            raise EntityLinkerTypeNotAvailable(
-                f" linker type {ltype} was not provided with a config"
-            )
+    def __getitem__(self, key):
+        return self.linkers[self._map_linker_ix[key]]
 
     def query(self, text, link_mode):
         return EntityLinkerManager.query0(
             text,
             link_mode,
-            self.configs[link_mode].text_field,
-            self.configs[link_mode].url,
-            self.configs[link_mode].extra_args,
+            self[link_mode].text_field,
+            self[link_mode].url,
+            self[link_mode].extra_args,
         )
 
-    def query_and_normalize(self, text, link_mode) -> list[tuple[Entity, tuple]]:
+    def query_and_normalize(
+        self, text, link_mode, **kwargs
+    ) -> list[tuple[Entity, tuple]]:
         r = self.query(text, link_mode)
-        epack = self.normalize(r, link_mode)
+        epack = self.normalize(r, link_mode, **kwargs)
         return epack
 
     @staticmethod
@@ -304,13 +245,13 @@ class EntityLinkerManager:
             )
         return q.json()
 
-    def normalize(self, response, link_mode) -> list[tuple[Entity, tuple]]:
+    def normalize(self, response, link_mode, **kwargs) -> list[tuple[Entity, tuple]]:
         if link_mode == EntityLinker.BERN_V2:
             if "annotations" in response:
                 ents = response["annotations"]
                 normalized = [
                     EntityLinkerManager._normalize_bern_entity(
-                        item, prob_thr=self.configs[link_mode].threshold
+                        item, prob_thr=self[link_mode].threshold, **kwargs
                     )
                     for item in ents
                 ]
@@ -324,6 +265,15 @@ class EntityLinkerManager:
                 ]
             else:
                 normalized = []
+        elif link_mode == EntityLinker.PELINKER:
+            if "entities" in response:
+                ents = response["entities"]
+                normalized = [
+                    EntityLinkerManager._normalize_pelinker_entity(item)
+                    for item in ents
+                ]
+            else:
+                normalized = []
         else:
             normalized = []
 
@@ -331,35 +281,84 @@ class EntityLinkerManager:
         return entity_pack
 
     @staticmethod
+    def _normalize_pelinker_entity(
+        item, prob_thr=0.8, **kwargs
+    ) -> tuple[None | Entity, tuple | None]:
+        id0 = item["entity"]
+        item_spec = id0.split(".")
+        ent_db_type, item_id = item_spec
+        ent_type = None
+        return (
+            Entity(
+                linker_type=EntityLinker.PELINKER,
+                ent_type=ent_type,
+                ent_db_type=ent_db_type,
+                id=item_id,
+                original_form=item["entity_label"],
+            ),
+            (item["a"], item["b"]),
+        )
+
+    @staticmethod
     def _normalize_bern_entity(
-        item, prob_thr=0.8
-    ) -> tuple[Entity | None, tuple | None]:
+        item, prob_thr=0.8, **kwargs
+    ) -> tuple[None | Entity, tuple | None]:
         """
 
         :param item:
         :param prob_thr:
         :return:
         """
-        if len(item["id"]) > 0 and (
-            item["prob"] > prob_thr if "prob" in item else True
-        ):
-            item_spec = item["id"][0].split(":")
-            try:
-                db_type, item_id = item_spec
-            except:
-                logger.warning(
-                    " non standard bern entity (does not look like"
-                    f" `<ent_type>:<id>` : {item}. NB: most likely CUI-less"
-                    " entity"
-                )
-                return None, None
+
+        try:
+            _ids = item.pop("id")
+            id0 = _ids.pop()
+        except KeyError:
+            logger.warning(f" {item} does not contain ids")
+            return None, None
+        except IndexError:
+            logger.warning(f" {item} contains empty list of ids")
+            return None, None
+
+        try:
+            prob0 = item.pop("prob")
+        except KeyError:
+            logger.warning(f" {item} does not contain prob key")
+            prob0 = 1.0
+
+        try:
+            ent_type = item.pop("obj")
+        except KeyError:
+            logger.warning(f" {item} does not contain obj key")
+            return None, None
+
+        if prob0 > prob_thr:
+            if id0 == "CUI-less":
+                doc = item["mention"]
+                sub_id = "_".join(doc.split(" ")).lower()
+                item_id = f"{ent_type}:{sub_id}"
+                ent_db_type = "NA"
+            else:
+                item_spec = id0.split(":")
+                try:
+                    ent_db_type, item_id = item_spec
+                except:
+                    logger.warning(
+                        " non standard bern entity (does not look like"
+                        f" `<ent_type>:<id>`: {item}. NB: most likely CUI-less"
+                        " entity"
+                    )
+                    return None, None
             return Entity(
                 linker_type=EntityLinker.BERN_V2,
-                ent_type=item["obj"],
-                ent_db_type=db_type,
+                ent_type=ent_type,
+                ent_db_type=ent_db_type,
                 id=item_id,
             ), (item["span"]["begin"], item["span"]["end"])
         else:
+            logger.info(
+                f" prob0 > prob_thr did not hold: prob0 {prob0:.3f}, prob_thr {prob_thr:.3f}"
+            )
             return None, None
 
     @staticmethod
@@ -388,6 +387,90 @@ class EntityLinkerManager:
             return None, None
 
 
+@profile
+def iterate_over_linkers(
+    phrases: list[str],
+    ecl: ExtCandidateList,
+    map_muindex_candidate: dict[MuIndex, Candidate],
+    entity_linker_manager: EntityLinkerManager,
+    **kwargs,
+) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
+    map_eindex_entity: dict[str, Entity] = dict()
+    map_c2e: list[tuple[MuIndex, str]] = []
+    entity_pack_per_phrase: defaultdict[int, list[tuple[str, tuple[int, int]]]] = (
+        defaultdict(list)
+    )
+
+    sep = " "
+    pm = PhraseMapper(phrases, sep)
+
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+    with ProcessPool() as pool:
+        responses = pool.map(
+            partial(
+                link_simple,
+                phrases=phrases,
+                elm=entity_linker_manager,
+                **kwargs,
+            ),
+            entity_linker_manager.linker_types,
+        )
+
+    entity_pack = []
+    for link_mode, r in zip(entity_linker_manager.linker_types, responses):
+        epack = entity_linker_manager.normalize(r, link_mode, **kwargs)
+        entity_pack.extend(epack)
+
+    for entity, span in entity_pack:
+        try:
+            ip, (ia, ib) = pm.span(span)
+            entity_pack_per_phrase[ip] += [(entity.hash, (ia, ib))]
+        except ValueError as ex:
+            logger.error(
+                f"{ex} : span (mapping) for {entity.hash} was not computed" " correctly"
+            )
+
+    map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
+    map_eindex_entity = {
+        **map_eindex_entity,
+        **{e.hash: e for e, _ in entity_pack},
+    }
+
+    map_eindex_entity, map_c2e = link_unlinked_entities(
+        map_eindex_entity, map_c2e, map_muindex_candidate
+    )
+
+    map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
+    map_eindex_entity = {
+        **map_eindex_entity,
+        **{e.hash: e for e, _ in entity_pack},
+    }
+
+    return map_eindex_entity, map_c2e
+
+
+@profile(_argnames="link_simple")
+def link_simple(
+    link_mode: EntityLinker, phrases, elm: EntityLinkerManager, **kwargs
+) -> list:
+    """
+
+    :param phrases:
+    :param link_mode:
+    :param elm:
+    """
+
+    sep = " "
+    text = sep.join(phrases)
+    try:
+        entity_pack = elm.query(text, link_mode)
+    except EntityLinkerFailed as e:
+        logging.error(f"EntityLinkerFailed es {e}")
+        entity_pack = list()
+    return entity_pack
+
+
 @profile(_argnames="link_mode")
 def link_over_phrases(
     link_mode: EntityLinker,
@@ -412,7 +495,7 @@ def link_over_phrases(
     text = sep.join(phrases)
     pm = PhraseMapper(phrases, sep)
     try:
-        entity_pack = elm.query_and_normalize(text, link_mode)
+        entity_pack = elm.query_and_normalize(text, link_mode, **kwargs)
     except EntityLinkerFailed as e:
         logging.error(f"EntityLinkerFailed es {e}")
         entity_pack = list()
@@ -469,3 +552,44 @@ class PhraseMapper:
                 f" phrases ip_a, ia: {ip_a} {ia} | ip_b, ib: {ip_b} {ib}"
             )
         return ip_a, (ia, ib)
+
+
+@dataclasses.dataclass
+class APISpec(BaseDataclass):
+    route: str | None = None
+    host: str | None = None
+    url: str | None = None
+    port: str = "80"
+    text_field: str | None = "text"
+    protocol: str | None = "http"
+    keyword: str | None = None
+    threshold: float = 0.8
+    extra_args: dict = dataclasses.field(default_factory=lambda: {})
+
+    def __post_init__(self):
+        if self.url is None:
+            if self.route is None or self.host is None:
+                raise ValueError(
+                    "self.route is None or self.port is None or self.host is None"
+                )
+            self.url = f"{self.protocol}://{self.host}:{self.port}/{self.route}"
+        else:
+            try:
+                self.protocol, rest = self.url.split("://")
+            except:
+                raise ValueError("protocol could not be identified")
+
+            rest = rest.split("/")
+
+            try:
+                prefix = rest[0]
+                self.route = "/".join(rest[1:])
+            except:
+                raise ValueError("host and post could not be identified")
+
+            tmp = prefix.split(":")
+            if len(tmp) == 1:
+                self.port = "80"
+            else:
+                self.port = tmp[1]
+            self.host = tmp[0]

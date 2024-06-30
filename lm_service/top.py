@@ -8,11 +8,7 @@ from dataclass_wizard import JSONWizard
 from suthing import profile
 
 from lm_service.hash import hashme
-from lm_service.linking import (
-    Entity,
-    iterate_over_linkers,
-    link_unlinked_entities,
-)
+from lm_service.linking import Entity, iterate_over_linkers
 from lm_service.onto import MuIndex, SimplifiedCandidate
 from lm_service.text import normalize_text, phrases_to_triples
 
@@ -65,10 +61,6 @@ def text_to_rel_graph(text, nlp, rules, elm, **kwargs):
         map_muindex_candidate=map_muindex_candidate,
         entity_linker_manager=elm,
         **kwargs,
-    )
-
-    map_eindex_entity, map_c2e = link_unlinked_entities(
-        map_eindex_entity, map_c2e, map_muindex_candidate
     )
 
     map_muindex_candidate_simplified = {
