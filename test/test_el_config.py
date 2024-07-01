@@ -1,4 +1,4 @@
-from lm_service.linking import EntityLinkerManager
+from lm_service.linking.onto import EntityLinkerManager
 
 
 def test_elconf(el_conf):

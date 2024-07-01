@@ -1,13 +1,12 @@
 linkers:
 -   keyword: BERN_V2
     route: plain
-    url: http://bern2.korea.ac.kr/plain
     text_field: text
+    port: 8888
 -   keyword: FISHING
     route: service/disambiguate
     port: 8090
     protocol: http
-    host: 127.0.0.1
     text_field: text
     extra_args:
         language:

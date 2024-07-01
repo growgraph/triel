@@ -3,6 +3,7 @@ linkers:
     route: plain
     port: 8888
     text_field: text
+    threshold: 0.75
 -   keyword: PELINKER
     route: pelinker
     port: 8599

@@ -8,7 +8,8 @@ from dataclass_wizard import JSONWizard
 from suthing import profile
 
 from lm_service.hash import hashme
-from lm_service.linking import Entity, iterate_over_linkers
+from lm_service.linking.onto import Entity
+from lm_service.linking.util import iterate_over_linkers
 from lm_service.onto import MuIndex, SimplifiedCandidate
 from lm_service.text import normalize_text, phrases_to_triples
 

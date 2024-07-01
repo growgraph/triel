@@ -1,11 +1,9 @@
 import logging
 import os
 import pathlib
-import pkgutil
 import sys
 
 import pytest
-import yaml
 
 from lm_service.piles import ExtCandidateList
 from lm_service.relation import text_to_coref_sourcetarget
@@ -22,9 +20,6 @@ pathlib.Path(current_path).mkdir(parents=True, exist_ok=True)
 path = pathlib.Path(__file__).parent
 fig_path = os.path.join(path, figs_folder)
 
-fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
-rules = yaml.load(fp, Loader=yaml.FullLoader)
-
 
 @pytest.fixture(scope="module")
 def phrases():
@@ -35,7 +30,7 @@ def phrases():
     )
 
 
-def test_substitution_in_depot(nlp_fixture, phrases):
+def test_substitution_in_depot(nlp_fixture, phrases, rules):
     striples, striples_meta, relations, ext_cand_list, megagraph = (
         phrases_to_triples_stage_a(phrases, nlp_fixture, rules, plot_path=fig_path)
     )

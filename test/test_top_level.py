@@ -7,7 +7,7 @@ import spacy
 import yaml
 from suthing import FileHandle
 
-from lm_service.linking import EntityLinkerManager
+from lm_service.linking.onto import EntityLinkerManager
 from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
 
 

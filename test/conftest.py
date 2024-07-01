@@ -3,12 +3,23 @@ import spacy
 import suthing
 from suthing import FileHandle
 
-from lm_service.linking import APISpec
+from lm_service.linking.onto import APISpec
+
+
+def pytest_addoption(parser):
+    parser.addoption("--linker-host", action="store", default="localhost")
+
+
+@pytest.fixture(scope="session")
+def linker_host(pytestconfig):
+    return pytestconfig.getoption("linker_host")
 
 
 @pytest.fixture
-def el_conf():
+def el_conf(linker_host):
     config = FileHandle.load("test.config", "el_config.yaml")
+    for c in config["linkers"]:
+        c["host"] = linker_host
     return config
 
 

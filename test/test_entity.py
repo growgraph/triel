@@ -1,6 +1,6 @@
 import logging
 
-from lm_service.linking import Entity, EntityLinkerManager
+from lm_service.linking.onto import Entity, EntityLinkerManager
 
 logger = logging.getLogger(__name__)
 

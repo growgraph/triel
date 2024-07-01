@@ -233,7 +233,7 @@ def graph_to_candidate_pile(
 
     source_candidates, target_candidates = sieve_sources_targets(candidate_pile)
 
-    logger.info(f" relations: {relation_pile}")
+    logger.debug(f" relations: {relation_pile}")
 
     return (
         SRTPile(
