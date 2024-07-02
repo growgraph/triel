@@ -1,0 +1,16 @@
+[
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D017719",
+        "hash": "BERN_V2.mesh.D017719",
+        "ent_type": "disease"
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D002056",
+        "hash": "BERN_V2.mesh.D002056",
+        "ent_type": "disease"
+    }
+]

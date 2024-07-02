@@ -1,0 +1,491 @@
+[
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tams",
+        "hash": "BERN_V2.NA.cell_type:tams",
+        "ent_type": "cell_type",
+        "b": 4,
+        "score": 0.9091679453849792
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3569",
+        "hash": "BERN_V2.NCBIGene.3569",
+        "ent_type": "gene",
+        "a": 82,
+        "b": 86,
+        "score": 0.9733055233955383
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "7039",
+        "hash": "BERN_V2.NCBIGene.7039",
+        "ent_type": "gene",
+        "a": 88,
+        "b": 92,
+        "score": 0.9807039499282837
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3586",
+        "hash": "BERN_V2.NCBIGene.3586",
+        "ent_type": "gene",
+        "a": 98,
+        "b": 103,
+        "score": 0.9554975032806396
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:cd8+_t-cell",
+        "hash": "BERN_V2.NA.cell_type:cd8+_t-cell",
+        "ent_type": "cell_type",
+        "a": 130,
+        "b": 141,
+        "score": 0.8203046917915344
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "925",
+        "hash": "BERN_V2.NCBIGene.925",
+        "ent_type": "gene",
+        "a": 130,
+        "b": 134,
+        "score": 0.9439983367919922
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3569",
+        "hash": "BERN_V2.NCBIGene.3569",
+        "ent_type": "gene",
+        "a": 171,
+        "b": 175,
+        "score": 0.985564112663269
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D010190",
+        "hash": "BERN_V2.mesh.D010190",
+        "ent_type": "disease",
+        "a": 207,
+        "b": 211,
+        "score": 0.9980660080909729
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3569",
+        "hash": "BERN_V2.NCBIGene.3569",
+        "ent_type": "gene",
+        "a": 329,
+        "b": 333,
+        "score": 0.9728359580039978
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "958",
+        "hash": "BERN_V2.NCBIGene.958",
+        "ent_type": "gene",
+        "a": 355,
+        "b": 359,
+        "score": 0.9774762988090515
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "7039",
+        "hash": "BERN_V2.NCBIGene.7039",
+        "ent_type": "gene",
+        "a": 448,
+        "b": 452,
+        "score": 0.976250171661377
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "1277",
+        "hash": "BERN_V2.NCBIGene.1277",
+        "ent_type": "gene",
+        "a": 507,
+        "b": 522,
+        "score": 0.9956538677215576
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tregs",
+        "hash": "BERN_V2.NA.cell_type:tregs",
+        "ent_type": "cell_type",
+        "a": 625,
+        "b": 630,
+        "score": 0.837649405002594
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 638,
+        "b": 643,
+        "score": 0.9995355606079102
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3586",
+        "hash": "BERN_V2.NCBIGene.3586",
+        "ent_type": "gene",
+        "a": 691,
+        "b": 695,
+        "score": 0.9050513505935669
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "7039",
+        "hash": "BERN_V2.NCBIGene.7039",
+        "ent_type": "gene",
+        "a": 700,
+        "b": 703,
+        "score": 0.9783756136894226
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_line:tregs",
+        "hash": "BERN_V2.NA.cell_line:tregs",
+        "ent_type": "cell_line",
+        "a": 746,
+        "b": 751,
+        "score": 0.8144814372062683
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "383",
+        "hash": "BERN_V2.NCBIGene.383",
+        "ent_type": "gene",
+        "a": 855,
+        "b": 865,
+        "score": 0.9884436726570129
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D001120",
+        "hash": "BERN_V2.mesh.D001120",
+        "ent_type": "drug",
+        "a": 895,
+        "b": 905,
+        "score": 0.9991462826728821
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tams",
+        "hash": "BERN_V2.NA.cell_type:tams",
+        "ent_type": "cell_type",
+        "a": 949,
+        "b": 953,
+        "score": 0.8968544602394104
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "CL",
+        "id": "0000623",
+        "hash": "BERN_V2.CL.0000623",
+        "ent_type": "cell_type",
+        "a": 989,
+        "b": 996,
+        "score": 0.8346501588821411
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3439",
+        "hash": "BERN_V2.NCBIGene.3439",
+        "ent_type": "gene",
+        "a": 1098,
+        "b": 1103,
+        "score": 0.9918856620788574
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "5551",
+        "hash": "BERN_V2.NCBIGene.5551",
+        "ent_type": "gene",
+        "a": 1104,
+        "b": 1112,
+        "score": 0.9699354767799377
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3592",
+        "hash": "BERN_V2.NCBIGene.3592",
+        "ent_type": "gene",
+        "a": 1118,
+        "b": 1123,
+        "score": 0.9925719499588013
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tams",
+        "hash": "BERN_V2.NA.cell_type:tams",
+        "ent_type": "cell_type",
+        "a": 1210,
+        "b": 1214,
+        "score": 0.9191293120384216
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "29126",
+        "hash": "BERN_V2.NCBIGene.29126",
+        "ent_type": "gene",
+        "a": 1298,
+        "b": 1303,
+        "score": 0.9867202639579773
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "5133",
+        "hash": "BERN_V2.NCBIGene.5133",
+        "ent_type": "gene",
+        "a": 1334,
+        "b": 1338,
+        "score": 0.990058958530426
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:nk_cells",
+        "hash": "BERN_V2.NA.cell_type:nk_cells",
+        "ent_type": "cell_type",
+        "a": 1342,
+        "b": 1350,
+        "score": 0.8062090277671814
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:cafs",
+        "hash": "BERN_V2.NA.cell_type:cafs",
+        "ent_type": "cell_type",
+        "a": 1436,
+        "b": 1440,
+        "score": 0.8719189167022705
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D010190",
+        "hash": "BERN_V2.mesh.D010190",
+        "ent_type": "disease",
+        "a": 1488,
+        "b": 1505,
+        "score": 0.999992311000824
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:myofibroblastic",
+        "hash": "BERN_V2.NA.cell_type:myofibroblastic",
+        "ent_type": "cell_type",
+        "a": 1507,
+        "b": 1522,
+        "score": 0.8694179654121399
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:mycafs",
+        "hash": "BERN_V2.NA.cell_type:mycafs",
+        "ent_type": "cell_type",
+        "a": 1524,
+        "b": 1530,
+        "score": 0.8789846897125244
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 1564,
+        "b": 1569,
+        "score": 0.9723338484764099
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 1596,
+        "b": 1601,
+        "score": 0.9999709129333496
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 1687,
+        "b": 1692,
+        "score": 0.9999827146530151
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:myeloid-derived_suppressor_cells",
+        "hash": "BERN_V2.NA.cell_type:myeloid-derived_suppressor_cells",
+        "ent_type": "cell_type",
+        "a": 1875,
+        "b": 1907,
+        "score": 0.8201096057891846
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:dendritic_cells",
+        "hash": "BERN_V2.NA.cell_type:dendritic_cells",
+        "ent_type": "cell_type",
+        "a": 1936,
+        "b": 1951,
+        "score": 0.903684139251709
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:cafs",
+        "hash": "BERN_V2.NA.cell_type:cafs",
+        "ent_type": "cell_type",
+        "a": 2045,
+        "b": 2049,
+        "score": 0.8537023067474365
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "5133",
+        "hash": "BERN_V2.NCBIGene.5133",
+        "ent_type": "gene",
+        "a": 2141,
+        "b": 2145,
+        "score": 0.9959729909896851
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "84868",
+        "hash": "BERN_V2.NCBIGene.84868",
+        "ent_type": "gene",
+        "a": 2147,
+        "b": 2152,
+        "score": 0.9946383833885193
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 2196,
+        "b": 2201,
+        "score": 0.9993727803230286
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 2282,
+        "b": 2287,
+        "score": 0.9980719089508057
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:mdscs",
+        "hash": "BERN_V2.NA.cell_type:mdscs",
+        "ent_type": "cell_type",
+        "a": 2336,
+        "b": 2341,
+        "score": 0.92542964220047
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:m2-type_macrophages",
+        "hash": "BERN_V2.NA.cell_type:m2-type_macrophages",
+        "ent_type": "cell_type",
+        "a": 2343,
+        "b": 2362,
+        "score": 0.8298847675323486
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:neutrophils",
+        "hash": "BERN_V2.NA.cell_type:neutrophils",
+        "ent_type": "cell_type",
+        "a": 2368,
+        "b": 2379,
+        "score": 0.8191183805465698
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3579",
+        "hash": "BERN_V2.NCBIGene.3579",
+        "ent_type": "gene",
+        "a": 2410,
+        "b": 2415,
+        "score": 0.9810956120491028
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 2450,
+        "b": 2455,
+        "score": 0.9997760653495789
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3627",
+        "hash": "BERN_V2.NCBIGene.3627",
+        "ent_type": "gene",
+        "a": 2481,
+        "b": 2487,
+        "score": 0.8400051593780518
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tregs",
+        "hash": "BERN_V2.NA.cell_type:tregs",
+        "ent_type": "cell_type",
+        "a": 2571,
+        "b": 2576,
+        "score": 0.8239643573760986
+    }
+]

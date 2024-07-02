@@ -59,3 +59,8 @@ def text():
 @pytest.fixture(scope="module")
 def entities():
     return suthing.FileHandle.load("test.data", "entities.json")
+
+
+@pytest.fixture(scope="module")
+def entities_local():
+    return suthing.FileHandle.load("test.data", "local.entities.json")

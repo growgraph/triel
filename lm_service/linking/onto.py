@@ -237,13 +237,20 @@ class EntityLinkerManager(BaseDataclass):
                         " entity"
                     )
                     return None
+            try:
+                span = item.pop("span")
+                a = span.pop("begin")
+                b = span.pop("end")
+            except KeyError:
+                logger.warning(f" {item} does not contain span key")
+                return None
             return LocalEntity(
                 linker_type=EntityLinker.BERN_V2,
                 ent_type=ent_type,
                 ent_db_type=ent_db_type,
                 id=item_id,
-                a=item["span"]["begin"],
-                b=item["span"]["end"],
+                a=a,
+                b=b,
                 score=prob0,
             )
         else:
