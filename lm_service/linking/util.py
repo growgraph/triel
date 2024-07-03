@@ -194,9 +194,10 @@ def iterate_over_linkers(
     )
 
     map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
+
     map_eindex_entity = {
         **map_eindex_entity,
-        **{e.hash: e for e, _ in entity_pack},
+        **{e.hash: e for e in entity_pack},
     }
 
     return map_eindex_entity, map_c2e

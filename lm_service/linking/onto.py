@@ -51,16 +51,6 @@ class Entity(BaseDataclass):
     def __post_init__(self):
         self.hash = f"{self.linker_type}.{self.ent_db_type}.{self.id}"
 
-    def as_dict(self):
-        return {
-            k: v.value if isinstance(v, Enum) else v
-            for k, v in self.__dict__.items()
-            if v
-        }
-
-    def to_dict(self):
-        return self.as_dict()
-
 
 @dataclasses.dataclass(kw_only=True)
 class LocalEntity(Entity):

@@ -36,6 +36,7 @@ pytest = "7.4.0"
 python = ">=3.10,<3.12"
 pyyaml = "^6"
 requests = "^2.31.0"
+scipy = "^1.14.0"
 simple-websocket = "^0.5.2"
 spacy = {extras = ["cuda114"], version = "3.5"}
 suthing = {git = "ssh://git@github.com/growgraph/suthing.git", rev = "v0.2.8"}

@@ -37,6 +37,8 @@ def test_bern_normalization(bern_example, caplog):
     assert epack[-2] is None
     assert epack[4].id == "cell_type:cd8+_t-cell"
     dumped_entity = epack[0].to_dict()
+    assert "ent_type" in dumped_entity
+    assert dumped_entity["linker_type"] == "BERN_V2"
     assert dumped_entity["a"] == 0
 
 

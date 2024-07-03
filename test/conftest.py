@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 import spacy
 import suthing
@@ -64,3 +65,8 @@ def entities():
 @pytest.fixture(scope="module")
 def entities_local():
     return suthing.FileHandle.load("test.data", "local.entities.json")
+
+
+@pytest.fixture(scope="module")
+def bern_score():
+    return np.array(suthing.FileHandle.load("test.data", "bern.score.json")["scores"])

@@ -35,19 +35,6 @@ class RELResponse(JSONWizard):
     muindex_candidate: dict[str, SimplifiedCandidate]
 
 
-def to_dict(obj):
-    if isinstance(obj, dict):
-        return {to_dict(k): to_dict(v) for k, v in obj.items()}
-    elif isinstance(obj, (list, tuple)):
-        return [to_dict(v) for v in obj]
-    elif isinstance(obj, MuIndex):
-        return obj.to_str()
-    elif dataclasses.is_dataclass(obj):
-        return obj.to_dict()
-    else:
-        return obj
-
-
 @profile
 def text_to_rel_graph(text, nlp, rules, elm, **kwargs):
     phrases = normalize_text(text, nlp)
@@ -171,11 +158,9 @@ def cast_response_to_unfolded(response: RELResponse, **kwargs):
 
     top_level_mention = [{"hash": h} for h in top_level_metamus]
 
-    r = to_dict(
-        {
-            "triples": triples_upd,
-            "map_mention_entity": mu_ei_grounded,
-            "top_level_mention": top_level_mention,
-        }
-    )
+    r = {
+        "triples": triples_upd,
+        "map_mention_entity": mu_ei_grounded,
+        "top_level_mention": top_level_mention,
+    }
     return r
