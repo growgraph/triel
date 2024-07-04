@@ -3,14 +3,16 @@ linkers:
     route: plain
     port: 8888
     text_field: text
+    entities_key: annotations
     threshold: 0.75
 -   keyword: PELINKER
     route: pelinker
     port: 8599
     text_field: text
+    normalized_text_key: normalized_text
 -   keyword: FISHING
     route: service/disambiguate
-    port: 8090
+    port: 8590
     protocol: http
     text_field: text
     extra_args:

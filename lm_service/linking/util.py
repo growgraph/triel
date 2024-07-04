@@ -164,13 +164,15 @@ def iterate_over_linkers(
 
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+    text = sep.join(phrases)
+
     responses = map_linkers(
-        phrases, entity_linker_manager=entity_linker_manager, **kwargs
+        text=text, entity_linker_manager=entity_linker_manager, **kwargs
     )
 
     entity_pack = []
     for link_mode, r in zip(entity_linker_manager.linker_types, responses):
-        epack = entity_linker_manager.normalize(r, link_mode, **kwargs)
+        epack = entity_linker_manager.normalize(r, link_mode, text, **kwargs)
         entity_pack.extend(epack)
 
     for entity in entity_pack:
@@ -205,17 +207,15 @@ def iterate_over_linkers(
 
 @profile(_argnames="link_simple")
 def link_simple(
-    link_mode: EntityLinker, phrases: list[str], elm: EntityLinkerManager, **kwargs
+    link_mode: EntityLinker, text: str, elm: EntityLinkerManager, **kwargs
 ) -> dict:
     """
 
-    :param phrases:
+    :param text:
     :param link_mode:
     :param elm:
     """
 
-    sep = " "
-    text = sep.join(phrases)
     try:
         entity_pack = elm.query(text, link_mode)
     except EntityLinkerFailed as e:
@@ -225,14 +225,12 @@ def link_simple(
 
 
 @profile
-def map_linkers(
-    phrases: list[str], entity_linker_manager: EntityLinkerManager, **kwargs
-):
+def map_linkers(text: str, entity_linker_manager: EntityLinkerManager, **kwargs):
     with ProcessPool() as pool:
         responses = pool.map(
             partial(
                 link_simple,
-                phrases=phrases,
+                text=text,
                 elm=entity_linker_manager,
                 **kwargs,
             ),

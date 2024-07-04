@@ -6,6 +6,7 @@ from enum import Enum
 
 import requests
 
+from lm_service.linking.string import render_gap_mappers, render_index_mapper
 from lm_service.onto import BaseDataclass
 
 logger = logging.getLogger(__name__)
@@ -110,40 +111,39 @@ class EntityLinkerManager(BaseDataclass):
             )
         return q.json()
 
-    def normalize(self, response, link_mode, **kwargs) -> list[LocalEntity]:
+    def normalize(
+        self, response, link_mode, original_text, **kwargs
+    ) -> list[LocalEntity]:
+        normalized_text = response[self[link_mode].normalized_text_key]
+        _, mapper_n2o = render_gap_mappers(original_text, normalized_text)
+        map_io = render_index_mapper(list(range(len(normalized_text))), mapper_n2o)
+
+        ents = (
+            response[self[link_mode].entities_key]
+            if self[link_mode].entities_key in response
+            else []
+        )
         if link_mode == EntityLinker.BERN_V2:
-            if "annotations" in response:
-                ents = response["annotations"]
-                normalized = [
-                    EntityLinkerManager._normalize_bern_entity(
-                        item, prob_thr=self[link_mode].threshold, **kwargs
-                    )
-                    for item in ents
-                ]
-            else:
-                normalized = []
+            normalized = [
+                EntityLinkerManager._normalize_bern_entity(
+                    item, prob_thr=self[link_mode].threshold, mapper_io=map_io, **kwargs
+                )
+                for item in ents
+            ]
         elif link_mode == EntityLinker.FISHING:
-            if "entities" in response:
-                ents = response["entities"]
-                normalized = [
-                    EntityLinkerManager._normalize_fishing_entity(
-                        item, prob_thr=self[link_mode].threshold
-                    )
-                    for item in ents
-                ]
-            else:
-                normalized = []
+            normalized = [
+                EntityLinkerManager._normalize_fishing_entity(
+                    item, prob_thr=self[link_mode].threshold, mapper_io=map_io
+                )
+                for item in ents
+            ]
         elif link_mode == EntityLinker.PELINKER:
-            if "entities" in response:
-                ents = response["entities"]
-                normalized = [
-                    EntityLinkerManager._normalize_pelinker_entity(
-                        item, prob_thr=self[link_mode].threshold
-                    )
-                    for item in ents
-                ]
-            else:
-                normalized = []
+            normalized = [
+                EntityLinkerManager._normalize_pelinker_entity(
+                    item, prob_thr=self[link_mode].threshold, mapper_io=map_io
+                )
+                for item in ents
+            ]
         else:
             normalized = []
 
@@ -156,6 +156,8 @@ class EntityLinkerManager(BaseDataclass):
 
     @staticmethod
     def _normalize_pelinker_entity(item, prob_thr, **kwargs) -> None | LocalEntity:
+        mapper_io = kwargs.pop("mapper_io", dict())
+
         try:
             prob0 = item.pop("score")
         except KeyError:
@@ -166,14 +168,20 @@ class EntityLinkerManager(BaseDataclass):
             item_spec = id0.split(".")
             ent_db_type, item_id = item_spec
             ent_type = None
+
+            a = item.pop("a")
+            b = item.pop("b")
+            a = mapper_io[a] if a in mapper_io else a
+            b = mapper_io[b] if b in mapper_io else b
+
             return LocalEntity(
                 linker_type=EntityLinker.PELINKER,
                 ent_type=ent_type,
                 ent_db_type=ent_db_type,
                 id=item_id,
                 original_form=item["entity_label"],
-                a=item["a"],
-                b=item["b"],
+                a=a,
+                b=b,
                 score=prob0,
             )
         else:
@@ -188,6 +196,7 @@ class EntityLinkerManager(BaseDataclass):
         :return:
         """
 
+        mapper_io = kwargs.pop("mapper_io", dict())
         try:
             _ids = item.pop("id")
             id0 = _ids.pop()
@@ -234,6 +243,8 @@ class EntityLinkerManager(BaseDataclass):
             except KeyError:
                 logger.warning(f" {item} does not contain span key")
                 return None
+            a = mapper_io[a] if a in mapper_io else a
+            b = mapper_io[b] if b in mapper_io else b
             return LocalEntity(
                 linker_type=EntityLinker.BERN_V2,
                 ent_type=ent_type,
@@ -250,7 +261,8 @@ class EntityLinkerManager(BaseDataclass):
             return None
 
     @staticmethod
-    def _normalize_fishing_entity(item, prob_thr) -> None | LocalEntity:
+    def _normalize_fishing_entity(item, prob_thr, **kwargs) -> None | LocalEntity:
+        mapper_io = kwargs.pop("mapper_io", dict())
         try:
             prob0 = item.pop("confidence_score")
         except KeyError:
@@ -267,12 +279,18 @@ class EntityLinkerManager(BaseDataclass):
             else:
                 logger.info(f"no wikidataId/ wikipediaExternalRef provided in {item}")
                 return None
+
+            a = item["offsetStart"]
+            b = item["offsetEnd"]
+            a = mapper_io[a] if a in mapper_io else a
+            b = mapper_io[b] if b in mapper_io else b
+
             return LocalEntity(
                 linker_type=EntityLinker.FISHING,
                 ent_db_type=db_type,
                 id=item_id,
-                a=item["offsetStart"],
-                b=item["offsetEnd"],
+                a=a,
+                b=b,
                 score=prob0,
             )
         else:
@@ -319,6 +337,8 @@ class APISpec(BaseDataclass):
     url: str | None = None
     port: str = "80"
     text_field: str | None = "text"
+    normalized_text_key: str = "text"
+    entities_key: str = "entities"
     protocol: str | None = "http"
     keyword: str | None = None
     threshold: float = 0.8

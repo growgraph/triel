@@ -70,3 +70,8 @@ def entities_local():
 @pytest.fixture(scope="module")
 def bern_score():
     return np.array(suthing.FileHandle.load("test.data", "bern.score.json")["scores"])
+
+
+@pytest.fixture(scope="module")
+def strings():
+    return "abbbbc aam123", "abc m123"

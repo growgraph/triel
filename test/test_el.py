@@ -12,7 +12,7 @@ def test_link_phrases(text, nlp_fixture, rules, el_conf):
     phrases = [text]
     epack = link_simple(
         link_mode=EntityLinker.BERN_V2,
-        phrases=phrases,
+        text=phrases,
         elm=elm,
     )
     assert len(epack["annotations"]) == 2

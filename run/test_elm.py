@@ -33,18 +33,17 @@ def run(host, conf_el_path, input_path, output, debug):
 
     inp = FileHandle.load(fpath=input_path)
     if not isinstance(inp, list):
-        inp_list = [inp["text"]]
+        input_text = inp["text"]
     else:
-        inp_list = inp
+        input_text = " ".join(inp)
 
-    responses = map_linkers(entity_linker_manager=elm, phrases=inp_list)
+    responses = map_linkers(entity_linker_manager=elm, text=input_text)
+    if output:
+        FileHandle.dump(responses, (output.parent / "linker.response.json").as_posix())
 
     entity_pack = []
     for link_mode, r in zip(elm.linker_types, responses):
-        epack = elm.normalize(
-            r,
-            link_mode,
-        )
+        epack = elm.normalize(r, link_mode, original_text=input_text)
         entity_pack.extend(epack)
 
     if output:
