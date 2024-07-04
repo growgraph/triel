@@ -9,10 +9,9 @@ from lm_service.text import normalize_text
 
 def test_link_phrases(text, nlp_fixture, rules, el_conf):
     elm = EntityLinkerManager.from_dict(el_conf)
-    phrases = [text]
     epack = link_simple(
         link_mode=EntityLinker.BERN_V2,
-        text=phrases,
+        text=text,
         elm=elm,
     )
     assert len(epack["annotations"]) == 2
