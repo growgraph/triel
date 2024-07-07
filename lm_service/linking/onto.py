@@ -52,6 +52,18 @@ class Entity(BaseDataclass):
     def __post_init__(self):
         self.hash = f"{self.linker_type}.{self.ent_db_type}.{self.id}"
 
+    @classmethod
+    def from_local_entity(cls, e: LocalEntity):
+        return Entity(
+            linker_type=e.linker_type,
+            ent_db_type=e.ent_db_type,
+            id=e.id,
+            hash=e.hash,
+            ent_type=e.ent_type,
+            original_form=e.original_form,
+            description=e.description,
+        )
+
 
 @dataclasses.dataclass(kw_only=True)
 class LocalEntity(Entity):

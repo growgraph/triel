@@ -17,6 +17,7 @@ from lm_service.linking.onto import (
     EntityLinker,
     EntityLinkerFailed,
     EntityLinkerManager,
+    LocalEntity,
     PhraseMapper,
     ent_db_type_gg_verbatim,
     interval_inclusion_metric,
@@ -102,15 +103,32 @@ def link_unlinked_entities(
 
 
 def link_candidate_entity(
-    phrase_to_ent_spans: defaultdict[int, list[tuple[str, tuple[int, int]]]],
+    pm: PhraseMapper,
     ecl: ExtCandidateList,
+    entity_pack,
+    score_mapper=None,
+    overlap_thr=0.1,
 ):
     """
 
-    :param phrase_to_ent_spans: iphrase : (i_ent, (span_beg, span_end))
+    :param pm: PhraseMapper : (i_ent, (span_beg, span_end))
     :param ecl:
-    :return: MuIndex(iphrase, sindex, cand_subindex, token_index) : e_index (str)
+    :param entity_pack:
+    :return: MuIndex(meta, phrase, token, running) : e_index (str)
     """
+
+    phrase_to_ent_spans: defaultdict[int, list[tuple[int, int, LocalEntity]]] = (
+        defaultdict(list)
+    )
+    for entity in entity_pack:
+        span = entity.a, entity.b
+        try:
+            ip, (ia, ib) = pm.span(span)
+            phrase_to_ent_spans[ip] += [(ia, ib, entity)]
+        except ValueError as ex:
+            logger.error(
+                f"{ex} : span (mapping) for {entity.hash} was not computed correctly"
+            )
 
     map_candidate2entity = []
     # filter on phrase
@@ -118,14 +136,15 @@ def link_candidate_entity(
 
     for (iphrase, stoken), cand_list in ecl:
         ec_spans_phrase = phrase_to_ent_spans[iphrase]
+        emetrics = [(e.score, e.linker_type) for _, _, e in ec_spans_phrase]
         for jcandidate, candidate in enumerate(cand_list):
             dist = np.array(
                 [
                     [
-                        interval_inclusion_metric((t.idx, t.idx_eot), int_ec)
+                        interval_inclusion_metric((t.idx, t.idx_eot), (ea, eb))
                         for t in candidate.tokens
                     ]
-                    for _, int_ec in ec_spans_phrase
+                    for ea, eb, _ in ec_spans_phrase
                 ]
             )
             if dist.size > 0:
@@ -133,35 +152,33 @@ def link_candidate_entity(
                     raise EntityCandidateAlignmentError(
                         "Entity indices and candidate indices are not aligned."
                     )
-                (ec_ixs,) = np.where((dist > 0.8).any(axis=1))
+                (ec_ixs,) = np.where((dist > overlap_thr).any(axis=1))
+                metric0 = [
+                    (dist[ix].mean(), dist[ix].max(), *emetrics[ix]) for ix in ec_ixs
+                ]
+                score = [
+                    score_mapper.predict(ltype, score)
+                    for _mean, _max, score, ltype in ec_ixs
+                ]
                 # map current candidate to entity index
                 map_candidate2entity += [
                     (
                         MuIndex(False, iphrase, stoken, jcandidate),
-                        ec_spans_phrase[i][0],
+                        ec_spans_phrase[i][-1].hash,
                     )
                     for i in ec_ixs
                 ]
 
+    # Entity.from_local_entity(e)
     return map_candidate2entity
 
 
 def iterate_over_linkers(
     phrases: list[str],
-    ecl: ExtCandidateList,
-    map_muindex_candidate: dict[MuIndex, Candidate],
     entity_linker_manager: EntityLinkerManager,
+    sep=" ",
     **kwargs,
-) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
-    map_eindex_entity: dict[str, Entity] = dict()
-    map_c2e: list[tuple[MuIndex, str]] = []
-    entity_pack_per_phrase: defaultdict[int, list[tuple[str, tuple[int, int]]]] = (
-        defaultdict(list)
-    )
-
-    sep = " "
-    pm = PhraseMapper(phrases, sep)
-
+) -> list[LocalEntity]:
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     text = sep.join(phrases)
@@ -175,17 +192,22 @@ def iterate_over_linkers(
         epack = entity_linker_manager.normalize(r, link_mode, text, **kwargs)
         entity_pack.extend(epack)
 
-    for entity in entity_pack:
-        span = entity.a, entity.b
-        try:
-            ip, (ia, ib) = pm.span(span)
-            entity_pack_per_phrase[ip] += [(entity.hash, (ia, ib))]
-        except ValueError as ex:
-            logger.error(
-                f"{ex} : span (mapping) for {entity.hash} was not computed" " correctly"
-            )
+    return entity_pack
 
-    map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
+
+def map_mentions_to_entities(
+    phrases,
+    entity_pack: list[LocalEntity],
+    map_muindex_candidate: dict[MuIndex, Candidate],
+    ecl: ExtCandidateList,
+    sep=" ",
+):
+    pm = PhraseMapper(phrases, sep)
+
+    map_eindex_entity: dict[str, Entity] = dict()
+    map_c2e: list[tuple[MuIndex, str]] = []
+
+    map_c2e += link_candidate_entity(pm, ecl, entity_pack)
     map_eindex_entity = {
         **map_eindex_entity,
         **{e.hash: e for e in entity_pack},
@@ -195,12 +217,12 @@ def iterate_over_linkers(
         map_eindex_entity, map_c2e, map_muindex_candidate
     )
 
-    map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
-
-    map_eindex_entity = {
-        **map_eindex_entity,
-        **{e.hash: e for e in entity_pack},
-    }
+    # map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
+    #
+    # map_eindex_entity = {
+    #     **map_eindex_entity,
+    #     **{e.hash: e for e in entity_pack},
+    # }
 
     return map_eindex_entity, map_c2e
 

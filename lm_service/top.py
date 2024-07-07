@@ -9,7 +9,10 @@ from suthing import profile
 
 from lm_service.hash import hashme
 from lm_service.linking.onto import Entity
-from lm_service.linking.util import iterate_over_linkers
+from lm_service.linking.util import (
+    iterate_over_linkers,
+    map_mentions_to_entities,
+)
 from lm_service.onto import MuIndex, SimplifiedCandidate
 from lm_service.text import normalize_text, phrases_to_triples
 
@@ -32,7 +35,7 @@ class RELResponse(JSONWizard):
     triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]]
     eindex_entity: dict[str, Entity]
     muindex_eindex: list[tuple[MuIndex, str]]
-    muindex_candidate: dict[str, SimplifiedCandidate]
+    muindex_candidate: dict[MuIndex, SimplifiedCandidate]
 
 
 @profile
@@ -43,12 +46,14 @@ def text_to_rel_graph(text, nlp, rules, elm, **kwargs):
         phrases, nlp, rules, window_size=2, **kwargs
     )
 
-    map_eindex_entity, map_c2e = iterate_over_linkers(
+    entity_pack = iterate_over_linkers(
         phrases=phrases,
-        ecl=ecl,
-        map_muindex_candidate=map_muindex_candidate,
         entity_linker_manager=elm,
         **kwargs,
+    )
+
+    map_eindex_entity, map_c2e = map_mentions_to_entities(
+        phrases, entity_pack, map_muindex_candidate, ecl
     )
 
     map_muindex_candidate_simplified = {

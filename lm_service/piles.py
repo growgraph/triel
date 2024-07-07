@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from copy import deepcopy
+from typing import Callable
 
 from lm_service.onto import Candidate, CandidateType, Token, TokenIndexT
 
@@ -144,7 +145,7 @@ class ExtCandidateList:
     """
 
     def __init__(self):
-        self._filter = None
+        self._filter: None | Callable = None
         self._root_to_lists: defaultdict[TokenIndexT, list[CandidateType]] = (
             defaultdict(list)
         )  # type: ignore
@@ -155,16 +156,21 @@ class ExtCandidateList:
     def __contains__(self, item):
         return item in self._root_to_lists
 
-    def set_filter(self, key):
+    def set_filter(self, foo: Callable):
         # eg consider only candidates from a phrase range
         # self.set_filter(lambda x: i <= x[0] < i + window_size)
-        self._filter = key
+        self._filter = foo
 
     def __setitem__(self, key, value):
         self._root_to_lists[key] = value
 
     def __getitem__(self, item):
         return self._root_to_lists[item]
+
+    def select(self, ip):
+        return (
+            self._root_to_lists[k] for k in self._root_to_lists.keys() if k[0] == ip
+        )
 
     def append(self, key, value: CandidateType):
         if tuple(value.stokens) not in {  # type: ignore

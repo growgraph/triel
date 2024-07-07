@@ -7,7 +7,7 @@ from abc import ABC
 from collections import deque
 from copy import deepcopy
 from enum import Enum
-from typing import TypeVar, Union
+from typing import TypeVar
 
 import networkx as nx
 from dataclass_wizard import JSONWizard
@@ -39,7 +39,7 @@ class RequestedIndexDoesNotExist(Exception):
     pass
 
 
-TokenIndexT = Union[str, tuple[int, str]]
+TokenIndexT = tuple[int, str]
 
 
 logger = logging.getLogger(__name__)
@@ -134,9 +134,6 @@ class Token(AbsToken):
     represents a token in dep tree
     """
 
-    class _(JSONWizard.Meta):
-        key_transform_with_dump = "SNAKE"
-
     s: TokenIndexT = (0, "")
     predecessors: set[TokenIndexT] = dataclasses.field(default_factory=set)
     successors: set[TokenIndexT] = dataclasses.field(default_factory=set)
@@ -180,7 +177,7 @@ class Token(AbsToken):
 
 
 @dataclasses.dataclass(repr=False)
-class AbsCandidate(ABC):
+class AbsCandidate(BaseDataclass, ABC):
     def project_to_text_str(self):
         pass
 
@@ -212,11 +209,7 @@ class CandidateReference(AbsCandidate, JSONWizard):
 
 
 @dataclasses.dataclass(eq=True, order=True)
-class SimplifiedCandidate(JSONWizard):
-    class _(JSONWizard.Meta):
-        key_transform_with_dump = "SNAKE"
-        skip_defaults = True
-
+class SimplifiedCandidate(BaseDataclass):
     hash: str
     text: str | None = None
     role: str | None = None
@@ -228,11 +221,7 @@ class SimplifiedCandidate(JSONWizard):
 
 
 @dataclasses.dataclass(repr=False)
-class Candidate(AbsCandidate, JSONWizard):
-    class _(JSONWizard.Meta):
-        key_transform_with_dump = "SNAKE"
-        skip_defaults = True
-
+class Candidate(AbsCandidate):
     _tokens: dict[TokenIndexT, Token] = dataclasses.field(default_factory=dict)
     _index_vec: list[TokenIndexT] = dataclasses.field(default_factory=list)
     _root: TokenIndexT | None = None
