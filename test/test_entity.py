@@ -1,30 +1,26 @@
 import logging
 
-from lm_service.linking.onto import Entity, EntityLinkerManager
+import pytest
+
+from lm_service.linking.onto import EntityLinkerManager
 
 logger = logging.getLogger(__name__)
 
 
 def test_entities(entities):
-    ents = [Entity.from_dict(item) for item in entities]
-    ent_a = ents[0]
-    ent_b = ents[1]
-    ent_b.description = "something"
-    assert ent_a.to_dict() == {
+    ent_a = entities[0]
+    ref_a = {
         "linker_type": "BERN_V2",
-        "ent_db_type": "mesh",
-        "id": "D017719",
-        "hash": "BERN_V2.mesh.D017719",
-        "ent_type": "disease",
+        "ent_db_type": "NA",
+        "id": "cell_type:tams",
+        "hash": "BERN_V2.NA.cell_type:tams",
+        "ent_type": "cell_type",
+        "a": 0,
+        "b": 4,
     }
-    assert ent_b.to_dict() == {
-        "linker_type": "BERN_V2",
-        "ent_db_type": "mesh",
-        "id": "D002056",
-        "hash": "BERN_V2.mesh.D002056",
-        "ent_type": "disease",
-        "description": "something",
-    }
+    ent_a_dict = ent_a.to_dict()
+    assert pytest.approx(ent_a_dict.pop("score"), abs=0.1) == 0.9
+    assert ent_a_dict == ref_a
 
 
 def test_bern_normalization(bern_example, caplog):

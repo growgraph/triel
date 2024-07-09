@@ -29,10 +29,7 @@ def run():
     file_path = files("lm_service.models.store").joinpath("linker.scaling.model.gz")
     joblib.dump(score_mapper, file_path, compress=3)
     model0 = joblib.load(file_path)
-    scaled_pct = model0.predict(
-        EntityLinker.PELINKER, score_dict[EntityLinker.PELINKER]
-    )
-    print(scaled_pct)
+    _ = model0(EntityLinker.PELINKER, score_dict[EntityLinker.PELINKER])
 
 
 if __name__ == "__main__":

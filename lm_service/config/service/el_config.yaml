@@ -4,12 +4,13 @@ linkers:
     port: 8888
     text_field: text
     entities_key: annotations
-    threshold: 0.75
+    threshold: 0.0
 -   keyword: PELINKER
     route: pelinker
     port: 8599
     text_field: text
     normalized_text_key: normalized_text
+    threshold: 0.5
 -   keyword: FISHING
     route: service/disambiguate
     port: 8590

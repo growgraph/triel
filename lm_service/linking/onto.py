@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import hashlib
 import logging
 from enum import Enum
 
@@ -64,6 +65,9 @@ class Entity(BaseDataclass):
             description=e.description,
         )
 
+    def __hash__(self):
+        return int(hashlib.md5(self.hash.encode("utf-8")).hexdigest(), 16)
+
 
 @dataclasses.dataclass(kw_only=True)
 class LocalEntity(Entity):
@@ -76,13 +80,14 @@ class LocalEntity(Entity):
     score: float
 
 
-def interval_inclusion_metric(x, y):
-    xa, xb = x
-    ya, yb = y
-    int_a = max([xa, ya])
-    int_b = min([xb, yb])
-    int_size = max([0, int_b - int_a])
-    return (xb - xa) / int_size if int_size > 0 else 0
+def interval_overlap_metric(first_item_bnds, second_item_bnds):
+    first_item_a, first_item_b = first_item_bnds
+    second_item_a, second_item_b = second_item_bnds
+    int_a = max([first_item_a, second_item_a])
+    int_b = min([first_item_b, second_item_b])
+    overlap = max([0, int_b - int_a])
+    overlap_norm = min([first_item_b - first_item_a, second_item_b - second_item_a])
+    return overlap / overlap_norm if overlap_norm > 0 else 0
 
 
 @dataclasses.dataclass
@@ -353,7 +358,7 @@ class APISpec(BaseDataclass):
     entities_key: str = "entities"
     protocol: str | None = "http"
     keyword: str | None = None
-    threshold: float = 0.8
+    threshold: float = 0.0
     extra_args: dict = dataclasses.field(default_factory=lambda: {})
 
     def __post_init__(self):

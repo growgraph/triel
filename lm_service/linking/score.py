@@ -69,5 +69,5 @@ class ScoreMapper:
         for k, arr in data.items():
             self.mappers[k] = BoundedCubicSpline(arr, **kwargs)
 
-    def predict(self, el: EntityLinker, arr):
+    def __call__(self, el: EntityLinker, arr):
         return self.mappers[el].predict(arr)

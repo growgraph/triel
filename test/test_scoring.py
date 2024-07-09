@@ -14,9 +14,5 @@ def test_score_mapper(bern_score):
     score_mapper = ScoreMapper(
         {EntityLinker.BERN_V2: bern_score, EntityLinker.PELINKER: 0.3 * bern_score}
     )
-    assert (
-        pytest.approx(score_mapper.predict(EntityLinker.BERN_V2, 0.6), abs=0.05) == 0.01
-    )
-    assert (
-        pytest.approx(score_mapper.predict(EntityLinker.PELINKER, 0.6), abs=0.05) == 1.0
-    )
+    assert pytest.approx(score_mapper(EntityLinker.BERN_V2, 0.6), abs=0.05) == 0.01
+    assert pytest.approx(score_mapper(EntityLinker.PELINKER, 0.6), abs=0.05) == 1.0

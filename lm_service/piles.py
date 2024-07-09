@@ -189,6 +189,12 @@ class ExtCandidateList:
         for k, vlist in self._root_to_lists.items():
             self._root_to_lists[k] = [item for item in vlist if not item.has_pronoun()]
 
+    def get_phrase(self, iphrase):
+        return sorted(
+            [(k, v) for k, v in self._root_to_lists.items() if k[0] == iphrase],
+            key=lambda x: x[0][1],
+        )
+
 
 @dataclasses.dataclass
 class SRTPile:

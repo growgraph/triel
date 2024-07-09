@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import operator
 import os
 from collections import defaultdict
 from functools import partial
@@ -13,16 +14,15 @@ from wordfreq import zipf_frequency
 from lm_service.hash import hashme
 from lm_service.linking.onto import (
     Entity,
-    EntityCandidateAlignmentError,
     EntityLinker,
     EntityLinkerFailed,
     EntityLinkerManager,
     LocalEntity,
     PhraseMapper,
     ent_db_type_gg_verbatim,
-    interval_inclusion_metric,
-    logger,
+    interval_overlap_metric,
 )
+from lm_service.linking.score import ScoreMapper
 from lm_service.onto import Candidate, MuIndex
 from lm_service.piles import ExtCandidateList
 
@@ -103,74 +103,64 @@ def link_unlinked_entities(
 
 
 def link_candidate_entity(
-    pm: PhraseMapper,
+    phrase_mapper: PhraseMapper,
     ecl: ExtCandidateList,
-    entity_pack,
-    score_mapper=None,
-    overlap_thr=0.1,
+    entities_local,
+    score_mapper: ScoreMapper | None = None,
+    overlap_thr=0.8,
 ):
     """
 
-    :param pm: PhraseMapper : (i_ent, (span_beg, span_end))
+    :param phrase_mapper: PhraseMapper : (i_ent, (span_beg, span_end))
     :param ecl:
-    :param entity_pack:
+    :param entities_local:
+    :param score_mapper:
+    :param overlap_thr:
+
     :return: MuIndex(meta, phrase, token, running) : e_index (str)
     """
 
-    phrase_to_ent_spans: defaultdict[int, list[tuple[int, int, LocalEntity]]] = (
-        defaultdict(list)
-    )
-    for entity in entity_pack:
-        span = entity.a, entity.b
-        try:
-            ip, (ia, ib) = pm.span(span)
-            phrase_to_ent_spans[ip] += [(ia, ib, entity)]
-        except ValueError as ex:
-            logger.error(
-                f"{ex} : span (mapping) for {entity.hash} was not computed correctly"
-            )
+    prio_entities, entity_edges = process_entities(entities_local, score_mapper)
 
+    phrase_to_ent_spans: defaultdict[int, list[tuple[int, int]]] = defaultdict(list)
+    phrase_to_ents: defaultdict[int, list[LocalEntity]] = defaultdict(list)
     map_candidate2entity = []
-    # filter on phrase
-    ecl.set_filter(lambda x: x[0] in phrase_to_ent_spans.keys())
+    for entity in prio_entities:
+        span = entity.a, entity.b
+        ip, (ia, ib) = phrase_mapper.span(span)
+        phrase_to_ent_spans[ip] += [(ia, ib)]
+        phrase_to_ents[ip] += [entity]
 
-    for (iphrase, stoken), cand_list in ecl:
-        ec_spans_phrase = phrase_to_ent_spans[iphrase]
-        emetrics = [(e.score, e.linker_type) for _, _, e in ec_spans_phrase]
-        for jcandidate, candidate in enumerate(cand_list):
-            dist = np.array(
-                [
+    for iphrase in phrase_to_ent_spans:
+        mus = ecl.get_phrase(iphrase)
+        for (_, stoken), mu_cand_list in mus:
+            for jcandidate, candidate in enumerate(mu_cand_list):
+                dist = np.array(
                     [
-                        interval_inclusion_metric((t.idx, t.idx_eot), (ea, eb))
-                        for t in candidate.tokens
+                        [
+                            interval_overlap_metric((t.idx, t.idx_eot), (ea, eb))
+                            for t in candidate.tokens
+                        ]
+                        for ea, eb in phrase_to_ent_spans[iphrase]
                     ]
-                    for ea, eb, _ in ec_spans_phrase
-                ]
-            )
-            if dist.size > 0:
-                if np.sum((dist > 0) & (dist < 1)) > 0:
-                    raise EntityCandidateAlignmentError(
-                        "Entity indices and candidate indices are not aligned."
-                    )
+                )
                 (ec_ixs,) = np.where((dist > overlap_thr).any(axis=1))
-                metric0 = [
-                    (dist[ix].mean(), dist[ix].max(), *emetrics[ix]) for ix in ec_ixs
-                ]
-                score = [
-                    score_mapper.predict(ltype, score)
-                    for _mean, _max, score, ltype in ec_ixs
-                ]
-                # map current candidate to entity index
+                if not ec_ixs.tolist():
+                    print(
+                        f"ip: {iphrase} st: {stoken} dmax: {dist.max() }"
+                        f"a: {min([t.idx for t in candidate.tokens])} "
+                        f"b: {max([t.idx_eot for t in candidate.tokens])} "
+                        f"|{' '.join([t.text for t in candidate.tokens])}|"
+                    )
                 map_candidate2entity += [
                     (
                         MuIndex(False, iphrase, stoken, jcandidate),
-                        ec_spans_phrase[i][-1].hash,
+                        phrase_to_ents[iphrase][j].hash,
                     )
-                    for i in ec_ixs
+                    for j in ec_ixs
                 ]
 
-    # Entity.from_local_entity(e)
-    return map_candidate2entity
+    return map_candidate2entity, entity_edges
 
 
 def iterate_over_linkers(
@@ -204,14 +194,13 @@ def map_mentions_to_entities(
 ):
     pm = PhraseMapper(phrases, sep)
 
-    map_eindex_entity: dict[str, Entity] = dict()
     map_c2e: list[tuple[MuIndex, str]] = []
 
     map_c2e += link_candidate_entity(pm, ecl, entity_pack)
-    map_eindex_entity = {
-        **map_eindex_entity,
-        **{e.hash: e for e in entity_pack},
-    }
+
+    normalized_entities = set([Entity.from_local_entity(e) for e in entity_pack])
+
+    map_eindex_entity: dict[str, Entity] = {e.hash: e for e in normalized_entities}
 
     map_eindex_entity, map_c2e = link_unlinked_entities(
         map_eindex_entity, map_c2e, map_muindex_candidate
@@ -259,3 +248,118 @@ def map_linkers(text: str, entity_linker_manager: EntityLinkerManager, **kwargs)
             entity_linker_manager.linker_types,
         )
     return responses
+
+
+def process_entity_cluster(
+    cluster: list[LocalEntity], score_mapper: ScoreMapper | None = None
+) -> tuple[LocalEntity, list[tuple[str, str, float]]]:
+    # pick leading candidate
+    if score_mapper is not None:
+        score_obj = [score_mapper(e.linker_type, e.score) for e in cluster]
+    else:
+        score_obj = [e.score for e in cluster]
+
+    # TODO: replace by a generic solution
+    # motivation: ent_db_type='NA' are least preferred
+    # example: LocalEntity(linker_type=<EntityLinker.BERN_V2: 'BERN_V2'>, ent_db_type='NA',
+    #                      id='cell_type:tams', hash='BERN_V2.NA.cell_type:tams',
+    #                      ent_type='cell_type', original_form=None, description=None, a=0, b=4, score=0.9)
+    ent_type = [e.ent_db_type for e in cluster]
+    score_multiplier = [(0.5 if t == "NA" else 1.0) for t in ent_type]
+    score_obj = [s * m for m, s in zip(score_multiplier, score_obj)]
+
+    # maybe added extra factors into decision
+
+    # metric0 = [
+    #     (e.b - e.a, score) for e, score in zip(cluster, score_obj)
+    # ]
+    # max_size = max([s for s, _ in metric0])
+    # score_obj = [score + 0.2*size/max_size for size, score in metric0]
+
+    index, value = max(enumerate(score_obj), key=operator.itemgetter(1))
+
+    principal_entity = cluster[index]
+    candidates = cluster[:index] + cluster[index + 1 :]
+
+    # render entity equivalences
+    entity_edges = []
+    for e in candidates:
+        xs = principal_entity.a, principal_entity.b
+        ys = e.a, e.b
+        weight = interval_overlap_metric(xs, ys)
+        entity_edges += [(principal_entity.hash, e.hash, weight)]
+    return principal_entity, entity_edges
+
+
+def render_entity_clusters(entity_pack: list[LocalEntity]) -> list[list[LocalEntity]]:
+    clusters: list[list[LocalEntity]] = []
+
+    current_cluster: list[LocalEntity] = [entity_pack[0]]
+    pnt = 1
+    while pnt < len(entity_pack):
+        xs = current_cluster[-1].a, current_cluster[-1].b
+        ys = entity_pack[pnt].a, entity_pack[pnt].b
+        if interval_overlap_metric(xs, ys) > 0:
+            current_cluster += [entity_pack[pnt]]
+        else:
+            clusters += [current_cluster]
+            current_cluster = [entity_pack[pnt]]
+        pnt += 1
+    clusters += [current_cluster]
+    return clusters
+
+
+def process_entities(
+    entity_pack: list[LocalEntity], score_mapper: ScoreMapper | None = None
+) -> tuple[list[LocalEntity], list[tuple[str, str, float]]]:
+    """
+    take a list of entities, cast them to clusters, pick one principal entity per cluster
+
+    return a list of principal members and a list edges, connecting each principal entity
+        to members of its cluster
+
+    :param entity_pack:
+    :param score_mapper:
+    :return:
+    """
+    entity_pack = sorted(entity_pack, key=lambda x: (x.a, x.b))
+
+    clusters = render_entity_clusters(entity_pack)
+
+    edges = []
+    principal_entities = []
+    for entity_cluster in clusters:
+        e, edges0 = process_entity_cluster(entity_cluster, score_mapper)
+        principal_entities += [e]
+        edges += edges0
+
+    return principal_entities, edges
+
+
+def render_mention_entity_clusters(
+    entity_pack: list[LocalEntity],
+) -> list[list[LocalEntity]]:
+    """
+    transform a list of entities into a list of entity clusters, based on overlap
+
+    :param entity_pack:
+    :return:
+    """
+
+    pnt = 0
+    current_cluster: list[LocalEntity] = []
+    clusters: list[list[LocalEntity]] = []
+
+    while pnt < len(entity_pack):
+        if current_cluster:
+            xs = current_cluster[-1].a, current_cluster[-1].b
+            ys = entity_pack[pnt].a, entity_pack[pnt].b
+            if interval_overlap_metric(xs, ys) > 0:
+                current_cluster += [entity_pack[pnt]]
+            else:
+                clusters += [current_cluster]
+                current_cluster = []
+        else:
+            current_cluster += [entity_pack[pnt]]
+        pnt += 1
+    return clusters
