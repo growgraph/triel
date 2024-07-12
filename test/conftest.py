@@ -1,3 +1,5 @@
+import pathlib
+
 import numpy as np
 import pytest
 import spacy
@@ -92,6 +94,16 @@ def phrase_mapper():
 
 
 @pytest.fixture(scope="module")
+def doc_coref():
+    return FileHandle.load("test.data", "doc.coref.pkl")
+
+
+@pytest.fixture(scope="module")
+def muindex_candidate():
+    return FileHandle.load("test.data", "muindex_candidate.pkl")
+
+
+@pytest.fixture(scope="module")
 def score_mapper_trivial():
     return lambda _, y: y
 
@@ -130,3 +142,24 @@ def entity_cluster():
         },
     ]
     return [LocalEntity.from_dict(item) for item in cluster_dict]
+
+
+@pytest.fixture(scope="module")
+def phrases_for_coref():
+    return (
+        "Although he was very busy with his work, Peter Brown had had enough of it.",
+        "He and his wife decided they needed a holiday.",
+        "They travelled to Spain because they loved the country very much.",
+    )
+
+
+@pytest.fixture(scope="module")
+def fig_path():
+    fig_path = pathlib.Path("./test/figs")
+    fig_path.mkdir(parents=True, exist_ok=True)
+    return fig_path
+
+
+@pytest.fixture(scope="module")
+def map_tree_subtree_index():
+    return suthing.FileHandle.load("test.data", "map_tree_subtree_index.pkl")

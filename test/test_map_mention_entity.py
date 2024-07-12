@@ -1,6 +1,7 @@
 from lm_service.linking.onto import Entity, interval_overlap_metric
 from lm_service.linking.util import (
     link_candidate_entity,
+    link_unlinked_entities,
     process_entities,
     process_entity_cluster,
     render_entity_clusters,
@@ -44,7 +45,11 @@ def test_process_entities(entities, score_mapper_trivial):
 
 
 def test_mapping(
-    ecl: ExtCandidateList, entities_local, phrase_mapper, score_mapper_trivial
+    ecl: ExtCandidateList,
+    entities_local,
+    phrase_mapper,
+    score_mapper_trivial,
+    muindex_candidate,
 ):
     map_candidate2entity, edges = link_candidate_entity(
         phrase_mapper=phrase_mapper,
@@ -53,5 +58,14 @@ def test_mapping(
         score_mapper=score_mapper_trivial,
         overlap_thr=0.8,
     )
+
     assert len(map_candidate2entity) == 148
     assert len(edges) == 78
+
+    normalized_entities = set([Entity.from_local_entity(e) for e in entities_local])
+
+    map_eindex_entity: dict[str, Entity] = {e.hash: e for e in normalized_entities}
+
+    map_eindex_entity, map_c2e = link_unlinked_entities(
+        map_candidate2entity, muindex_candidate
+    )

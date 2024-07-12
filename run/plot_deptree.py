@@ -4,8 +4,7 @@ import pathlib
 
 import spacy
 
-from lm_service.coref import render_coref_graph
-from lm_service.relation import text_to_compound_index_graph
+from lm_service.coref import render_coref_graph, text_to_compound_index_graph
 from lm_service.util import plot_graph
 
 

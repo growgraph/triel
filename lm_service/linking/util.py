@@ -26,6 +26,8 @@ from lm_service.linking.score import ScoreMapper
 from lm_service.onto import Candidate, MuIndex
 from lm_service.piles import ExtCandidateList
 
+logger = logging.getLogger(__name__)
+
 
 def phrase_to_spacy_basic_entities(phrase=None, rdoc=None, nlp=None):
     # TODO add to EntityLinkerManager
@@ -49,14 +51,12 @@ def phrase_to_spacy_basic_entities(phrase=None, rdoc=None, nlp=None):
 
 
 def link_unlinked_entities(
-    map_eindex_entity: dict[str, Entity],
     map_c2e: list[tuple[MuIndex, str]],
     map_muindex_candidate: dict[MuIndex, Candidate],
     n_token_min=3,
 ) -> tuple[dict[str, Entity], list[tuple[MuIndex, str]]]:
     """
 
-    :param map_eindex_entity:
     :param map_muindex_candidate:
     :param map_c2e:
     :param n_token_min: min number of tokens to compute hash (could be more if they are infrequent)
@@ -64,6 +64,9 @@ def link_unlinked_entities(
     :return:
         i_e -> e ; i_e -> i_mu
     """
+
+    map_c2e_extra: list[tuple[MuIndex, str]] = []
+    map_eindex_entity_extra: dict[str, Entity] = dict()
 
     mentions_not_in_entities = set(map_muindex_candidate) - set(c for c, e in map_c2e)
 
@@ -96,10 +99,10 @@ def link_unlinked_entities(
             id=e_id,
             original_form=least_frequent_phrase,
         )
-        map_c2e += [(i_mu, new_entity.hash)]
-        map_eindex_entity[new_entity.hash] = new_entity
+        map_c2e_extra += [(i_mu, new_entity.hash)]
+        map_eindex_entity_extra[new_entity.hash] = new_entity
 
-    return map_eindex_entity, map_c2e
+    return map_eindex_entity_extra, map_c2e_extra
 
 
 def link_candidate_entity(
@@ -108,7 +111,7 @@ def link_candidate_entity(
     entities_local,
     score_mapper: ScoreMapper | None = None,
     overlap_thr=0.8,
-):
+) -> tuple[list[tuple[MuIndex, str]], list[tuple[str, str, float]]]:
     """
 
     :param phrase_mapper: PhraseMapper : (i_ent, (span_beg, span_end))
@@ -125,6 +128,9 @@ def link_candidate_entity(
     phrase_to_ent_spans: defaultdict[int, list[tuple[int, int]]] = defaultdict(list)
     phrase_to_ents: defaultdict[int, list[LocalEntity]] = defaultdict(list)
     map_candidate2entity = []
+
+    missed_mentions = []
+
     for entity in prio_entities:
         span = entity.a, entity.b
         ip, (ia, ib) = phrase_mapper.span(span)
@@ -146,12 +152,14 @@ def link_candidate_entity(
                 )
                 (ec_ixs,) = np.where((dist > overlap_thr).any(axis=1))
                 if not ec_ixs.tolist():
-                    print(
-                        f"ip: {iphrase} st: {stoken} dmax: {dist.max() }"
+                    logger.debug(
+                        f"ip: {iphrase} st: {stoken} dmax: {dist.max()}"
                         f"a: {min([t.idx for t in candidate.tokens])} "
                         f"b: {max([t.idx_eot for t in candidate.tokens])} "
                         f"|{' '.join([t.text for t in candidate.tokens])}|"
                     )
+                    missed_mentions += [(iphrase, stoken, jcandidate)]
+
                 map_candidate2entity += [
                     (
                         MuIndex(False, iphrase, stoken, jcandidate),
@@ -194,24 +202,25 @@ def map_mentions_to_entities(
 ):
     pm = PhraseMapper(phrases, sep)
 
-    map_c2e: list[tuple[MuIndex, str]] = []
+    map_c2e: list[tuple[MuIndex, str]]
+    ee_edges: list[tuple[str, str, float]]
 
-    map_c2e += link_candidate_entity(pm, ecl, entity_pack)
+    map_c2e, ee_edges = link_candidate_entity(pm, ecl, entity_pack)
 
     normalized_entities = set([Entity.from_local_entity(e) for e in entity_pack])
 
     map_eindex_entity: dict[str, Entity] = {e.hash: e for e in normalized_entities}
 
-    map_eindex_entity, map_c2e = link_unlinked_entities(
-        map_eindex_entity, map_c2e, map_muindex_candidate
+    map_eindex_entity_extra, map_c2e_extra = link_unlinked_entities(
+        map_c2e, map_muindex_candidate
     )
 
-    # map_c2e += link_candidate_entity(entity_pack_per_phrase, ecl)
-    #
-    # map_eindex_entity = {
-    #     **map_eindex_entity,
-    #     **{e.hash: e for e in entity_pack},
-    # }
+    # map_c2e += link_candidate_entity(pm, ecl, entity_pack_per_phrase)
+
+    map_eindex_entity = {
+        **map_eindex_entity,
+        **{e.hash: e for e in entity_pack},
+    }
 
     return map_eindex_entity, map_c2e
 

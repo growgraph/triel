@@ -4,10 +4,9 @@ from pprint import pprint
 import pytest
 from suthing import FileHandle
 
-from lm_service.coref import graph_component_maps, render_coref_maps_wrapper
+from lm_service.coref import graph_component_maps
 from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
-from lm_service.onto import AbsToken, MuIndex, apply_map
-from lm_service.phrase import graph_to_triples
+from lm_service.onto import AbsToken, MuIndex
 from lm_service.relation import (
     compute_distances,
     generate_extra_graphs,
@@ -211,68 +210,6 @@ def test_distances(nlp_fixture, rules, documents):
         )
 
     # assert distance_check == reference_distance
-
-
-def test_relation(nlp_fixture, rules, documents, reference_projected):
-    documents = {
-        key: documents[key]
-        for key in [
-            "near-field",
-            "cheops0_trunc",
-            "cheops_ext",
-            "photometric",
-            "thousands",
-        ]
-    }
-    acc_triples = []
-    triples_projected = {}
-
-    for key, doc in documents.items():
-        rdoc, graph = phrase_to_deptree(nlp=nlp_fixture, document=doc)
-
-        # cast index to compound index
-        map_tree_subtree_index = graph_component_maps(graph)
-        map_tree_subtree_index = {
-            k: AbsToken.ituple2stuple(v) for k, v in map_tree_subtree_index.items()
-        }
-        graph_relabeled = relabel_nodes_and_key(graph, map_tree_subtree_index, "s")
-
-        # coref maps
-        (
-            map_subbable_to_chain,
-            map_chain_to_most_specific,
-        ) = render_coref_maps_wrapper(rdoc)
-
-        (
-            map_subbable_to_chain_str,
-            map_chain_to_most_specific_str,
-        ) = apply_map(
-            [map_subbable_to_chain, map_chain_to_most_specific],
-            map_tree_subtree_index,
-        )
-
-        triples = graph_to_triples(
-            graph_relabeled,
-            map_subbable_to_chain_str,
-            map_chain_to_most_specific_str,
-            rules,
-        )
-        triples = [tri.normalize_relation() for tri in triples]
-        acc_triples += triples
-
-        triples_projected[key] = [tri.project_to_text() for tri in triples]
-
-    for k in triples_projected:
-        if set(triples_projected[k]) != set(reference_projected[k]):
-            projected_ = set(triples_projected[k]) - set(reference_projected[k])
-            refs_ = set(reference_projected[k]) - set(triples_projected[k])
-            print(k)
-            print("new")
-            pprint(sorted(projected_))
-            print("ref")
-            pprint(sorted(refs_))
-
-        # assert triples_projected[k] == reference_projected[k]
 
 
 def test_text_to_relations(nlp_fixture, text, rules):

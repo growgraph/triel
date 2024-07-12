@@ -5,8 +5,10 @@ from collections import defaultdict, deque
 from itertools import product
 
 import networkx as nx
+import spacy
 from suthing import profile
 
+from lm_service.coref import stitch_coreference, text_to_compound_index_graph
 from lm_service.onto import Candidate, MuIndex, Relation, TokenIndexT
 from lm_service.piles import CandidatePile, ExtCandidateList
 from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
@@ -15,8 +17,6 @@ from lm_service.relation import (
     form_triples,
     graph_to_candidate_pile,
     graph_to_maps,
-    text_to_compound_index_graph,
-    text_to_coref_sourcetarget,
 )
 from lm_service.util import plot_graph
 
@@ -42,7 +42,7 @@ def normalize_text(text, nlp, head=None) -> list[str]:
 
 def phrases_to_triples_stage_a(
     phrases,
-    nlp,
+    nlp: spacy.Language,
     rules,
     plot_path=None,
 ):
@@ -71,7 +71,7 @@ def phrases_to_triples_stage_a(
 
 @profile
 def phrases_to_triples(
-    phrases: list[str], nlp, rules, window_size, plot_path=None, **kwargs
+    phrases: list[str], nlp: spacy.Language, rules, window_size, plot_path=None
 ) -> tuple[
     dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]],
     dict[MuIndex, Candidate],
@@ -87,20 +87,11 @@ def phrases_to_triples(
 
     global_ecl = ExtCandidateList()
 
-    window_size = min([window_size, len(phrases)])
-    nmax = len(phrases) - window_size + 1
-    for i in range(nmax):
-        fragment = " ".join(phrases[i : i + window_size])
-        ext_cand_list.set_filter(lambda x: i <= x[0] < i + window_size)
-        ncp = text_to_coref_sourcetarget(
-            nlp, fragment, ext_cand_list, initial_phrase_index=i
-        )
+    # source_target are extended by coreferences
 
-        for key, candidate_list in ncp.items():
-            for c in candidate_list:
-                global_ecl.append(key, c)
-
-    global_ecl.filter_out_pronouns()
+    edges_chain_token_global, edges_chain_order_global = stitch_coreference(
+        nlp=nlp, phrases_for_coref=phrases, window_size=window_size
+    )
 
     # mnemonics : fun ~ fundamental
     fun_candidates: dict[MuIndex, Candidate] = dict()
@@ -109,30 +100,17 @@ def phrases_to_triples(
             fun_candidates[MuIndex(False, *key, j)] = item
 
     # iphrase -> fundamental triple
+    # for each phrase - a list of triple
     fundamental_triples_aux: defaultdict[
         int, list[tuple[MuIndex, MuIndex, MuIndex]]
     ] = defaultdict(list)
 
-    # triple_index -> fundamental triple
-    fundamental_triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]] = dict()
-
-    # iphrase -> meta triple
-    meta_triples_aux: defaultdict[int, list[tuple[MuIndex, MuIndex, MuIndex]]] = (
-        defaultdict(list)
-    )
-
-    # triple_index -> meta triple
-    meta_triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]] = dict()
+    # TokenIndexT -> (hashlike -> relation)
     relation_ecd: defaultdict[TokenIndexT, dict[int, Relation]] = defaultdict(dict)
 
     for s, r, t in striples:
+        iphrase = r[0]
         current_relation = relations[r]
-        if isinstance(r, str):
-            iphrase = 0
-        elif isinstance(r, tuple):
-            iphrase = r[0]
-        else:
-            raise TypeError("Unknown TokenIndexT subtype")
         for srunning in range(len(global_ecl[s])):
             if current_relation.has_prepositions():
                 relation_redux = [
@@ -154,7 +132,8 @@ def phrases_to_triples(
             else:
                 relation_index = relations[r].approximate_hash_int()
                 rt = [
-                    (relation_index, trunning) for trunning in range(len(global_ecl[t]))
+                    (relation_index, trunning)
+                    for trunning in range(len(ext_cand_list[t]))
                 ]
                 relation_ecd[r][relation_index] = relations[r]
 
@@ -171,6 +150,9 @@ def phrases_to_triples(
         if r not in relation_ecd:
             relation_ecd[r][relations[r].approximate_hash_int()] = relations[r]
 
+    # triple_index -> fundamental triple
+    fundamental_triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]] = dict()
+
     for iphrase, list_item in fundamental_triples_aux.items():
         for k_tri, tri in enumerate(list_item):
             fundamental_triples[MuIndex(True, iphrase, "000", k_tri)] = tri
@@ -178,6 +160,14 @@ def phrases_to_triples(
     relation_triple_map: dict[MuIndex, MuIndex] = {}
     for mu_tri, (_, r, _) in fundamental_triples.items():
         relation_triple_map[r] = mu_tri
+
+    # triple_index -> meta triple
+    meta_triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]] = dict()
+
+    # iphrase -> meta triple
+    meta_triples_aux: defaultdict[int, list[tuple[MuIndex, MuIndex, MuIndex]]] = (
+        defaultdict(list)
+    )
 
     deq_striples_meta = deque(striples_meta)
     deq_len = len(deq_striples_meta)

@@ -40,6 +40,7 @@ class RequestedIndexDoesNotExist(Exception):
 
 
 TokenIndexT = tuple[int, str]
+ChainIndex = tuple[int, str]
 
 
 logger = logging.getLogger(__name__)

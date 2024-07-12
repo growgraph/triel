@@ -2,36 +2,24 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from collections import defaultdict, deque
+from collections import deque
 from copy import deepcopy
 from itertools import product
 
 import networkx as nx
 import pandas as pd
 
-from lm_service.coref import (
-    coref_candidates,
-    graph_component_maps,
-    render_coref_maps_wrapper,
-)
 from lm_service.folding import get_flag
-from lm_service.graph import (
-    excise_node,
-    phrase_to_deptree,
-    relabel_nodes_and_key,
-)
+from lm_service.graph import excise_node
 from lm_service.onto import (
-    AbsToken,
     ACandidateKind,
-    Candidate,
     CandidateType,
     Relation,
     SourceOrTarget,
     Token,
     TokenIndexT,
-    apply_map,
 )
-from lm_service.piles import CandidatePile, ExtCandidateList, SRTPile
+from lm_service.piles import CandidatePile, SRTPile
 
 logger = logging.getLogger(__name__)
 
@@ -696,84 +684,6 @@ def sieve_sources_targets(
         if True:
             targets.append(c)
     return sources, targets
-
-
-def text_to_compound_index_graph(
-    nlp, text, initial_phrase_index, single_phrase_mode=False
-):
-    rdoc, graph = phrase_to_deptree(nlp, text)
-
-    if single_phrase_mode and nx.number_weakly_connected_components(graph) > 1:
-        components = sorted(nx.weakly_connected_components(graph), key=lambda x: len(x))
-        sg = nx.subgraph(graph, components[-1])
-        logger.warning(
-            f" with single_phrase_mode from text <fail>{text}<fail> only"
-            f" largest component [representing {sg.size()}/{graph.size()}] was"
-            " kept."
-        )
-        graph = sg
-
-    # cast index to compound index
-    map_tree_subtree_index = graph_component_maps(graph, initial_phrase_index)
-
-    map_tree_subtree_index = {
-        k: AbsToken.ituple2stuple(v) for k, v in map_tree_subtree_index.items()
-    }
-    graph_relabeled = relabel_nodes_and_key(graph, map_tree_subtree_index, "s")
-    return graph_relabeled, rdoc, map_tree_subtree_index
-
-
-def text_to_coref_sourcetarget(
-    nlp, text, ext_candidate_list: ExtCandidateList, initial_phrase_index
-) -> defaultdict[TokenIndexT, list[Candidate]]:
-    """
-
-    :param nlp:
-    :param text:
-    :param  ext_candidate_list: ExtCandidateList
-    :param  initial_phrase_index
-    :return:
-    """
-    (
-        graph_relabeled,
-        rdoc,
-        map_tree_subtree_index,
-    ) = text_to_compound_index_graph(nlp, text, initial_phrase_index)
-
-    # coref maps
-    (
-        map_subbable_to_chain,
-        map_chain_to_most_specific,
-    ) = render_coref_maps_wrapper(rdoc)
-
-    (
-        map_subbable_to_chain_str,
-        map_chain_to_most_specific_str,
-    ) = apply_map(
-        [map_subbable_to_chain, map_chain_to_most_specific],
-        map_tree_subtree_index,
-    )
-
-    tokens = [
-        Token(
-            **graph_relabeled.nodes[i],
-            successors=graph_relabeled.successors(i),
-            predecessors=graph_relabeled.predecessors(i),
-        )
-        for i in graph_relabeled.nodes()
-    ]
-
-    token_dict = {t.s: t for t in tokens}
-
-    # ncp : dict[TokenIndexT, list[Candidate]]
-    # for each root -> a list of relevant candidates
-    ncp = coref_candidates(
-        ext_candidate_list,
-        map_subbable_to_chain_str,
-        map_chain_to_most_specific_str,
-        token_dict,
-    )
-    return ncp
 
 
 def add_hash(triples_expanded):

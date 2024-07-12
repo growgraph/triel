@@ -1,94 +1,60 @@
-import logging
-import os
-import pathlib
-import sys
-
-import pytest
-
-from lm_service.piles import ExtCandidateList
-from lm_service.relation import text_to_coref_sourcetarget
-from lm_service.text import phrases_to_triples_stage_a
-
-logger = logging.getLogger(__name__)
-
-logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
-
-figs_folder = "./.figs"
-current_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), figs_folder)
-pathlib.Path(current_path).mkdir(parents=True, exist_ok=True)
-
-path = pathlib.Path(__file__).parent
-fig_path = os.path.join(path, figs_folder)
+from lm_service.coref import (
+    render_coref_maps_wrapper,
+    stitch_coreference,
+    text_to_coref_classes,
+)
 
 
-@pytest.fixture(scope="module")
-def phrases():
-    return (
-        "Although he was very busy with his work, Peter Brown had had enough of it.",
-        "He and his wife decided they needed a holiday.",
-        "They travelled to Spain because they loved the country very much.",
-    )
+def test_coref_maps(doc_coref):
+    edges_chain_token, edges_chain_order = render_coref_maps_wrapper(doc_coref)
+    assert len(edges_chain_order) == 1
+    assert edges_chain_order[0] == (0, 2)
+    assert len(edges_chain_token) == 13
 
 
-def test_substitution_in_depot(nlp_fixture, phrases, rules):
-    striples, striples_meta, relations, ext_cand_list, megagraph = (
-        phrases_to_triples_stage_a(phrases, nlp_fixture, rules, plot_path=fig_path)
-    )
+def test_coref_maps_tokenindext(doc_coref, map_tree_subtree_index):
+    initial_phrase_index = 0
+    # edges_chain_token, edges_chain_order
 
-    global_ecl = ExtCandidateList()
+    edges_chain_token, edges_chain_order = render_coref_maps_wrapper(doc_coref)
 
-    window_size = 5
-    window_size = min([window_size, len(phrases)])
-    nmax = len(phrases) - window_size + 1
-    for i in range(nmax):
-        fragment = " ".join(phrases[i : i + window_size])
-        ext_cand_list.set_filter(lambda x: i <= x[0] < i + window_size)
-        ncp = text_to_coref_sourcetarget(
-            nlp_fixture, fragment, ext_cand_list, initial_phrase_index=i
+    edges_chain_tokenit = [
+        (
+            (initial_phrase_index, f"c_{k}"),
+            tuple([map_tree_subtree_index[vv] for vv in v]),
         )
-
-        for key, candidate_list in ncp.items():
-            for c in candidate_list:
-                global_ecl.append(key, c)
-
-    global_ecl.filter_out_pronouns()
-
-    ncp_ref = [
-        ((0, "001"), [[(0, "009"), (0, "010")]]),
-        ((0, "007"), [[(0, "007"), (0, "007a"), (0, "009"), (0, "010")]]),
-        ((0, "010"), [[(0, "009"), (0, "010")]]),
-        ((0, "015"), [[(0, "007"), (0, "007a"), (0, "009"), (0, "010")]]),
-        (
-            (1, "000"),
-            [
-                [(0, "009"), (0, "010")],
-                [(1, "003"), (1, "003a"), (0, "009"), (0, "010")],
-            ],
-        ),
-        (
-            (1, "005"),
-            [
-                [(0, "009"), (0, "010")],
-                [(1, "003"), (1, "003a"), (0, "009"), (0, "010")],
-            ],
-        ),
-        ((1, "008"), [[(1, "008")]]),
-        (
-            (2, "000"),
-            [
-                [(0, "009"), (0, "010")],
-                [(1, "003"), (1, "003a"), (0, "009"), (0, "010")],
-            ],
-        ),
-        ((2, "003"), [[(2, "003")]]),
-        (
-            (2, "005"),
-            [
-                [(0, "009"), (0, "010")],
-                [(1, "003"), (1, "003a"), (0, "009"), (0, "010")],
-            ],
-        ),
-        ((2, "008"), [[(2, "003")]]),
+        for k, v in edges_chain_token
     ]
-    ncp_test = [(k, [vv.stokens for vv in ncp[k]]) for k in sorted(ncp)]
-    assert ncp_test == ncp_ref
+
+    edges_chaint_order = [
+        ((initial_phrase_index, f"c_{a}"), (initial_phrase_index, f"c_{b}"))
+        for a, b in edges_chain_order
+    ]
+    assert isinstance(edges_chain_tokenit[0][0], tuple)
+    assert isinstance(edges_chain_tokenit[0][1], tuple)
+    assert isinstance(edges_chain_tokenit[0][1][0], tuple)
+    assert isinstance(edges_chaint_order[0][0], tuple)
+
+
+def test_coref_classes(nlp_fixture, phrases_for_coref):
+    initial_phrase_index = 0
+    fragment = " ".join(phrases_for_coref)
+
+    edges_chain_tokenit, edges_chaint_order = text_to_coref_classes(
+        nlp_fixture, fragment, initial_phrase_index
+    )
+
+    assert isinstance(edges_chain_tokenit[0][0], tuple)
+    assert isinstance(edges_chain_tokenit[0][1], tuple)
+    assert isinstance(edges_chain_tokenit[0][1][0], tuple)
+    assert isinstance(edges_chaint_order[0][0], tuple)
+    assert max([y[0][0] for _, y in edges_chain_tokenit]) == 2
+
+
+def test_stitching(nlp_fixture, phrases_for_coref, fig_path):
+    edges_chain_token_global, edges_chain_order_global = stitch_coreference(
+        nlp=nlp_fixture, phrases_for_coref=phrases_for_coref, window_size=2
+    )
+
+    assert len(edges_chain_token_global) == 13
+    assert len(edges_chain_order_global) == 1
