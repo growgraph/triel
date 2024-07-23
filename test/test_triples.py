@@ -215,8 +215,8 @@ def test_distances(nlp_fixture, rules, documents):
 def test_text_to_relations(nlp_fixture, text, rules):
     phrases = normalize_text(text, nlp_fixture)
 
-    global_triples, map_mu_index_triple, _ = phrases_to_triples(
-        phrases, nlp_fixture, rules, window_size=2
+    global_triples, map_mu_index_triple = phrases_to_triples(
+        phrases, nlp_fixture, rules
     )
 
     global_triples_txt = cast_simplified_triples_table(

@@ -23,11 +23,7 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
 
     phrases = normalize_text(text, nlp, head)
     triples, map_mu_index_triple, _ = phrases_to_triples(
-        phrases,
-        nlp,
-        rules,
-        window_size=window_size,
-        plot_path=plot_path,
+        phrases, nlp, rules, plot_path=plot_path
     )
 
     triples_text = cast_simplified_triples_table(triples, map_mu_index_triple)

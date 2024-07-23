@@ -24,7 +24,6 @@ from lm_service.linking.onto import (
 )
 from lm_service.linking.score import ScoreMapper
 from lm_service.onto import Candidate, MuIndex
-from lm_service.piles import ExtCandidateList
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +67,13 @@ def link_unlinked_entities(
     map_c2e_extra: list[tuple[MuIndex, str]] = []
     map_eindex_entity_extra: dict[str, Entity] = dict()
 
-    mentions_not_in_entities = set(map_muindex_candidate) - set(c for c, e in map_c2e)
+    mentions_not_in_entities = sorted(
+        set(map_muindex_candidate) - set(c for c, e in map_c2e)
+    )
 
     for i_mu in mentions_not_in_entities:
         c = map_muindex_candidate[i_mu]
+        c = c.normalize()
         lemmatized = [x.lemma for x in c.tokens]
 
         zipf_freqs = [
@@ -107,7 +109,7 @@ def link_unlinked_entities(
 
 def link_candidate_entity(
     phrase_mapper: PhraseMapper,
-    ecl: ExtCandidateList,
+    muindex_candidate,
     entities_local,
     score_mapper: ScoreMapper | None = None,
     overlap_thr=0.8,
@@ -115,7 +117,7 @@ def link_candidate_entity(
     """
 
     :param phrase_mapper: PhraseMapper : (i_ent, (span_beg, span_end))
-    :param ecl:
+    :param muindex_candidate: MuIndex -> Candidate
     :param entities_local:
     :param score_mapper:
     :param overlap_thr:
@@ -137,36 +139,42 @@ def link_candidate_entity(
         phrase_to_ent_spans[ip] += [(ia, ib)]
         phrase_to_ents[ip] += [entity]
 
-    for iphrase in phrase_to_ent_spans:
-        mus = ecl.get_phrase(iphrase)
-        for (_, stoken), mu_cand_list in mus:
-            for jcandidate, candidate in enumerate(mu_cand_list):
-                dist = np.array(
-                    [
-                        [
-                            interval_overlap_metric((t.idx, t.idx_eot), (ea, eb))
-                            for t in candidate.tokens
-                        ]
-                        for ea, eb in phrase_to_ent_spans[iphrase]
-                    ]
-                )
-                (ec_ixs,) = np.where((dist > overlap_thr).any(axis=1))
-                if not ec_ixs.tolist():
-                    logger.debug(
-                        f"ip: {iphrase} st: {stoken} dmax: {dist.max()}"
-                        f"a: {min([t.idx for t in candidate.tokens])} "
-                        f"b: {max([t.idx_eot for t in candidate.tokens])} "
-                        f"|{' '.join([t.text for t in candidate.tokens])}|"
-                    )
-                    missed_mentions += [(iphrase, stoken, jcandidate)]
+    phrase_candidates: dict[int, list[tuple]] = {}
+    for k, v in muindex_candidate.items():
+        if k.phrase in phrase_candidates:
+            phrase_candidates[k.phrase] += [(k, v)]
+        else:
+            phrase_candidates[k.phrase] = [(k, v)]
 
-                map_candidate2entity += [
-                    (
-                        MuIndex(False, iphrase, stoken, jcandidate),
-                        phrase_to_ents[iphrase][j].hash,
-                    )
-                    for j in ec_ixs
+    for iphrase, candidates in phrase_candidates.items():
+        for mu, candidate in candidates:
+            stoken = mu.token
+            dist = np.array(
+                [
+                    [
+                        interval_overlap_metric((t.idx, t.idx_eot), (ea, eb))
+                        for t in candidate.tokens
+                    ]
+                    for ea, eb in phrase_to_ent_spans[iphrase]
                 ]
+            )
+            (ec_ixs,) = np.where((dist > overlap_thr).any(axis=1))
+            if not ec_ixs.tolist():
+                logger.debug(
+                    f"ip: {iphrase} st: {stoken} dmax: {dist.max()}"
+                    f"a: {min([t.idx for t in candidate.tokens])} "
+                    f"b: {max([t.idx_eot for t in candidate.tokens])} "
+                    f"|{' '.join([t.text for t in candidate.tokens])}|"
+                )
+                missed_mentions += [mu]
+
+            map_candidate2entity += [
+                (
+                    MuIndex(False, iphrase, stoken, mu.running),
+                    phrase_to_ents[iphrase][j].hash,
+                )
+                for j in ec_ixs
+            ]
 
     return map_candidate2entity, entity_edges
 
@@ -197,7 +205,6 @@ def map_mentions_to_entities(
     phrases,
     entity_pack: list[LocalEntity],
     map_muindex_candidate: dict[MuIndex, Candidate],
-    ecl: ExtCandidateList,
     sep=" ",
 ):
     pm = PhraseMapper(phrases, sep)
@@ -205,22 +212,11 @@ def map_mentions_to_entities(
     map_c2e: list[tuple[MuIndex, str]]
     ee_edges: list[tuple[str, str, float]]
 
-    map_c2e, ee_edges = link_candidate_entity(pm, ecl, entity_pack)
+    map_c2e, ee_edges = link_candidate_entity(pm, map_muindex_candidate, entity_pack)
 
     normalized_entities = set([Entity.from_local_entity(e) for e in entity_pack])
 
     map_eindex_entity: dict[str, Entity] = {e.hash: e for e in normalized_entities}
-
-    map_eindex_entity_extra, map_c2e_extra = link_unlinked_entities(
-        map_c2e, map_muindex_candidate
-    )
-
-    # map_c2e += link_candidate_entity(pm, ecl, entity_pack_per_phrase)
-
-    map_eindex_entity = {
-        **map_eindex_entity,
-        **{e.hash: e for e in entity_pack},
-    }
 
     return map_eindex_entity, map_c2e
 

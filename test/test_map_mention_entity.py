@@ -53,13 +53,13 @@ def test_mapping(
 ):
     map_candidate2entity, edges = link_candidate_entity(
         phrase_mapper=phrase_mapper,
-        ecl=ecl,
+        muindex_candidate=muindex_candidate,
         entities_local=entities_local,
         score_mapper=score_mapper_trivial,
         overlap_thr=0.8,
     )
 
-    assert len(map_candidate2entity) == 148
+    assert len(map_candidate2entity) == 153
     assert len(edges) == 78
 
     normalized_entities = set([Entity.from_local_entity(e) for e in entities_local])

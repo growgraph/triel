@@ -8,9 +8,9 @@ import networkx as nx
 import spacy
 from suthing import profile
 
-from lm_service.coref import stitch_coreference, text_to_compound_index_graph
+from lm_service.coref import text_to_compound_index_graph
 from lm_service.onto import Candidate, MuIndex, Relation, TokenIndexT
-from lm_service.piles import CandidatePile, ExtCandidateList
+from lm_service.piles import CandidatePile
 from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
 from lm_service.relation import (
     align_relation_to_target,
@@ -64,19 +64,21 @@ def phrases_to_triples_stage_a(
 
     # mnemonics : ecl ~ ExtCandidateList()
     ext_cand_list = candidate_depot.unfold_conjunction()
-    for r in relations:
-        r.normalize()
     return striples, striples_meta, relations, ext_cand_list, megagraph
 
 
 @profile
 def phrases_to_triples(
-    phrases: list[str], nlp: spacy.Language, rules, window_size, plot_path=None
-) -> tuple[
-    dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]],
-    dict[MuIndex, Candidate],
-    ExtCandidateList,
-]:
+    phrases: list[str], nlp: spacy.Language, rules, plot_path=None
+) -> tuple[dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]], dict[MuIndex, Candidate]]:
+    """
+
+    :param phrases:
+    :param nlp:
+    :param rules:
+    :param plot_path:
+    :return: global_triples, mu_index_candidate_map, ext_cand_list
+    """
     (
         striples,
         striples_meta,
@@ -85,17 +87,11 @@ def phrases_to_triples(
         megagraph,
     ) = phrases_to_triples_stage_a(phrases, nlp, rules, plot_path)
 
-    global_ecl = ExtCandidateList()
-
     # source_target are extended by coreferences
-
-    edges_chain_token_global, edges_chain_order_global = stitch_coreference(
-        nlp=nlp, phrases_for_coref=phrases, window_size=window_size
-    )
 
     # mnemonics : fun ~ fundamental
     fun_candidates: dict[MuIndex, Candidate] = dict()
-    for key, item_list in global_ecl:
+    for key, item_list in ext_cand_list:
         for j, item in enumerate(item_list):
             fun_candidates[MuIndex(False, *key, j)] = item
 
@@ -110,12 +106,12 @@ def phrases_to_triples(
 
     for s, r, t in striples:
         iphrase = r[0]
-        current_relation = relations[r]
-        for srunning in range(len(global_ecl[s])):
+        current_relation: Relation = relations[r]
+        for srunning in range(len(ext_cand_list[s])):
             if current_relation.has_prepositions():
                 relation_redux = [
                     align_relation_to_target(relations[r], tprime, megagraph)
-                    for tprime in global_ecl[t]
+                    for tprime in ext_cand_list[t]
                 ]
 
                 rt = list(
@@ -130,12 +126,12 @@ def phrases_to_triples(
                 for k, v in rt_map.items():
                     relation_ecd[r][k] = relation_redux[v]
             else:
-                relation_index = relations[r].approximate_hash_int()
+                relation_index = current_relation.approximate_hash_int()
                 rt = [
                     (relation_index, trunning)
                     for trunning in range(len(ext_cand_list[t]))
                 ]
-                relation_ecd[r][relation_index] = relations[r]
+                relation_ecd[r][relation_index] = current_relation
 
             fundamental_triples_aux[iphrase] += [
                 (
@@ -208,7 +204,7 @@ def phrases_to_triples(
                 deq_striples_meta.appendleft((s, r, t))
                 continue
         else:
-            sources_mu = [MuIndex(False, *s, j) for j in range(len(global_ecl[s]))]
+            sources_mu = [MuIndex(False, *s, j) for j in range(len(ext_cand_list[s]))]
         if t in relations.sroots:
             r_current_index = relations[t].approximate_hash_int()
 
@@ -218,7 +214,7 @@ def phrases_to_triples(
                 deq_striples_meta.appendleft((s, r, t))
                 continue
         else:
-            targets_mu = [MuIndex(False, *t, j) for j in range(len(global_ecl[t]))]
+            targets_mu = [MuIndex(False, *t, j) for j in range(len(ext_cand_list[t]))]
 
         if isinstance(r, str):
             iphrase = 0
@@ -269,10 +265,10 @@ def phrases_to_triples(
             mu_index_candidate_map[candlike_like] = relation_ecd[basic_index][
                 candlike_like.running
             ]
-        elif basic_index in global_ecl and candlike_like.running < len(
-            global_ecl[basic_index]
+        elif basic_index in ext_cand_list and candlike_like.running < len(
+            ext_cand_list[basic_index]
         ):
-            mu_index_candidate_map[candlike_like] = global_ecl[basic_index][
+            mu_index_candidate_map[candlike_like] = ext_cand_list[basic_index][
                 candlike_like.running
             ]
         else:
@@ -280,7 +276,7 @@ def phrases_to_triples(
                 f"Fundamental MuIndex {candlike_like} not in global_ecl and"
                 " not in relation_ecd"
             )
-    return global_triples, mu_index_candidate_map, ext_cand_list
+    return global_triples, mu_index_candidate_map
 
 
 def phrases_to_basis_triples(

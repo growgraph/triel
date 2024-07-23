@@ -5,17 +5,27 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Callable
 
-from lm_service.onto import Candidate, CandidateType, Token, TokenIndexT
+import pandas as pd
+
+from lm_service.onto import (
+    Candidate,
+    CandidateType,
+    Relation,
+    SourceOrTarget,
+    Token,
+    TokenIndexT,
+)
 
 
 @dataclasses.dataclass(repr=False)
 class CandidatePile:
     """
     pile of candidates of one type
+    TokenIndexT -> Candidate (SourceOrTarget | Relation)
     """
 
-    _root_to_candidate: dict[TokenIndexT, Candidate] = dataclasses.field(
-        default_factory=dict
+    _root_to_candidate: dict[TokenIndexT, SourceOrTarget | Relation] = (
+        dataclasses.field(default_factory=dict)
     )  # type: ignore
 
     def __len__(self) -> int:
@@ -138,10 +148,25 @@ class CandidatePile:
                 dd_pile[sroot] += [c_unfolded]
         return dd_pile
 
+    def dump_to_table(self):
+        arr = [
+            (
+                *k,
+                min([vv.idx for vv in v.tokens]),
+                max([vv.idx_eot for vv in v.tokens]),
+                " ".join(v.project_to_text()),
+            )
+            for k, v in self._root_to_candidate.items()
+        ]
+        return pd.DataFrame(arr, columns=["iphrase", "itoken", "a", "b", "text"])
+
 
 class ExtCandidateList:
     """
     ext list of candidates
+
+    necessary because under the same root there can be several candidate (e.g. conjunction)
+    TokenIndexT -> [Candidate] (SourceOrTarget | Relation)
     """
 
     def __init__(self):

@@ -616,6 +616,11 @@ class Candidate(AbsCandidate):
         self.drop_tokens(drop_aux_indices)
         return self
 
+    def drop_pronouns(self):
+        drop_aux_indices = [j for j, t in self._tokens.items() if t.tag_[:3] == "PRP"]
+        self.drop_tokens(drop_aux_indices)
+        return self
+
     def drop_punct(self):
         drop_aux_indices = [
             j
@@ -718,6 +723,7 @@ class Relation(Candidate):
                         inflected = getInflection(lemmas[0], tag="VBZ")
                         if inflected:
                             self._tokens[s].text = inflected[0]
+        return self
 
 
 @dataclasses.dataclass(repr=False)
@@ -727,6 +733,7 @@ class SourceOrTarget(Candidate):
             self.drop_cc()
             .drop_punct()
             .drop_articles()
+            .drop_pronouns()
             .clean_dangling_edges()
             .sort_index()
         )

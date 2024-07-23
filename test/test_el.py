@@ -4,7 +4,6 @@ from lm_service.linking.onto import (
     PhraseMapper,
 )
 from lm_service.linking.util import link_simple
-from lm_service.text import normalize_text
 
 
 def test_link_phrases(text, nlp_fixture, rules, el_conf):
@@ -19,8 +18,10 @@ def test_link_phrases(text, nlp_fixture, rules, el_conf):
 
 
 def test_phrasemapper(nlp_fixture):
-    pretext = "Diabetic ulcers are related to burns. Autophagy maintains tumour growth through circulating arginine."
-    phrases = normalize_text(pretext, nlp_fixture)
+    phrases = [
+        "Diabetic ulcers are related to burns. "
+        "Autophagy maintains tumour growth through circulating arginine."
+    ]
     text = " ".join(phrases)
     pm = PhraseMapper(phrases, " ")
     i = 39

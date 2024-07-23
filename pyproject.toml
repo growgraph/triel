@@ -1,16 +1,16 @@
 [build-system]
 build-backend = "poetry.core.masonry.api"
-packages = [
-  {include = "lm_service"},
-  {include = "test"}
-]
 requires = ["poetry-core>=1.0.0"]
 
 [tool.poetry]
 authors = ["Alexander Belikov <alexander@growgraph.dev>"]
 description = "Convert text to graphs. Create candidates. Entity linking"
 name = "lm_service"
-version = "0.5.2"
+packages = [
+  {include = "lm_service"},
+  {include = "test"}
+]
+version = "0.6.0"
 
 [tool.poetry.dependencies]
 Flask = "^2.3.2"
@@ -26,7 +26,7 @@ flask-cors = "^4.0.1"
 flask-limiter = "^3.7.0"
 joblib = "^1.4.2"
 lemminflect = "^0.2.2"
-networkx = "^2.6.3"
+networkx = "^3.3"
 pandas = "^2.0.3"
 pathos = "^0.3.0"
 pybind11 = "^2.12.0"

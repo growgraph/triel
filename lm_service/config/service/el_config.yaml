@@ -6,7 +6,7 @@ linkers:
     entities_key: annotations
     threshold: 0.0
 -   keyword: PELINKER
-    route: pelinker
+    route: link
     port: 8599
     text_field: text
     normalized_text_key: normalized_text
@@ -16,6 +16,7 @@ linkers:
     port: 8590
     protocol: http
     text_field: text
+    threshold: 0.55
     extra_args:
         language:
             lang: en

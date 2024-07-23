@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 def run(host, conf_el_path, input_path, output):
     el_conf = FileHandle.load(fpath=conf_el_path)
     for c in el_conf["linkers"]:
-        c["host"] = host
+        if "host" not in c:
+            c["host"] = host
 
     elm = EntityLinkerManager.from_dict(el_conf)
     rules = FileHandle.load("lm_service.config", "prune_noun_compound_v2.yaml")
