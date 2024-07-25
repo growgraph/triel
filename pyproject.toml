@@ -7,8 +7,7 @@ authors = ["Alexander Belikov <alexander@growgraph.dev>"]
 description = "Convert text to graphs. Create candidates. Entity linking"
 name = "lm_service"
 packages = [
-  {include = "lm_service"},
-  {include = "test"}
+  {include = "lm_service"}
 ]
 version = "0.6.0"
 
