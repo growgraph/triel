@@ -104,9 +104,7 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
             except Exception as e:
                 return {"error": get_exception_traceback_str(e)}, 500
 
-            response_jsonlike = cast_response_to_unfolded(
-                response, cast_triple_version="v1"
-            )
+            response_jsonlike = cast_response_to_unfolded(response)
 
             jy = jsonify(response_jsonlike)
             return jy, 200

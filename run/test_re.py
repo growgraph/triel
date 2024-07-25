@@ -40,9 +40,8 @@ def run(host, conf_el_path, input_path, output):
     acc = []
     for s in inp_list:
         response = text_to_rel_graph(s["text"], nlp, rules, elm)
-        response_jsonlike = cast_response_to_unfolded(
-            response, cast_triple_version="v1"
-        )
+        response_jsonlike = cast_response_to_unfolded(response)
+        response_jsonlike = response_jsonlike.to_dict()
         pprint(response_jsonlike)
         acc += [response_jsonlike]
 

@@ -365,14 +365,13 @@ def derive_sources_per_relation(
     mask_ud = decision.groupby("r")["ud"].transform("min")
 
     decision = decision[decision["ud"].eq(mask_ud)]
+    sources_per_relation: dict[TokenIndexT, set[TokenIndexT]]
 
     if decision.empty:
-        sources_per_relation: dict[TokenIndexT, set[TokenIndexT]] = {
-            t: set() for t in relation_candidate_roots
-        }
+        sources_per_relation = {t: set() for t in relation_candidate_roots}
     else:
         sources_per_relation = (
-            decision.groupby("r", group_keys=False)
+            decision.groupby("r", group_keys=True)[["s"]]
             .apply(lambda x: set(x["s"]))  # type: ignore
             .to_dict()
         )

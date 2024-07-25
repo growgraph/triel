@@ -57,9 +57,7 @@ def main():
         sp = manager.SProfiler()
 
         response = text_to_rel_graph(text, nlp, rules, elm, _profiler=sp)
-        response_jsonlike = cast_response_to_unfolded(
-            response, cast_triple_version="v1"
-        )
+        response_jsonlike = cast_response_to_unfolded(response)
         stats = sp.view_stats()
     print(response_jsonlike)
     pprint(stats)

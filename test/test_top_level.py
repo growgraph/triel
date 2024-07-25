@@ -60,9 +60,7 @@ class TestREL(unittest.TestCase):
         elm = EntityLinkerManager(self.conf_bern_external)
 
         response = text_to_rel_graph(text, self.nlp, self.rules, elm)
-        response_jsonlike = cast_response_to_unfolded(
-            response, cast_triple_version="v1"
-        )
+        response_jsonlike = cast_response_to_unfolded(response)
 
         if not self.reset:
             ref = FileHandle.load("test.reference.el", "iterate_linking_bern.json")
@@ -143,9 +141,7 @@ class TestREL(unittest.TestCase):
         elm = EntityLinkerManager(self.conf)
         response = text_to_rel_graph(text, self.nlp, self.rules, elm)
 
-        response_jsonlike = cast_response_to_unfolded(
-            response, cast_triple_version="v1"
-        )
+        response_jsonlike = cast_response_to_unfolded(response)
 
         if not self.reset:
             ref = FileHandle.load("test.reference.el", "iterate_linking_bern.json")
