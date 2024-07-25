@@ -20,7 +20,7 @@ def linker_host(pytestconfig):
 
 @pytest.fixture
 def el_conf(linker_host):
-    config = FileHandle.load("test.config", "el_config.yaml")
+    config = FileHandle.load("test.config", "reference_el_config.yaml")
     for c in config["linkers"]:
         c["host"] = linker_host
     return config

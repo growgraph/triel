@@ -61,7 +61,7 @@ def get_exception_traceback_str(exc: Exception) -> str:
     help="entity linker config as json or yaml",
     type=click.Path(path_type=pathlib.Path),
 )
-@click.option("--host", type=click.STRING, default="localhost")
+@click.option("--host", type=click.STRING, default=None)
 @click.option("--threads", type=int, default=8, help="number of concur threads")
 @click.option("--gpu", help="load spacy models to gpu", is_flag=True, default=True)
 @click.option("--debug", is_flag=True, default=False, help="logging at debug level")
@@ -76,8 +76,9 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
     rules = FileHandle.load("lm_service.config", "prune_noun_compound_v2.yaml")
 
     el_config = FileHandle.load(fpath=entity_linker_config)
-    for c in el_config["linkers"]:
-        c["host"] = host
+    if host is not None:
+        for c in el_config["linkers"]:
+            c["host"] = host
     elm = EntityLinkerManager.from_dict(el_config)
 
     if gpu:

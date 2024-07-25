@@ -136,7 +136,6 @@ def cast_response_to_unfolded(response: RELResponse):
 
     # extend muc with meta candidates
     while deq:
-        print(len(deq))
         mu, tri = deq.popleft()
         if all(t in muc for t in tri):
             tri_sub = muc[tri[0]], muc[tri[1]], muc[tri[2]]
