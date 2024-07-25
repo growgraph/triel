@@ -48,6 +48,9 @@ COPY lm_service ./lm_service
 
 RUN mkdir -p -m 0700 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
 RUN --mount=type=ssh poetry install --no-interaction -vvv --without dev
+RUN poetry run python -m spacy download en_core_web_lg
+RUN poetry run python -m spacy download en_core_web_trf
+RUN poetry run python -m coreferee install en
 COPY run ./run
 COPY README.md logging.conf ./
 
