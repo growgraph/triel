@@ -1,7 +1,7 @@
 FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS builder
 
 RUN apt update -y && apt upgrade -y && apt install curl git -y
-RUN apt install -y python 3.10
+RUN apt install -y python3.10
 RUN curl -sSL https://install.python-poetry.org | python - --version 1.8.3
 
 #ENV PATH="${PATH}:/root/.local/bin"
