@@ -179,9 +179,9 @@ def cast_response_to_unfolded(response: RELResponse):
     top_level_metamus = metamus - all_mus
 
     top_level_mention = [{"hash": h} for h in top_level_metamus]
-    r = RELResponseSimplified(
+
+    return RELResponseSimplified(
         triples=triples_upd_tri,
-        map_mention_entity=map_eindex_entity,
+        map_mention_entity=mu_ei_grounded,
         top_level_mention=top_level_mention,
     )
-    return r

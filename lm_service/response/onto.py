@@ -51,5 +51,5 @@ class RELResponseSimplified(BaseDataclass):
     """
 
     triples: list[Triple]
-    map_mention_entity: dict[str, Entity]
+    map_mention_entity: list[dict]
     top_level_mention: list[dict]
