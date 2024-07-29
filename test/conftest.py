@@ -20,7 +20,7 @@ def linker_host(pytestconfig):
 
 @pytest.fixture
 def el_conf(linker_host):
-    config = FileHandle.load("test.config", "reference_el_config.yaml")
+    config = FileHandle.load("test.config", "el_config.yaml")
     for c in config["linkers"]:
         c["host"] = linker_host
     return config
@@ -163,3 +163,22 @@ def fig_path():
 @pytest.fixture(scope="module")
 def map_tree_subtree_index():
     return suthing.FileHandle.load("test.data", "map_tree_subtree_index.pkl")
+
+
+@pytest.fixture(scope="module")
+def text_cheops():
+    return suthing.FileHandle.load("test.data", "sample.cheops.json")
+
+
+@pytest.fixture(scope="module")
+def documents():
+    return [
+        "The medium was affected by the near-field radiation",
+        (
+            "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+            " telescope to determine the size of known extrasolar planets,"
+            " which will allow the estimation of their mass, density,"
+            " composition and their formation."
+        ),
+        "He treated her unfairly.",
+    ]

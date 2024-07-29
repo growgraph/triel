@@ -40,33 +40,6 @@ def normalize_text(text, nlp, head=None) -> list[str]:
     return phrases
 
 
-def phrases_to_triples_stage_a(
-    phrases,
-    nlp: spacy.Language,
-    rules,
-    plot_path=None,
-):
-    """
-    stage a : basis triples
-    :param phrases:
-    :param nlp:
-    :param rules:
-    :param plot_path:
-    :return:
-    """
-    (
-        striples,
-        striples_meta,
-        candidate_depot,
-        relations,
-        megagraph,
-    ) = phrases_to_basis_triples(nlp, rules, phrases, plot_path)
-
-    # mnemonics : ecl ~ ExtCandidateList()
-    ext_cand_list = candidate_depot.unfold_conjunction()
-    return striples, striples_meta, relations, ext_cand_list, megagraph
-
-
 @profile
 def phrases_to_triples(
     phrases: list[str], nlp: spacy.Language, rules, plot_path=None
@@ -82,10 +55,13 @@ def phrases_to_triples(
     (
         striples,
         striples_meta,
+        candidate_depot,
         relations,
-        ext_cand_list,
         megagraph,
-    ) = phrases_to_triples_stage_a(phrases, nlp, rules, plot_path)
+    ) = phrases_to_basis_triples(nlp, rules, phrases, plot_path)
+
+    # mnemonics : ecl ~ ExtCandidateList()
+    ext_cand_list = candidate_depot.unfold_conjunction()
 
     # source_target are extended by coreferences
 
