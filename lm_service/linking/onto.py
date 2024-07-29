@@ -13,6 +13,9 @@ from lm_service.onto import BaseDataclass
 logger = logging.getLogger(__name__)
 
 
+EntityHash = str
+
+
 class EntityCandidateAlignmentError(Exception):
     pass
 
@@ -46,7 +49,7 @@ class Entity(BaseDataclass):
     linker_type: EntityLinker
     ent_db_type: str
     id: str
-    hash: str = ""
+    hash: EntityHash = ""
     ent_type: str | None = None
     original_form: str | None = None
     description: str | None = None

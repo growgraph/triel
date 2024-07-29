@@ -1,20 +1,29 @@
 from __future__ import annotations
 
 import logging
-from collections import deque
+from collections import defaultdict, deque
+from itertools import product
 
 import networkx as nx
 from suthing import profile
 
 from lm_service.coref import stitch_coreference
 from lm_service.hash import hashme
+from lm_service.linking.onto import EntityLinker
 from lm_service.linking.util import (
     iterate_over_linkers,
     link_unlinked_entities,
     map_mentions_to_entities,
 )
 from lm_service.onto import MuIndex, SimplifiedCandidate
-from lm_service.response.onto import REELResponse, REELResponseRedux, Triple
+from lm_service.response.onto import (
+    Entity,
+    REELResponse,
+    REELResponseEntity,
+    REELResponseRedux,
+    Triple,
+    TripleFormal,
+)
 from lm_service.text import normalize_text, phrases_to_triples
 
 logger = logging.getLogger(__name__)
@@ -195,99 +204,48 @@ def cast_response_redux(response: REELResponse) -> REELResponseRedux:
     )
 
 
-# def cast_response_entity_representation(response: REELResponse) -> REELResponseEntity:
-#     muc = response.muindex_candidate
-#     map_eindex_entity = response.eindex_entity
-#     mu_ei = response.muindex_eindex
-#
-#     from collections import defaultdict
-#     from itertools import product
-#
-#     map_muindex_eindexes: defaultdict[MuIndex, list[str]] = defaultdict(list)
-#
-#     for mu_index, e_index in response.muindex_eindex:
-#         map_muindex_eindexes[mu_index] += [e_index]
-#
-#     acc: list[TripleFormal] = []
-#
-#     deq: deque[
-#         tuple[
-#             MuIndex,
-#             tuple[
-#                 MuIndex,
-#                 MuIndex,
-#                 MuIndex,
-#             ],
-#         ]
-#     ] = deque(response.triples)
-#
-#     triples_upd: list[
-#         tuple[
-#             SimplifiedCandidate,
-#             tuple[SimplifiedCandidate, SimplifiedCandidate, SimplifiedCandidate],
-#         ]
-#     ] = []
-#
-#     # extend muc with meta candidates
-#     while deq:
-#         mu, tri = deq.popleft()
-#         if all(x in map_muindex_eindexes for x in tri):
-#             o, p, s = tri
-#             for eo, ep, es in product(
-#                 map_muindex_eindexes[o],
-#                 map_muindex_eindexes[p],
-#                 map_muindex_eindexes[s],
-#             ):
-#                 acc += [TripleFormal(object=eo, predicate=ep, subject=es)]
-#                 original_form = f"o: {eo}, p: {ep}, s: {es}"
-#                 e = Entity(
-#                     id=hashme(original_form),
-#                     linker_type=EntityLinker.META,
-#                     original_form=original_form,
-#                     ent_db_type="_",
-#                 )
-#             # map_muindex_eindexes[mu] =
-#             tri_sub = (
-#                 muc[tri[0]].get_copy_with_role("source"),
-#                 muc[tri[1]].get_copy_with_role("relation"),
-#                 muc[tri[2]].get_copy_with_role("target"),
-#             )
-#             if mu in muc:
-#                 mu_sub = map_muindex_eindexes[mu]
-#             else:
-#                 s = "".join(t.hash for t in tri_sub)
-#                 mu_sub = SimplifiedCandidate(hash=hashme(s))
-#                 muc[mu] = mu_sub
-#             triples_upd += [(mu_sub, tri_sub)]
-#         else:
-#             deq.append((mu, tri))
-#
-#     mu_ei_grounded = []
-#
-#     connected_mus = set(
-#         [x for _, t in response.triples for x in t] + [m for m, _ in response.triples]
-#     )
-#
-#     for mu, ei in mu_ei:
-#         if mu in connected_mus:
-#             try:
-#                 mu_ei_grounded += [
-#                     {
-#                         "mention": muc[mu],
-#                         "entity": map_eindex_entity[ei],
-#                     }
-#                 ]
-#             except Exception as e:
-#                 logger.error(f"Exception in top.cast_response_to_unfolded : {e}")
-#                 logger.error(f" mu = {mu}, ei = {ei}")
-#
-#     # triples_upd = [TripleExplicit(mu=x[0], source=x[1][0], relation=x[1][1], target=x[1][2]) for x in triples_upd]
-#     triples_upd_tri = [Triple(triple_index=x[0], triple=x[1]) for x in triples_upd]
-#
-#     metamus = {t.triple_index.hash for t in triples_upd_tri}
-#     all_mus = {t.hash for item in triples_upd_tri for t in item.triple}
-#     top_level_metamus = metamus - all_mus
-#
-#     top_level_mention = [{"hash": h} for h in top_level_metamus]
-#
-#     return REELResponseEntity(triples=triples_upd_tri, entities=None)
+def cast_response_entity_representation(response: REELResponse) -> REELResponseEntity:
+    map_eindex_entity = response.eindex_entity
+
+    map_muindex_eindexes: defaultdict[MuIndex, list[str]] = defaultdict(list)
+
+    for mu_index, e_index in response.muindex_eindex:
+        map_muindex_eindexes[mu_index] += [e_index]
+
+    acc: list[TripleFormal] = []
+
+    deq: deque[
+        tuple[
+            MuIndex,
+            tuple[
+                MuIndex,
+                MuIndex,
+                MuIndex,
+            ],
+        ]
+    ] = deque(response.triples)
+
+    while deq:
+        mu, tri = deq.popleft()
+        if all(x in map_muindex_eindexes for x in tri):
+            o, p, s = tri
+            for eo, ep, es in product(
+                map_muindex_eindexes[o],
+                map_muindex_eindexes[p],
+                map_muindex_eindexes[s],
+            ):
+                acc += [TripleFormal(object=eo, predicate=ep, subject=es)]
+                original_form = f"o:{eo}, p:{ep}, s:{es}"
+                e = Entity(
+                    id=hashme(original_form),
+                    linker_type=EntityLinker.META,
+                    original_form=original_form,
+                    ent_db_type="_",
+                )
+
+                map_muindex_eindexes[mu] += [e.hash]
+                map_eindex_entity[e.hash] = e
+        else:
+            deq.append((mu, tri))
+
+    return REELResponseEntity(triples=acc, entities=list(map_eindex_entity.values()))

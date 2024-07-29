@@ -1,11 +1,13 @@
 import pytest
 from suthing import FileHandle
 
-from lm_service.response.onto import (  # REELResponseEntity,
+from lm_service.response.onto import (
     REELResponse,
+    REELResponseEntity,
     REELResponseRedux,
 )
-from lm_service.top import (  # cast_response_entity_representation,
+from lm_service.top import (
+    cast_response_entity_representation,
     cast_response_redux,
 )
 
@@ -23,8 +25,8 @@ def test_cast_response_redux(reel_response):
     assert len(r.top_level_mention) == 79
 
 
-# def test_cast_response_er(reel_response):
-#     r = cast_response_entity_representation(reel_response)
-#     assert isinstance(r, REELResponseEntity)
-#     # assert len(r.triples) == 79
-#     # assert len(r.entities) == 147
+def test_cast_response_er(reel_response):
+    r = cast_response_entity_representation(reel_response)
+    assert isinstance(r, REELResponseEntity)
+    assert len(r.triples) == 256
+    assert len(r.entities) == 307

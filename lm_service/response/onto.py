@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from lm_service.linking.onto import Entity
+from lm_service.linking.onto import Entity, EntityHash
 from lm_service.onto import BaseDataclass, MuIndex, SimplifiedCandidate
 
 
@@ -20,9 +20,9 @@ class TripleExplicit(BaseDataclass):
 
 @dataclasses.dataclass(frozen=True, eq=True)
 class TripleFormal(BaseDataclass):
-    object: Entity
-    subject: Entity
-    predicate: Entity
+    object: EntityHash
+    subject: EntityHash
+    predicate: EntityHash
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
