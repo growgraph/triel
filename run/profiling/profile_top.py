@@ -10,7 +10,7 @@ import yaml
 from suthing import SProfiler
 
 from lm_service.linking.onto import EntityLinkerManager
-from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
+from lm_service.top import cast_response_redux, text_to_graph_mentions_entities
 
 
 def main():
@@ -56,8 +56,8 @@ def main():
     with LocalManager() as manager:
         sp = manager.SProfiler()
 
-        response = text_to_rel_graph(text, nlp, rules, elm, _profiler=sp)
-        response_jsonlike = cast_response_to_unfolded(response)
+        response = text_to_graph_mentions_entities(text, nlp, rules, elm, _profiler=sp)
+        response_jsonlike = cast_response_redux(response)
         stats = sp.view_stats()
     print(response_jsonlike)
     pprint(stats)

@@ -10,31 +10,22 @@ class UnknownCastTripleVersion(Exception):
     pass
 
 
-@dataclasses.dataclass(repr=False, frozen=True, eq=True)
-class RELResponse(BaseDataclass):
-    """
-    represents a token in dep tree
-    """
-
-    triples: dict[MuIndex, tuple[MuIndex, MuIndex, MuIndex]]
-    eindex_entity: dict[str, Entity]
-    muindex_eindex: list[tuple[MuIndex, str]]
-    muindex_candidate: dict[MuIndex, SimplifiedCandidate]
-
-
-@dataclasses.dataclass(repr=False, frozen=True, eq=True)
+@dataclasses.dataclass(frozen=True, eq=True)
 class TripleExplicit(BaseDataclass):
-    """
-    represents a token in dep tree
-    """
-
     mu: SimplifiedCandidate
     source: SimplifiedCandidate
     relation: SimplifiedCandidate
     target: SimplifiedCandidate
 
 
-@dataclasses.dataclass(repr=False, frozen=True, eq=True)
+@dataclasses.dataclass(frozen=True, eq=True)
+class TripleFormal(BaseDataclass):
+    object: Entity
+    subject: Entity
+    predicate: Entity
+
+
+@dataclasses.dataclass(frozen=True, eq=True)
 class Triple(BaseDataclass):
     """
     represents a token in dep tree
@@ -44,8 +35,28 @@ class Triple(BaseDataclass):
     triple: tuple[SimplifiedCandidate, SimplifiedCandidate, SimplifiedCandidate]
 
 
-@dataclasses.dataclass(repr=False, frozen=True, eq=True)
-class RELResponseSimplified(BaseDataclass):
+@dataclasses.dataclass(frozen=True, eq=True)
+class REELResponse(BaseDataclass):
+    """
+    relation extraction / entity linking response
+    """
+
+    triples: list[tuple[MuIndex, tuple[MuIndex, MuIndex, MuIndex]]]
+    eindex_entity: dict[str, Entity]
+    muindex_eindex: list[tuple[MuIndex, str]]
+    _muindex_candidate: list[tuple[MuIndex, SimplifiedCandidate]]
+
+    # @property
+    # def triples(self):
+    #     return {k: v for k, v in self._triples}
+
+    @property
+    def muindex_candidate(self):
+        return {k: v for k, v in self._muindex_candidate}
+
+
+@dataclasses.dataclass(frozen=True, eq=True)
+class REELResponseRedux(BaseDataclass):
     """
     represents a token in dep tree
     """
@@ -53,3 +64,13 @@ class RELResponseSimplified(BaseDataclass):
     triples: list[Triple]
     map_mention_entity: list[dict]
     top_level_mention: list[dict]
+
+
+@dataclasses.dataclass(frozen=True, eq=True)
+class REELResponseEntity(BaseDataclass):
+    """
+    represents a token in dep tree
+    """
+
+    triples: list[TripleFormal]
+    entities: list[Entity]

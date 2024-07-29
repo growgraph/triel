@@ -7,7 +7,7 @@ import spacy
 from suthing import FileHandle
 
 from lm_service.linking.onto import EntityLinkerManager
-from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
+from lm_service.top import cast_response_redux, text_to_graph_mentions_entities
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +39,8 @@ def run(host, conf_el_path, input_path, output):
 
     acc = []
     for s in inp_list:
-        response = text_to_rel_graph(s["text"], nlp, rules, elm)
-        response_form_b = cast_response_to_unfolded(response)
+        response = text_to_graph_mentions_entities(s["text"], nlp, rules, elm)
+        response_form_b = cast_response_redux(response)
         response_jsonlike = response_form_b.to_dict()
         pprint(response_jsonlike)
         acc += [response_jsonlike]

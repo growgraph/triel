@@ -35,6 +35,7 @@ class EntityLinker(str, Enum):
     SPACY_BASIC = "SPACY_BASIC"
     GG = "GG"
     PELINKER = "PELINKER"
+    META = "__META"
 
 
 ent_db_type_gg_verbatim = "verbatim"

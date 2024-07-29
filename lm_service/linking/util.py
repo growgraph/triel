@@ -218,7 +218,7 @@ def map_mentions_to_entities(
 
     map_eindex_entity: dict[str, Entity] = {e.hash: e for e in normalized_entities}
 
-    return map_eindex_entity, map_c2e
+    return map_eindex_entity, map_c2e, ee_edges
 
 
 @profile(_argnames="link_simple")

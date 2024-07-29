@@ -1,0 +1,6056 @@
+{
+    "triples": [
+        [
+            {
+                "meta": true,
+                "phrase": 0,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "003",
+                    "running": 8
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "006",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 0,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "003",
+                    "running": 4
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "008",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 0,
+                "token": "000",
+                "running": 2
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "003",
+                    "running": 4
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "008",
+                    "running": 1
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 0,
+                "token": "000",
+                "running": 3
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "003",
+                    "running": 4
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "008",
+                    "running": 2
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 0,
+                "token": "000",
+                "running": 4
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "008",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "024",
+                    "running": 49
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "027",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 0,
+                "token": "000",
+                "running": 5
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "008",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "024",
+                    "running": 49
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "027",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 0,
+                "token": "000",
+                "running": 6
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "008",
+                    "running": 2
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "024",
+                    "running": 49
+                },
+                {
+                    "meta": false,
+                    "phrase": 0,
+                    "token": "027",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 1,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 1,
+                    "token": "002",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 1,
+                    "token": "004",
+                    "running": 12
+                },
+                {
+                    "meta": false,
+                    "phrase": 1,
+                    "token": "007",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 1,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 1,
+                    "token": "002",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 1,
+                    "token": "004",
+                    "running": 15
+                },
+                {
+                    "meta": false,
+                    "phrase": 1,
+                    "token": "009",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 2,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "001",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "009",
+                    "running": 19
+                },
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "012",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 2,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "012",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "016",
+                    "running": 16
+                },
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "020",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 2,
+                "token": "000",
+                "running": 2
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "012",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "023",
+                    "running": 23
+                },
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "027",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 2,
+                "token": "000",
+                "running": 3
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "012",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "023",
+                    "running": 23
+                },
+                {
+                    "meta": false,
+                    "phrase": 2,
+                    "token": "027",
+                    "running": 1
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 36
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "026",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 36
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "026",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 2
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 2
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 36
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "026",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 3
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 3
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 36
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "026",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 4
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 36
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "015",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 5
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 36
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "015",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 6
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 2
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 36
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "015",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 7
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 3
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 36
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "015",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 8
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 63
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "031",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 9
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 63
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "031",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 10
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 2
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 63
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "031",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 3,
+                "token": "000",
+                "running": 11
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "002",
+                    "running": 3
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "013",
+                    "running": 63
+                },
+                {
+                    "meta": false,
+                    "phrase": 3,
+                    "token": "031",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 4,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 4,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 4,
+                    "token": "003",
+                    "running": 4
+                },
+                {
+                    "meta": false,
+                    "phrase": 4,
+                    "token": "005",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 4,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 4,
+                    "token": "005",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 4,
+                    "token": "007",
+                    "running": 34
+                },
+                {
+                    "meta": false,
+                    "phrase": 4,
+                    "token": "013",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 4,
+                "token": "000",
+                "running": 2
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 4,
+                    "token": "005",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 4,
+                    "token": "007",
+                    "running": 48
+                },
+                {
+                    "meta": false,
+                    "phrase": 4,
+                    "token": "021",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 5,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "001",
+                    "running": 8
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "009",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 5,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "001",
+                    "running": 15
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "014",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 5,
+                "token": "000",
+                "running": 2
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "014",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "021",
+                    "running": 43
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "025",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 5,
+                "token": "000",
+                "running": 3
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "014",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "021",
+                    "running": 43
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "025",
+                    "running": 1
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 5,
+                "token": "000",
+                "running": 4
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "014",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "021",
+                    "running": 43
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "025",
+                    "running": 2
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 5,
+                "token": "000",
+                "running": 5
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "014",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "043",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 5,
+                "token": "000",
+                "running": 6
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "014",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 5,
+                    "token": "043",
+                    "running": 1
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 6,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "001",
+                    "running": 3
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "004",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 6,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "004",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "022",
+                    "running": 95
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "024",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 6,
+                "token": "000",
+                "running": 2
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "004",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "022",
+                    "running": 72
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "017",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 6,
+                "token": "000",
+                "running": 3
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "004",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "022",
+                    "running": 72
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "031",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 6,
+                "token": "000",
+                "running": 4
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "004",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "022",
+                    "running": 97
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "027",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 6,
+                "token": "000",
+                "running": 5
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "017",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "018",
+                    "running": 37
+                },
+                {
+                    "meta": false,
+                    "phrase": 6,
+                    "token": "020",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 7,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "002",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "010",
+                    "running": 38
+                },
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "013",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 7,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "015",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "022",
+                    "running": 43
+                },
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "033",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 7,
+                "token": "000",
+                "running": 2
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "015",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "022",
+                    "running": 43
+                },
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "033",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 7,
+                "token": "000",
+                "running": 3
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "015",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "043",
+                    "running": 85
+                },
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "053",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 7,
+                "token": "000",
+                "running": 4
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "015",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "043",
+                    "running": 85
+                },
+                {
+                    "meta": false,
+                    "phrase": 7,
+                    "token": "053",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "004",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "006",
+                    "running": 11
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "004",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "006",
+                    "running": 11
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 1
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 2
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "004",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "006",
+                    "running": 11
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 2
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 3
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "004",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "006",
+                    "running": 11
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 3
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 4
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "004",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "006",
+                    "running": 11
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 4
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 5
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 6
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 1
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 7
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 2
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 8
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 3
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 9
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 10
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 1
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 11
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 2
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 12
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 3
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 13
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 2
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 14
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 2
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 1
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 15
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 2
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 2
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 16
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 2
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 3
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 17
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 3
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 18
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 3
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 1
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 19
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 3
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 2
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 20
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 3
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 3
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 21
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 4
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 22
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 4
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 1
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 23
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 4
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 2
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 8,
+                "token": "000",
+                "running": 24
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "008",
+                    "running": 4
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "040",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 8,
+                    "token": "044",
+                    "running": 3
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 9,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 9,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 9,
+                    "token": "002",
+                    "running": 10
+                },
+                {
+                    "meta": false,
+                    "phrase": 9,
+                    "token": "006",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 9,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 9,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 9,
+                    "token": "002",
+                    "running": 17
+                },
+                {
+                    "meta": false,
+                    "phrase": 9,
+                    "token": "009",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 10,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 10,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 10,
+                    "token": "002",
+                    "running": 12
+                },
+                {
+                    "meta": false,
+                    "phrase": 10,
+                    "token": "014",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 10,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 10,
+                    "token": "000",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 10,
+                    "token": "002",
+                    "running": 3
+                },
+                {
+                    "meta": false,
+                    "phrase": 10,
+                    "token": "004",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 11,
+                "token": "000",
+                "running": 0
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "001",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "012",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "015",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 11,
+                "token": "000",
+                "running": 1
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "001",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "012",
+                    "running": 40
+                },
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "015",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 11,
+                "token": "000",
+                "running": 2
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "001",
+                    "running": 0
+                },
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "012",
+                    "running": 56
+                },
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "019",
+                    "running": 0
+                }
+            ]
+        ],
+        [
+            {
+                "meta": true,
+                "phrase": 11,
+                "token": "000",
+                "running": 3
+            },
+            [
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "001",
+                    "running": 1
+                },
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "012",
+                    "running": 56
+                },
+                {
+                    "meta": false,
+                    "phrase": 11,
+                    "token": "019",
+                    "running": 0
+                }
+            ]
+        ]
+    ],
+    "eindexEntity": {
+        "FISHING.wikidataId.Q408598": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q408598",
+            "hash": "FISHING.wikidataId.Q408598",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:tregs": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:tregs",
+            "hash": "BERN_V2.NA.cell_type:tregs",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.PEL.000011": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000011",
+            "hash": "PELINKER.PEL.000011",
+            "entType": null,
+            "originalForm": "facilitates",
+            "description": null
+        },
+        "FISHING.wikidataId.Q24741149": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q24741149",
+            "hash": "FISHING.wikidataId.Q24741149",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q7670426": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q7670426",
+            "hash": "FISHING.wikidataId.Q7670426",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q184204": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q184204",
+            "hash": "FISHING.wikidataId.Q184204",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.CL.0000623": {
+            "linkerType": "BERN_V2",
+            "entDbType": "CL",
+            "id": "0000623",
+            "hash": "BERN_V2.CL.0000623",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.mesh.D015001": {
+            "linkerType": "BERN_V2",
+            "entDbType": "mesh",
+            "id": "D015001",
+            "hash": "BERN_V2.mesh.D015001",
+            "entType": "disease",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q592442": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q592442",
+            "hash": "FISHING.wikidataId.Q592442",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.958": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "958",
+            "hash": "BERN_V2.NCBIGene.958",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:cd8_+_t_-_cell": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:cd8_+_t_-_cell",
+            "hash": "BERN_V2.NA.cell_type:cd8_+_t_-_cell",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:dendritic_cells": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:dendritic_cells",
+            "hash": "BERN_V2.NA.cell_type:dendritic_cells",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.PEL.000026": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000026",
+            "hash": "PELINKER.PEL.000026",
+            "entType": null,
+            "originalForm": "promotes",
+            "description": null
+        },
+        "FISHING.wikidataId.Q189092": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q189092",
+            "hash": "FISHING.wikidataId.Q189092",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q142851": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q142851",
+            "hash": "FISHING.wikidataId.Q142851",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q210861": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q210861",
+            "hash": "FISHING.wikidataId.Q210861",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:t_cells": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:t_cells",
+            "hash": "BERN_V2.NA.cell_type:t_cells",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_line:m2_macrophages": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_line:m2_macrophages",
+            "hash": "BERN_V2.NA.cell_line:m2_macrophages",
+            "entType": "cell_line",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.729230": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "729230",
+            "hash": "BERN_V2.NCBIGene.729230",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q188417": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q188417",
+            "hash": "FISHING.wikidataId.Q188417",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q17121648": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q17121648",
+            "hash": "FISHING.wikidataId.Q17121648",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q376266": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q376266",
+            "hash": "FISHING.wikidataId.Q376266",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q986112": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q986112",
+            "hash": "FISHING.wikidataId.Q986112",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.PEL.000033": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000033",
+            "hash": "PELINKER.PEL.000033",
+            "entType": null,
+            "originalForm": "suppress",
+            "description": null
+        },
+        "FISHING.wikidataId.Q5009615": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q5009615",
+            "hash": "FISHING.wikidataId.Q5009615",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0001025": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0001025",
+            "hash": "PELINKER.RO.0001025",
+            "entType": null,
+            "originalForm": "located in",
+            "description": null
+        },
+        "BERN_V2.NCBIGene.1277": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "1277",
+            "hash": "BERN_V2.NCBIGene.1277",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q249619": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q249619",
+            "hash": "FISHING.wikidataId.Q249619",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q2587862": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q2587862",
+            "hash": "FISHING.wikidataId.Q2587862",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:tams": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:tams",
+            "hash": "BERN_V2.NA.cell_type:tams",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.PEL.000022": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000022",
+            "hash": "PELINKER.PEL.000022",
+            "entType": null,
+            "originalForm": "mentions",
+            "description": null
+        },
+        "BERN_V2.NCBIGene.3579": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "3579",
+            "hash": "BERN_V2.NCBIGene.3579",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.PEL.000017": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000017",
+            "hash": "PELINKER.PEL.000017",
+            "entType": null,
+            "originalForm": "inhibits",
+            "description": null
+        },
+        "FISHING.wikidataId.Q212354": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q212354",
+            "hash": "FISHING.wikidataId.Q212354",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q421866": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q421866",
+            "hash": "FISHING.wikidataId.Q421866",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q212961": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q212961",
+            "hash": "FISHING.wikidataId.Q212961",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:mycafs": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:mycafs",
+            "hash": "BERN_V2.NA.cell_type:mycafs",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q1786433": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q1786433",
+            "hash": "FISHING.wikidataId.Q1786433",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0003303": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0003303",
+            "hash": "PELINKER.RO.0003303",
+            "entType": null,
+            "originalForm": "causes condition",
+            "description": null
+        },
+        "PELINKER.PEL.000020": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000020",
+            "hash": "PELINKER.PEL.000020",
+            "entType": null,
+            "originalForm": "is",
+            "description": null
+        },
+        "BERN_V2.NCBIGene.7040": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "7040",
+            "hash": "BERN_V2.NCBIGene.7040",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0002019": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0002019",
+            "hash": "PELINKER.RO.0002019",
+            "entType": null,
+            "originalForm": "has ligand",
+            "description": null
+        },
+        "FISHING.wikidataId.Q412889": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q412889",
+            "hash": "FISHING.wikidataId.Q412889",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q2012719": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q2012719",
+            "hash": "FISHING.wikidataId.Q2012719",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q2409681": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q2409681",
+            "hash": "FISHING.wikidataId.Q2409681",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q246181": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q246181",
+            "hash": "FISHING.wikidataId.Q246181",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:mdsc": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:mdsc",
+            "hash": "BERN_V2.NA.cell_type:mdsc",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.29126": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "29126",
+            "hash": "BERN_V2.NCBIGene.29126",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.3586": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "3586",
+            "hash": "BERN_V2.NCBIGene.3586",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q21103279": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q21103279",
+            "hash": "FISHING.wikidataId.Q21103279",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.3569": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "3569",
+            "hash": "BERN_V2.NCBIGene.3569",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q15220362": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q15220362",
+            "hash": "FISHING.wikidataId.Q15220362",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q21135811": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q21135811",
+            "hash": "FISHING.wikidataId.Q21135811",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0002514": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0002514",
+            "hash": "PELINKER.RO.0002514",
+            "entType": null,
+            "originalForm": "sequentially related to",
+            "description": null
+        },
+        "FISHING.wikidataId.Q21208025": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q21208025",
+            "hash": "FISHING.wikidataId.Q21208025",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.PEL.000023": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000023",
+            "hash": "PELINKER.PEL.000023",
+            "entType": null,
+            "originalForm": "overproduces",
+            "description": null
+        },
+        "BERN_V2.NA.cell_line:m2_-_type_macrophages": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_line:m2_-_type_macrophages",
+            "hash": "BERN_V2.NA.cell_line:m2_-_type_macrophages",
+            "entType": "cell_line",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q173670": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q173670",
+            "hash": "FISHING.wikidataId.Q173670",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q24785672": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q24785672",
+            "hash": "FISHING.wikidataId.Q24785672",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:myeloid_cells": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:myeloid_cells",
+            "hash": "BERN_V2.NA.cell_type:myeloid_cells",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q24721374": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q24721374",
+            "hash": "FISHING.wikidataId.Q24721374",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.3627": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "3627",
+            "hash": "BERN_V2.NCBIGene.3627",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0002326": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0002326",
+            "hash": "PELINKER.RO.0002326",
+            "entType": null,
+            "originalForm": "contributes to",
+            "description": null
+        },
+        "FISHING.wikidataId.Q5014892": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q5014892",
+            "hash": "FISHING.wikidataId.Q5014892",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0002292": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0002292",
+            "hash": "PELINKER.RO.0002292",
+            "entType": null,
+            "originalForm": "expresses",
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:cafs": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:cafs",
+            "hash": "BERN_V2.NA.cell_type:cafs",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q4035572": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q4035572",
+            "hash": "FISHING.wikidataId.Q4035572",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q5058397": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q5058397",
+            "hash": "FISHING.wikidataId.Q5058397",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q26868": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q26868",
+            "hash": "FISHING.wikidataId.Q26868",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.mesh.D009369": {
+            "linkerType": "BERN_V2",
+            "entDbType": "mesh",
+            "id": "D009369",
+            "hash": "BERN_V2.mesh.D009369",
+            "entType": "disease",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.PEL.000021": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000021",
+            "hash": "PELINKER.PEL.000021",
+            "entType": null,
+            "originalForm": "limits",
+            "description": null
+        },
+        "PELINKER.PEL.000016": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000016",
+            "hash": "PELINKER.PEL.000016",
+            "entType": null,
+            "originalForm": "induces",
+            "description": null
+        },
+        "PELINKER.PEL.000015": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000015",
+            "hash": "PELINKER.PEL.000015",
+            "entType": null,
+            "originalForm": "increases",
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:inflammatory_cafs": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:inflammatory_cafs",
+            "hash": "BERN_V2.NA.cell_type:inflammatory_cafs",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q101991": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q101991",
+            "hash": "FISHING.wikidataId.Q101991",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0004025": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0004025",
+            "hash": "PELINKER.RO.0004025",
+            "entType": null,
+            "originalForm": "disease causes dysfunction of",
+            "description": null
+        },
+        "FISHING.wikidataId.Q506253": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q506253",
+            "hash": "FISHING.wikidataId.Q506253",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q1059": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q1059",
+            "hash": "FISHING.wikidataId.Q1059",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:myofibroblastic": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:myofibroblastic",
+            "hash": "BERN_V2.NA.cell_type:myofibroblastic",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q1216998": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q1216998",
+            "hash": "FISHING.wikidataId.Q1216998",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q1467330": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q1467330",
+            "hash": "FISHING.wikidataId.Q1467330",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q11688946": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q11688946",
+            "hash": "FISHING.wikidataId.Q11688946",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.BFO.0000051": {
+            "linkerType": "PELINKER",
+            "entDbType": "BFO",
+            "id": "0000051",
+            "hash": "PELINKER.BFO.0000051",
+            "entType": null,
+            "originalForm": "has part",
+            "description": null
+        },
+        "BERN_V2.NCBIGene.6347": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "6347",
+            "hash": "BERN_V2.NCBIGene.6347",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:dc": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:dc",
+            "hash": "BERN_V2.NA.cell_type:dc",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.7852": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "7852",
+            "hash": "BERN_V2.NCBIGene.7852",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.PEL.000030": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000030",
+            "hash": "PELINKER.PEL.000030",
+            "entType": null,
+            "originalForm": "reverts",
+            "description": null
+        },
+        "BERN_V2.NCBIGene.3458": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "3458",
+            "hash": "BERN_V2.NCBIGene.3458",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.6352": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "6352",
+            "hash": "BERN_V2.NCBIGene.6352",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.PEL.000028": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000028",
+            "hash": "PELINKER.PEL.000028",
+            "entType": null,
+            "originalForm": "reduces",
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:t_cytotoxic_effector_cells": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:t_cytotoxic_effector_cells",
+            "hash": "BERN_V2.NA.cell_type:t_cytotoxic_effector_cells",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q3492926": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q3492926",
+            "hash": "FISHING.wikidataId.Q3492926",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_line:tregs": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_line:tregs",
+            "hash": "BERN_V2.NA.cell_line:tregs",
+            "entType": "cell_line",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:t_regulatory_cells": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:t_regulatory_cells",
+            "hash": "BERN_V2.NA.cell_type:t_regulatory_cells",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q21100639": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q21100639",
+            "hash": "FISHING.wikidataId.Q21100639",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.3592": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "3592",
+            "hash": "BERN_V2.NCBIGene.3592",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:nk_cells": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:nk_cells",
+            "hash": "BERN_V2.NA.cell_type:nk_cells",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:icafs": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:icafs",
+            "hash": "BERN_V2.NA.cell_type:icafs",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q423698": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q423698",
+            "hash": "FISHING.wikidataId.Q423698",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.383": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "383",
+            "hash": "BERN_V2.NCBIGene.383",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q1637543": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q1637543",
+            "hash": "FISHING.wikidataId.Q1637543",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q3270846": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q3270846",
+            "hash": "FISHING.wikidataId.Q3270846",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q189159": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q189159",
+            "hash": "FISHING.wikidataId.Q189159",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.5551": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "5551",
+            "hash": "BERN_V2.NCBIGene.5551",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0001000": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0001000",
+            "hash": "PELINKER.RO.0001000",
+            "entType": null,
+            "originalForm": "derives from",
+            "description": null
+        },
+        "PELINKER.RO.0002211": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0002211",
+            "hash": "PELINKER.RO.0002211",
+            "entType": null,
+            "originalForm": "regulates",
+            "description": null
+        },
+        "FISHING.wikidataId.Q332181": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q332181",
+            "hash": "FISHING.wikidataId.Q332181",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0015008": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0015008",
+            "hash": "PELINKER.RO.0015008",
+            "entType": null,
+            "originalForm": "decreased in magnitude relative to",
+            "description": null
+        },
+        "FISHING.wikidataId.Q415718": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q415718",
+            "hash": "FISHING.wikidataId.Q415718",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:t_-_cell": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:t_-_cell",
+            "hash": "BERN_V2.NA.cell_type:t_-_cell",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:mdscs": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:mdscs",
+            "hash": "BERN_V2.NA.cell_type:mdscs",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:neutrophils": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:neutrophils",
+            "hash": "BERN_V2.NA.cell_type:neutrophils",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NA.cell_type:myeloid_-_derived_suppressor_cells": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NA",
+            "id": "cell_type:myeloid_-_derived_suppressor_cells",
+            "hash": "BERN_V2.NA.cell_type:myeloid_-_derived_suppressor_cells",
+            "entType": "cell_type",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q250694": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q250694",
+            "hash": "FISHING.wikidataId.Q250694",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0002331": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0002331",
+            "hash": "PELINKER.RO.0002331",
+            "entType": null,
+            "originalForm": "involved in",
+            "description": null
+        },
+        "FISHING.wikidataId.Q1550619": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q1550619",
+            "hash": "FISHING.wikidataId.Q1550619",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.mesh.D001120": {
+            "linkerType": "BERN_V2",
+            "entDbType": "mesh",
+            "id": "D001120",
+            "hash": "BERN_V2.mesh.D001120",
+            "entType": "drug",
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q4381253": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q4381253",
+            "hash": "FISHING.wikidataId.Q4381253",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.6387": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "6387",
+            "hash": "BERN_V2.NCBIGene.6387",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.925": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "925",
+            "hash": "BERN_V2.NCBIGene.925",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.5133": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "5133",
+            "hash": "BERN_V2.NCBIGene.5133",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "BERN_V2.NCBIGene.84868": {
+            "linkerType": "BERN_V2",
+            "entDbType": "NCBIGene",
+            "id": "84868",
+            "hash": "BERN_V2.NCBIGene.84868",
+            "entType": "gene",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0002503": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0002503",
+            "hash": "PELINKER.RO.0002503",
+            "entType": null,
+            "originalForm": "towards",
+            "description": null
+        },
+        "FISHING.wikidataId.Q1069599": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q1069599",
+            "hash": "FISHING.wikidataId.Q1069599",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "FISHING.wikidataId.Q3776878": {
+            "linkerType": "FISHING",
+            "entDbType": "wikidataId",
+            "id": "Q3776878",
+            "hash": "FISHING.wikidataId.Q3776878",
+            "entType": null,
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.PEL.000000": {
+            "linkerType": "PELINKER",
+            "entDbType": "PEL",
+            "id": "000000",
+            "hash": "PELINKER.PEL.000000",
+            "entType": null,
+            "originalForm": "activates",
+            "description": null
+        },
+        "BERN_V2.mesh.D010190": {
+            "linkerType": "BERN_V2",
+            "entDbType": "mesh",
+            "id": "D010190",
+            "hash": "BERN_V2.mesh.D010190",
+            "entType": "disease",
+            "originalForm": null,
+            "description": null
+        },
+        "PELINKER.RO.0002508": {
+            "linkerType": "PELINKER",
+            "entDbType": "RO",
+            "id": "0002508",
+            "hash": "PELINKER.RO.0002508",
+            "entType": null,
+            "originalForm": "determines",
+            "description": null
+        },
+        "GG.verbatim.fdfd4bc6e1efc3493ff0e55918c19f85f952a080": {
+            "linkerType": "GG",
+            "entDbType": "verbatim",
+            "id": "fdfd4bc6e1efc3493ff0e55918c19f85f952a080",
+            "hash": "GG.verbatim.fdfd4bc6e1efc3493ff0e55918c19f85f952a080",
+            "entType": null,
+            "originalForm": "high level",
+            "description": null
+        },
+        "GG.verbatim.e5e344962aa41d33852995c71b4dde60c18a1bb0": {
+            "linkerType": "GG",
+            "entDbType": "verbatim",
+            "id": "e5e344962aa41d33852995c71b4dde60c18a1bb0",
+            "hash": "GG.verbatim.e5e344962aa41d33852995c71b4dde60c18a1bb0",
+            "entType": null,
+            "originalForm": "signaling",
+            "description": null
+        },
+        "GG.verbatim.e03f6bd991badef784c9c5eeb581ef2f30461b52": {
+            "linkerType": "GG",
+            "entDbType": "verbatim",
+            "id": "e03f6bd991badef784c9c5eeb581ef2f30461b52",
+            "hash": "GG.verbatim.e03f6bd991badef784c9c5eeb581ef2f30461b52",
+            "entType": null,
+            "originalForm": "migration",
+            "description": null
+        },
+        "GG.verbatim.6b284c5046513e88edf9ca470e9cb6557ef26395": {
+            "linkerType": "GG",
+            "entDbType": "verbatim",
+            "id": "6b284c5046513e88edf9ca470e9cb6557ef26395",
+            "hash": "GG.verbatim.6b284c5046513e88edf9ca470e9cb6557ef26395",
+            "entType": null,
+            "originalForm": "function",
+            "description": null
+        },
+        "GG.verbatim.38b6a479facf3acb0c858bf7fd23489db290cb5f": {
+            "linkerType": "GG",
+            "entDbType": "verbatim",
+            "id": "38b6a479facf3acb0c858bf7fd23489db290cb5f",
+            "hash": "GG.verbatim.38b6a479facf3acb0c858bf7fd23489db290cb5f",
+            "entType": null,
+            "originalForm": "activation",
+            "description": null
+        },
+        "GG.verbatim.3343c0331fb537fb42b8bba10a6cc97027dd334f": {
+            "linkerType": "GG",
+            "entDbType": "verbatim",
+            "id": "3343c0331fb537fb42b8bba10a6cc97027dd334f",
+            "hash": "GG.verbatim.3343c0331fb537fb42b8bba10a6cc97027dd334f",
+            "entType": null,
+            "originalForm": "entrap",
+            "description": null
+        },
+        "GG.verbatim.b633a6460b78996d208634275d0949ee373810f1": {
+            "linkerType": "GG",
+            "entDbType": "verbatim",
+            "id": "b633a6460b78996d208634275d0949ee373810f1",
+            "hash": "GG.verbatim.b633a6460b78996d208634275d0949ee373810f1",
+            "entType": null,
+            "originalForm": "entrap through",
+            "description": null
+        },
+        "GG.verbatim.30f0f4bcb340b331283cd4fb1f7bce49f63e5619": {
+            "linkerType": "GG",
+            "entDbType": "verbatim",
+            "id": "30f0f4bcb340b331283cd4fb1f7bce49f63e5619",
+            "hash": "GG.verbatim.30f0f4bcb340b331283cd4fb1f7bce49f63e5619",
+            "entType": null,
+            "originalForm": "dual role",
+            "description": null
+        }
+    },
+    "muindexEindex": [
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "040",
+                "running": 40
+            },
+            "PELINKER.RO.0002508"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "025",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.3458"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "025",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q332181"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "043",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q246181"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "043",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q1786433"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "014",
+                "running": 0
+            },
+            "PELINKER.PEL.000022"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "014",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q212354"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "025",
+                "running": 2
+            },
+            "BERN_V2.NCBIGene.3592"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "025",
+                "running": 2
+            },
+            "FISHING.wikidataId.Q332181"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "043",
+                "running": 1
+            },
+            "FISHING.wikidataId.Q189159"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "000",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q17121648"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "009",
+                "running": 0
+            },
+            "PELINKER.PEL.000028"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "009",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q332181"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "001",
+                "running": 15
+            },
+            "PELINKER.PEL.000020"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "021",
+                "running": 43
+            },
+            "PELINKER.RO.0003303"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "025",
+                "running": 1
+            },
+            "BERN_V2.NCBIGene.5551"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "025",
+                "running": 1
+            },
+            "FISHING.wikidataId.Q332181"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "001",
+                "running": 8
+            },
+            "PELINKER.PEL.000020"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q249619"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q212354"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.3569"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 2
+            },
+            "FISHING.wikidataId.Q249619"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 2
+            },
+            "FISHING.wikidataId.Q212354"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 2
+            },
+            "BERN_V2.NCBIGene.3586"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "003",
+                "running": 8
+            },
+            "PELINKER.PEL.000023"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "024",
+                "running": 49
+            },
+            "PELINKER.PEL.000020"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "006",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q1786433"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "000",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q17121648"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "027",
+                "running": 0
+            },
+            "PELINKER.PEL.000033"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "027",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.925"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 1
+            },
+            "FISHING.wikidataId.Q249619"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 1
+            },
+            "FISHING.wikidataId.Q212354"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 1
+            },
+            "BERN_V2.NCBIGene.7040"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "003",
+                "running": 4
+            },
+            "PELINKER.PEL.000023"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "015",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q1550619"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "015",
+                "running": 0
+            },
+            "BERN_V2.mesh.D009369"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "013",
+                "running": 63
+            },
+            "PELINKER.PEL.000016"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "013",
+                "running": 63
+            },
+            "PELINKER.PEL.000000"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 1
+            },
+            "FISHING.wikidataId.Q421866"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 1
+            },
+            "FISHING.wikidataId.Q1069599"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 3
+            },
+            "FISHING.wikidataId.Q421866"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 3
+            },
+            "FISHING.wikidataId.Q3776878"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "013",
+                "running": 36
+            },
+            "PELINKER.PEL.000016"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "013",
+                "running": 36
+            },
+            "PELINKER.PEL.000000"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q421866"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q2587862"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 2
+            },
+            "FISHING.wikidataId.Q421866"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 2
+            },
+            "FISHING.wikidataId.Q5009615"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "012",
+                "running": 56
+            },
+            "PELINKER.BFO.0000051"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "012",
+                "running": 56
+            },
+            "PELINKER.PEL.000026"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "012",
+                "running": 40
+            },
+            "PELINKER.BFO.0000051"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "012",
+                "running": 40
+            },
+            "PELINKER.PEL.000026"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "001",
+                "running": 1
+            },
+            "FISHING.wikidataId.Q421866"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "001",
+                "running": 1
+            },
+            "BERN_V2.mesh.D009369"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "001",
+                "running": 1
+            },
+            "FISHING.wikidataId.Q3492926"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "019",
+                "running": 0
+            },
+            "BERN_V2.NA.cell_type:t_cells"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "001",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q421866"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "001",
+                "running": 0
+            },
+            "BERN_V2.mesh.D009369"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "001",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q986112"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "022",
+                "running": 72
+            },
+            "PELINKER.RO.0002019"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "004",
+                "running": 0
+            },
+            "PELINKER.PEL.000028"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "004",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q332181"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "004",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q5058397"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "022",
+                "running": 95
+            },
+            "PELINKER.RO.0002019"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "022",
+                "running": 97
+            },
+            "PELINKER.RO.0002019"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "020",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q17121648"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "024",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.5133"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "000",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q17121648"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "018",
+                "running": 37
+            },
+            "PELINKER.RO.0002292"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "031",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q246181"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "031",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q142851"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "031",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q332181"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "001",
+                "running": 3
+            },
+            "PELINKER.PEL.000020"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "017",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.29126"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "027",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q332181"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "027",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q142851"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "027",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q246181"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "004",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q1637543"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q210861"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q3270846"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 0
+            },
+            "PELINKER.RO.0001000"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "044",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q189092"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "044",
+                "running": 2
+            },
+            "FISHING.wikidataId.Q189159"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "006",
+                "running": 11
+            },
+            "PELINKER.RO.0002211"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 4
+            },
+            "FISHING.wikidataId.Q506253"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "040",
+                "running": 40
+            },
+            "PELINKER.PEL.000017"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 3
+            },
+            "FISHING.wikidataId.Q184204"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "044",
+                "running": 3
+            },
+            "FISHING.wikidataId.Q210861"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "027",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.7040"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "027",
+                "running": 0
+            },
+            "PELINKER.RO.0015008"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "012",
+                "running": 0
+            },
+            "PELINKER.PEL.000030"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "012",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q1786433"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "027",
+                "running": 1
+            },
+            "BERN_V2.mesh.D015001"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "009",
+                "running": 19
+            },
+            "PELINKER.PEL.000020"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "001",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.3569"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "001",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.958"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "016",
+                "running": 16
+            },
+            "PELINKER.PEL.000011"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "020",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q1059"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "023",
+                "running": 23
+            },
+            "PELINKER.PEL.000028"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "009",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q2012719"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "006",
+                "running": 0
+            },
+            "BERN_V2.NA.cell_type:t_-_cell"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "002",
+                "running": 17
+            },
+            "PELINKER.PEL.000033"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "002",
+                "running": 17
+            },
+            "PELINKER.PEL.000026"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "002",
+                "running": 10
+            },
+            "PELINKER.PEL.000033"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "002",
+                "running": 10
+            },
+            "PELINKER.PEL.000026"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "000",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q17121648"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "007",
+                "running": 48
+            },
+            "PELINKER.RO.0002331"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "007",
+                "running": 48
+            },
+            "PELINKER.PEL.000028"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "003",
+                "running": 4
+            },
+            "PELINKER.RO.0002292"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "007",
+                "running": 34
+            },
+            "PELINKER.RO.0002331"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "007",
+                "running": 34
+            },
+            "PELINKER.PEL.000028"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "005",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.383"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "013",
+                "running": 0
+            },
+            "BERN_V2.mesh.D001120"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "021",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q1786433"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "021",
+                "running": 0
+            },
+            "PELINKER.RO.0004025"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "010",
+                "running": 38
+            },
+            "PELINKER.RO.0002514"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "043",
+                "running": 85
+            },
+            "PELINKER.RO.0001025"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "002",
+                "running": 0
+            },
+            "BERN_V2.NA.cell_type:cafs"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "015",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q1467330"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "033",
+                "running": 0
+            },
+            "BERN_V2.mesh.D009369"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "033",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q189159"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "022",
+                "running": 43
+            },
+            "PELINKER.RO.0001025"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "015",
+                "running": 1
+            },
+            "FISHING.wikidataId.Q101991"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "013",
+                "running": 0
+            },
+            "BERN_V2.mesh.D010190"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "053",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q212354"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "053",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q1637543"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "014",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.6387"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "014",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.7852"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "004",
+                "running": 0
+            },
+            "BERN_V2.NA.cell_type:t_cells"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "004",
+                "running": 0
+            },
+            "BERN_V2.mesh.D009369"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "004",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q4381253"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "000",
+                "running": 0
+            },
+            "BERN_V2.NA.cell_type:cafs"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 1,
+                "token": "009",
+                "running": 0
+            },
+            "BERN_V2.mesh.D010190"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 1,
+                "token": "002",
+                "running": 0
+            },
+            "BERN_V2.NCBIGene.3569"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 1,
+                "token": "004",
+                "running": 15
+            },
+            "PELINKER.RO.0002292"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 1,
+                "token": "004",
+                "running": 12
+            },
+            "PELINKER.RO.0002292"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "000",
+                "running": 0
+            },
+            "BERN_V2.NA.cell_type:cafs"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "026",
+                "running": 0
+            },
+            "BERN_V2.mesh.D009369"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "026",
+                "running": 0
+            },
+            "FISHING.wikidataId.Q1550619"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 1,
+                "token": "007",
+                "running": 0
+            },
+            "GG.verbatim.fdfd4bc6e1efc3493ff0e55918c19f85f952a080"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "031",
+                "running": 0
+            },
+            "GG.verbatim.e5e344962aa41d33852995c71b4dde60c18a1bb0"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 1
+            },
+            "GG.verbatim.e03f6bd991badef784c9c5eeb581ef2f30461b52"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 2
+            },
+            "GG.verbatim.6b284c5046513e88edf9ca470e9cb6557ef26395"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "044",
+                "running": 1
+            },
+            "GG.verbatim.38b6a479facf3acb0c858bf7fd23489db290cb5f"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "002",
+                "running": 3
+            },
+            "GG.verbatim.3343c0331fb537fb42b8bba10a6cc97027dd334f"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "002",
+                "running": 12
+            },
+            "GG.verbatim.b633a6460b78996d208634275d0949ee373810f1"
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "015",
+                "running": 0
+            },
+            "GG.verbatim.30f0f4bcb340b331283cd4fb1f7bce49f63e5619"
+        ]
+    ],
+    "_muindexCandidate": [
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "040",
+                "running": 40
+            },
+            {
+                "hash": "aa8805e0c1a0e8e1e0dcdbd339d6030710a3ddde",
+                "text": "determines",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 0
+            },
+            {
+                "hash": "e63688ccb393de673d18f71fa843d70b0752af10",
+                "text": "number of cytokines immunosuppressive , as such il-6 , a 76 ( )",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "015",
+                "running": 0
+            },
+            {
+                "hash": "efa96fd0416db0ef45cb024f3d79f2afa7607fda",
+                "text": "recruitment the of tregs to sites tumor the",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "012",
+                "running": 56
+            },
+            {
+                "hash": "d5ff203171d6b82be4bc31bdb9e0e0c89fe87e7b",
+                "text": "can have by promoting",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "031",
+                "running": 0
+            },
+            {
+                "hash": "e5e344962aa41d33852995c71b4dde60c18a1bb0",
+                "text": "signaling",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "013",
+                "running": 63
+            },
+            {
+                "hash": "f3594671ddde5d540cad4850df0598085c45c2d1",
+                "text": "induce activating by",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "022",
+                "running": 72
+            },
+            {
+                "hash": "5f2b2486c02b92621308f53db2b60032fb8d6fed",
+                "text": "can bind avoiding",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "004",
+                "running": 0
+            },
+            {
+                "hash": "14e1e01867bfad9e6264786e3719ae4c27b27f60",
+                "text": "factors the tumorigenic pro -",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 0
+            },
+            {
+                "hash": "f2967cb43337dcb68638eb8a36af0606532f8ef5",
+                "text": "differentiation the , of cells myeloid as cells derived myeloid - , suppressor such",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 2
+            },
+            {
+                "hash": "80bef2286a7cdecffabaaef1c0d9c7df267ea2b3",
+                "text": "number of immunosuppressive cytokines such as il-10 76",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "027",
+                "running": 0
+            },
+            {
+                "hash": "e743983b0bc4138fed0c2018399f89ccc9446b0d",
+                "text": "activation b - tgf due production a decreased 78 ( ) and",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "009",
+                "running": 0
+            },
+            {
+                "hash": "9853d5c3d2fb754a8f50330e1ae1f9cc3b7e2120",
+                "text": "expression of inhibitors ) checkpoint immune (",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "000",
+                "running": 0
+            },
+            {
+                "hash": "1fb3aa13b0ad5ac68389fdde1dcf5e8a278ddd5f",
+                "text": "tams",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "012",
+                "running": 40
+            },
+            {
+                "hash": "feaf45a3467bb55242efd01c9f81653b400de606",
+                "text": "can have promoting",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "004",
+                "running": 0
+            },
+            {
+                "hash": "0477a215c06a848b9049f5e69815533f6258eee1",
+                "text": "reduce , by interactions direct cell - cell to functioning cell nk",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "003",
+                "running": 8
+            },
+            {
+                "hash": "956954f94fc408ec80b328a007ebc6df0bbc15bc",
+                "text": "can secrete in",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "010",
+                "running": 38
+            },
+            {
+                "hash": "fa8c777375678b9d232d9212b0043b14bdb0077f",
+                "text": "have been identified in",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "022",
+                "running": 95
+            },
+            {
+                "hash": "29baa7bd8a2e286aa28b5be459b824f8cde335fb",
+                "text": "can bind to avoiding",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "043",
+                "running": 85
+            },
+            {
+                "hash": "469d42b9419c0499bc6682383e664da2fa18414d",
+                "text": "are located",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "007",
+                "running": 48
+            },
+            {
+                "hash": "7e52853d03db9a7bc21eeb01edba0eb2cf68bb15",
+                "text": "is involved in reducing in",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "002",
+                "running": 0
+            },
+            {
+                "hash": "8d2fa3aa6877af6e73bda8265c7577421d1f6727",
+                "text": "subsets of cafs with functions diverse different two",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "024",
+                "running": 49
+            },
+            {
+                "hash": "25ae2585568a09979c35ad2737083229bc9eb8d3",
+                "text": "are able",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "015",
+                "running": 0
+            },
+            {
+                "hash": "369a3ffef0df7c3eebc3001c41560cb3aad0bae1",
+                "text": "myofibroblastic , and ,",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "022",
+                "running": 97
+            },
+            {
+                "hash": "071dbb65aeebabc4f9f4cd8f4d29767c3719692f",
+                "text": "can bind on avoiding",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "020",
+                "running": 0
+            },
+            {
+                "hash": "1fb3aa13b0ad5ac68389fdde1dcf5e8a278ddd5f",
+                "text": "tams",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "025",
+                "running": 0
+            },
+            {
+                "hash": "e60d3af5e45e95fb7ed56f40e7a9833428e25910",
+                "text": "production by cells nk of g ifn , - a limited",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "003",
+                "running": 4
+            },
+            {
+                "hash": "91dcd82dbd779d360ca81f8e7e57843efd5b6cc8",
+                "text": "can express",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "014",
+                "running": 0
+            },
+            {
+                "hash": "01af1774cd35f49578428187d112a1c136fdd0c6",
+                "text": "axis the cxcr4 - cxcl12",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "000",
+                "running": 0
+            },
+            {
+                "hash": "cadf362aa57e297beec4f26eebc6b18946f1fe07",
+                "text": "cafs",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "006",
+                "running": 0
+            },
+            {
+                "hash": "f6f0dfea3e06fbe7f13074b633179988b3d0e710",
+                "text": "tme the",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "007",
+                "running": 34
+            },
+            {
+                "hash": "719fa710a724556de4668c94ccc969d59e22ebb0",
+                "text": "is involved in reducing",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "033",
+                "running": 0
+            },
+            {
+                "hash": "1942cd8d070b4ae97ccad28ad64a4e140d917300",
+                "text": "growth cell tumor",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "044",
+                "running": 0
+            },
+            {
+                "hash": "8e839990bef3ef0d4c76d58881bfe6cee15f20aa",
+                "text": "migration , cell t -",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "006",
+                "running": 0
+            },
+            {
+                "hash": "8696f2b56044005cca42be5cffaab09fa00fb6dd",
+                "text": "functionality cell - t",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "012",
+                "running": 0
+            },
+            {
+                "hash": "3a95ecb32d9a44dc826b6276c12df475648e5133",
+                "text": "revert , by tme the to",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 2
+            },
+            {
+                "hash": "6b284c5046513e88edf9ca470e9cb6557ef26395",
+                "text": "function",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "043",
+                "running": 0
+            },
+            {
+                "hash": "d76c33f52d695b99b4fa06f5cd5c1ea05472ca40",
+                "text": "cytotoxicity and a in tme 84 ( ) the lower",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 1,
+                "token": "009",
+                "running": 0
+            },
+            {
+                "hash": "624b77d3982bdd7d971870a16eb7c459a853820d",
+                "text": "pdac",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "044",
+                "running": 2
+            },
+            {
+                "hash": "7b8aabf0480e8ff245d358ec98b31c56666eeea4",
+                "text": "proliferation",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "002",
+                "running": 3
+            },
+            {
+                "hash": "8a97864ee93890bc3930e0226c09f19fae5a3ba8",
+                "text": "can entrap",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "001",
+                "running": 1
+            },
+            {
+                "hash": "340dfab8b4f388af86adf18e63cfd8fa8af47d47",
+                "text": "other chemokines in tumor microenvironment such as ccl5",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "002",
+                "running": 12
+            },
+            {
+                "hash": "ea4523481027d9df8f44f8f8166cf5e5f9de2204",
+                "text": "can entrap through",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 1
+            },
+            {
+                "hash": "d82ec886349812b3cde7f3d41e8a5771c0446aef",
+                "text": "chemokines such as ccl17",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "006",
+                "running": 11
+            },
+            {
+                "hash": "ebe6524c6350409f44971206e8f340706011ab91",
+                "text": "can regulate",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 1,
+                "token": "002",
+                "running": 0
+            },
+            {
+                "hash": "58914f801cc5b182523d3f067961f94e4034512c",
+                "text": "il-6",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 4
+            },
+            {
+                "hash": "b1f4480c88aa948d26b6a2ea7da8dc08965fc2f3",
+                "text": "dendritic cells",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "027",
+                "running": 1
+            },
+            {
+                "hash": "e7cc9629e017163bf81302229b8cbde7d71cf81a",
+                "text": "firbosis deposition",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "019",
+                "running": 0
+            },
+            {
+                "hash": "5d3d4399d94e6bb29c05dadfdc9f7046a3245f86",
+                "text": "infiltration of but cells t the",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "009",
+                "running": 19
+            },
+            {
+                "hash": "30e8e6d147663d5dd572d5523f7901c63241590d",
+                "text": "is able",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "000",
+                "running": 0
+            },
+            {
+                "hash": "1fb3aa13b0ad5ac68389fdde1dcf5e8a278ddd5f",
+                "text": "tams",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "005",
+                "running": 0
+            },
+            {
+                "hash": "a4c3b64e7476035290bdfada0f2145594fdca909",
+                "text": "i arginase",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "014",
+                "running": 0
+            },
+            {
+                "hash": "4ce507efd3fcb9b33a3a624c8038e0ac80797e05",
+                "text": "secretion , the of cytokines the mentioned -",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "027",
+                "running": 0
+            },
+            {
+                "hash": "21bf6c503434f051c6850380ed890dc447e184bc",
+                "text": "suppress to function cell + - t",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "001",
+                "running": 0
+            },
+            {
+                "hash": "fee4a0c83862e415efa8006aa221f6aa2c95a388",
+                "text": "inhibition the along with blockade cd40 of signaling il-6",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 3
+            },
+            {
+                "hash": "7b65c1a1fa361ac2f052c7206e402f7f57fa82e5",
+                "text": "chemokines such as ccl22",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "004",
+                "running": 0
+            },
+            {
+                "hash": "3162b56dc144f158f75cf0bfe62ef58e151976eb",
+                "text": "cells t in stroma tumor the",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "015",
+                "running": 0
+            },
+            {
+                "hash": "b659eae1e5af134ae703e19e232a01fecddf3a66",
+                "text": "role a dual",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "013",
+                "running": 0
+            },
+            {
+                "hash": "a843ebc9bafa843724070216c19f0dbb02da66cb",
+                "text": "arginine - l",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "024",
+                "running": 0
+            },
+            {
+                "hash": "f3b3af7ee4c32eb90f8cbb163a33ec86ab5d7744",
+                "text": "pd-1",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "026",
+                "running": 0
+            },
+            {
+                "hash": "f3d6f6b0771c0d400a6b5e1844c618dd8cc85e42",
+                "text": "function their regulatory",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "016",
+                "running": 16
+            },
+            {
+                "hash": "2d132a2b1ef150c00dea64d918402d070c1ace7c",
+                "text": "support",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "025",
+                "running": 2
+            },
+            {
+                "hash": "dc3a67c7910e03987713ffed14b5c2c837108131",
+                "text": "limited production of il-12 by nk cells",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "000",
+                "running": 0
+            },
+            {
+                "hash": "1fb3aa13b0ad5ac68389fdde1dcf5e8a278ddd5f",
+                "text": "tams",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "008",
+                "running": 1
+            },
+            {
+                "hash": "547c76bbdcf1be85770109a601b5cfddd8b58b7e",
+                "text": "number of immunosuppressive cytokines such as tgf b 76",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "040",
+                "running": 40
+            },
+            {
+                "hash": "0b794f6251ab1a884eaecb36cd48d5a6f4361120",
+                "text": "inhibit",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "018",
+                "running": 37
+            },
+            {
+                "hash": "20d1664e7bf06b17b9cbb5a4e8599d4c4ca43be5",
+                "text": "expressed on",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 1,
+                "token": "004",
+                "running": 15
+            },
+            {
+                "hash": "8740d703556a639f3a0960d163822b319446947e",
+                "text": "is expressed in",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "020",
+                "running": 0
+            },
+            {
+                "hash": "a2219a3a370e3671b5838f228a090a507521bb6c",
+                "text": "response immune antitumor an",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 1,
+                "token": "007",
+                "running": 0
+            },
+            {
+                "hash": "a0266153ce5c2b4eaab62c84da2154231f0371f0",
+                "text": "levels high",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 0,
+                "token": "003",
+                "running": 4
+            },
+            {
+                "hash": "e1f616e1bef535a232a4e45d89fee88fef26d2b6",
+                "text": "can secrete",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "022",
+                "running": 43
+            },
+            {
+                "hash": "469d42b9419c0499bc6682383e664da2fa18414d",
+                "text": "are located",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 1
+            },
+            {
+                "hash": "e03f6bd991badef784c9c5eeb581ef2f30461b52",
+                "text": "migration",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "031",
+                "running": 0
+            },
+            {
+                "hash": "c9466cdabdd60090ad03f22bb6ad7a270e7fcddd",
+                "text": "activation of receptors 85 ) cytotoxic ( their the",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "002",
+                "running": 17
+            },
+            {
+                "hash": "f7ee67f92db7c9517e7edf2054c62270808f03ee",
+                "text": "disrupt by promoting",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "013",
+                "running": 36
+            },
+            {
+                "hash": "2e8cf43c7d6107da6b9fdc1a7f4f169c9e9d307f",
+                "text": "induce activating",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "044",
+                "running": 1
+            },
+            {
+                "hash": "38b6a479facf3acb0c858bf7fd23489db290cb5f",
+                "text": "activation",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 11,
+                "token": "001",
+                "running": 0
+            },
+            {
+                "hash": "47fe53aa8998b1e82789a3e8658a9de1e0b7bf15",
+                "text": "chemokines in microenvironment tumor the other as such cxcl10 and",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 0
+            },
+            {
+                "hash": "106c957557823706e4460b039d838c61687fb513",
+                "text": "chemokines as such ccl2 ,",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "008",
+                "running": 3
+            },
+            {
+                "hash": "e1c3d53dc37fe85e45cac7606f58dd81cbd8525d",
+                "text": "m2 macrophages",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 9,
+                "token": "002",
+                "running": 10
+            },
+            {
+                "hash": "92d2ac948dfa212c27e3bc48306c95542ab7d577",
+                "text": "disrupt promoting",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "043",
+                "running": 1
+            },
+            {
+                "hash": "7b8aabf0480e8ff245d358ec98b31c56666eeea4",
+                "text": "proliferation",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 10,
+                "token": "000",
+                "running": 0
+            },
+            {
+                "hash": "cadf362aa57e297beec4f26eebc6b18946f1fe07",
+                "text": "cafs",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 8,
+                "token": "044",
+                "running": 3
+            },
+            {
+                "hash": "a2e8a5297a18c4586eb6c354232463cadec80d0e",
+                "text": "differentiation",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "000",
+                "running": 0
+            },
+            {
+                "hash": "1fb3aa13b0ad5ac68389fdde1dcf5e8a278ddd5f",
+                "text": "tams",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 3,
+                "token": "002",
+                "running": 2
+            },
+            {
+                "hash": "4568a1af7ad536e0a071bf74f731574272adc0a8",
+                "text": "chemokines such as ccl20",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 2,
+                "token": "023",
+                "running": 23
+            },
+            {
+                "hash": "039ebdf4ffb09199a4654b4bed9ef1804bdab789",
+                "text": "reducing",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "009",
+                "running": 0
+            },
+            {
+                "hash": "16597e5a9c5da4c9088aee725dd02b025ec68907",
+                "text": "function reduced cell nk a",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "001",
+                "running": 15
+            },
+            {
+                "hash": "0e25e505cf4988f77586988d09c1ab9259067d69",
+                "text": "are responsible due",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "001",
+                "running": 3
+            },
+            {
+                "hash": "25ae2585568a09979c35ad2737083229bc9eb8d3",
+                "text": "are able",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "015",
+                "running": 1
+            },
+            {
+                "hash": "008daaf3f7bb928d9691a4f7e57b5d7fb80004a9",
+                "text": "inflammatory cafs",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "013",
+                "running": 0
+            },
+            {
+                "hash": "9ee766d976783d3ca358ac1487631935f06f9c23",
+                "text": "cancer pancreatic",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "017",
+                "running": 0
+            },
+            {
+                "hash": "dc04780744c4222716f6aa8cf4c2ca6169ff64b3",
+                "text": "pdl-1",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 1,
+                "token": "004",
+                "running": 12
+            },
+            {
+                "hash": "50ca30b57002c66fe1fa76349dc5d9792f24163d",
+                "text": "is expressed at",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 7,
+                "token": "053",
+                "running": 0
+            },
+            {
+                "hash": "a535337f1b89adbd3b7c27241c3f87ef743c5085",
+                "text": "factors inflammatory with functions pro tumorigenic -",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "021",
+                "running": 43
+            },
+            {
+                "hash": "4d9d2d1e52fc991b367f9fa88963e551c247fefd",
+                "text": "resulting in",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "025",
+                "running": 1
+            },
+            {
+                "hash": "c033317fa192485d95a5f10b92187d07b4919d7c",
+                "text": "limited production of perforin by nk cells",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 6,
+                "token": "027",
+                "running": 0
+            },
+            {
+                "hash": "99809cb0a931b8d4ceaa73d71e382fca6fd97ad0",
+                "text": "cells nk",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 4,
+                "token": "021",
+                "running": 0
+            },
+            {
+                "hash": "e995684db70b7867d164018a3332d878a48290ec",
+                "text": "function cell - t ) impairing tme the 83 (",
+                "role": null
+            }
+        ],
+        [
+            {
+                "meta": false,
+                "phrase": 5,
+                "token": "001",
+                "running": 8
+            },
+            {
+                "hash": "e28110c78d65d6dd5e0fecfcb3a1f9afcbf576a4",
+                "text": "are responsible for",
+                "role": null
+            }
+        ]
+    ]
+}

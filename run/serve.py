@@ -20,7 +20,7 @@ from lm_service.linking.onto import (
     EntityLinkerManager,
     EntityLinkerTypeNotAvailable,
 )
-from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
+from lm_service.top import cast_response_redux, text_to_graph_mentions_entities
 
 app = Flask(__name__)
 Compress(app)
@@ -97,7 +97,7 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
             json_data = request.json
             text = json_data["text"]
             try:
-                response = text_to_rel_graph(text, nlp, rules, elm)
+                response = text_to_graph_mentions_entities(text, nlp, rules, elm)
             except EntityLinkerFailed as e:
                 return {"error": get_exception_traceback_str(e)}, 502
             except EntityLinkerTypeNotAvailable as e:
@@ -105,7 +105,7 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
             except Exception as e:
                 return {"error": get_exception_traceback_str(e)}, 500
 
-            response_jsonlike = cast_response_to_unfolded(response)
+            response_jsonlike = cast_response_redux(response)
 
             jy = jsonify(response_jsonlike)
             return jy, 200

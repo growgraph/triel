@@ -17,10 +17,11 @@ from lemminflect import getInflection, getLemma
 from lm_service.hash import hashme
 
 
-class BaseDataclass(JSONWizard, JSONWizard.Meta):
-    marshal_date_time_as = DateTimeTo.ISO_FORMAT
-    key_transform_with_dump = "SNAKE"
-    skip_defaults = True
+class BaseDataclass(JSONWizard):
+    class Meta(JSONWizard.Meta):
+        marshal_date_time_as = DateTimeTo.ISO_FORMAT
+        key_transform_with_dump = "SNAKE"
+        skip_defaults = True
 
 
 class MissingTokenInACandidate(Exception):
