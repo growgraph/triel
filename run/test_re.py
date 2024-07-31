@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @click.command()
 @click.option("--host", type=click.STRING, default="localhost")
-@click.option("--input-path", type=click.Path(path_type=pathlib.Path))
+@click.option("--input-path", type=click.Path(path_type=pathlib.Path), multiple=True)
 @click.option("--conf-el-path", type=click.Path(path_type=pathlib.Path))
 @click.option("--output", type=click.Path(path_type=pathlib.Path), required=False)
 def run(host, conf_el_path, input_path, output):
@@ -35,28 +35,32 @@ def run(host, conf_el_path, input_path, output):
 
     logger.info("nlp loaded")
 
-    inp = FileHandle.load(fpath=input_path)
-    if not isinstance(inp, list):
-        inp_list = [inp]
-    else:
-        inp_list = inp
+    inputs = [
+        (
+            ".".join(ipath.as_posix().split("/")[-1].split(".")[:-1]),
+            FileHandle.load(fpath=ipath),
+        )
+        for ipath in input_path
+    ]
 
-    acc = []
-    for s in inp_list:
-        response = text_to_graph_mentions_entities(s["text"], nlp, rules, elm)
+    for name, data in inputs:
+        response = text_to_graph_mentions_entities(data["text"], nlp, rules, elm)
 
         response_redux = cast_response_redux(response)
         response_jsonlike = response_redux.to_dict()
         pprint(response_jsonlike)
+        if output:
+            FileHandle.dump(
+                response_jsonlike, (output / f"{name}.kg.detailed.json").as_posix()
+            )
 
         response_ent = cast_response_entity_representation(response)
         response_jsonlike = response_ent.to_dict()
         pprint(response_jsonlike)
-
-        acc += [response_jsonlike]
-
-    if output:
-        FileHandle.dump(acc, output.as_posix())
+        if output:
+            FileHandle.dump(
+                response_jsonlike, (output / f"{name}.kg.entities.json").as_posix()
+            )
 
 
 if __name__ == "__main__":

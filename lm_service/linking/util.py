@@ -11,7 +11,6 @@ from pathos.multiprocessing import ProcessPool
 from suthing import profile
 from wordfreq import zipf_frequency
 
-from lm_service.hash import hashme
 from lm_service.linking.onto import (
     Entity,
     EntityLinker,
@@ -92,8 +91,9 @@ def link_unlinked_entities(
         )
         lucky_indices = [k for k, _ in index_zipf_metric[:n_tokens]]
         least_frequent = [w for j, w in enumerate(lemmatized) if j in lucky_indices]
-        least_frequent_phrase = " ".join(least_frequent)
-        e_id = hashme(" ".join(least_frequent))
+        least_frequent_phrase = "_".join(least_frequent)
+        # e_id = hashme(" ".join(least_frequent))
+        e_id = " ".join(least_frequent)
 
         new_entity = Entity(
             linker_type=EntityLinker.GG,

@@ -26,7 +26,7 @@ class CandidatePile:
 
     _root_to_candidate: dict[TokenIndexT, SourceOrTarget | Relation] = (
         dataclasses.field(default_factory=dict)
-    )  # type: ignore
+    )
 
     def __len__(self) -> int:
         return len(self._root_to_candidate)

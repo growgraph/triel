@@ -228,14 +228,14 @@ def cast_response_entity_representation(response: REELResponse) -> REELResponseE
     while deq:
         mu, tri = deq.popleft()
         if all(x in map_muindex_eindexes for x in tri):
-            o, p, s = tri
-            for eo, ep, es in product(
+            s, p, o = tri
+            for es, ep, eo in product(
                 map_muindex_eindexes[o],
                 map_muindex_eindexes[p],
                 map_muindex_eindexes[s],
             ):
-                acc += [TripleFormal(object=eo, predicate=ep, subject=es)]
-                original_form = f"o:{eo}, p:{ep}, s:{es}"
+                acc += [TripleFormal(subject=es, predicate=ep, object=eo)]
+                original_form = f"s:{es}, p:{ep}, o:{eo}"
                 e = Entity(
                     id=hashme(original_form),
                     linker_type=EntityLinker.META,

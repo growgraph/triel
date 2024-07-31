@@ -20,7 +20,11 @@ from lm_service.linking.onto import (
     EntityLinkerManager,
     EntityLinkerTypeNotAvailable,
 )
-from lm_service.top import cast_response_redux, text_to_graph_mentions_entities
+from lm_service.top import (
+    cast_response_entity_representation,
+    cast_response_redux,
+    text_to_graph_mentions_entities,
+)
 
 app = Flask(__name__)
 Compress(app)
@@ -87,25 +91,42 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
 
-    @app.route(wsgi_re.path, methods=["POST"])
+    def work(request0):
+        logger.info(request0)
+        logger.info(request0.json)
+        json_data = request0.json
+        text = json_data["text"]
+        try:
+            response = text_to_graph_mentions_entities(text, nlp, rules, elm)
+        except EntityLinkerFailed as e:
+            return {"error": get_exception_traceback_str(e)}, 502
+        except EntityLinkerTypeNotAvailable as e:
+            return {"error": get_exception_traceback_str(e)}, 501
+        except Exception as e:
+            return {"error": get_exception_traceback_str(e)}, 500
+        return response
+
+    @app.route(wsgi_re.paths["parse"], methods=["POST"])
+    @app.route(wsgi_re.paths["parse/detailed"], methods=["POST"])
     @limiter.limit("10/second", override_defaults=False)
     @cross_origin()
-    def re():
+    def parse():
         if request.method == "POST":
-            logger.info(request)
-            logger.info(request.json)
-            json_data = request.json
-            text = json_data["text"]
-            try:
-                response = text_to_graph_mentions_entities(text, nlp, rules, elm)
-            except EntityLinkerFailed as e:
-                return {"error": get_exception_traceback_str(e)}, 502
-            except EntityLinkerTypeNotAvailable as e:
-                return {"error": get_exception_traceback_str(e)}, 501
-            except Exception as e:
-                return {"error": get_exception_traceback_str(e)}, 500
+            response = work(request)
 
             response_jsonlike = cast_response_redux(response)
+
+            jy = jsonify(response_jsonlike)
+            return jy, 200
+
+    @app.route(wsgi_re.paths["parse/entities"], methods=["POST"])
+    @limiter.limit("10/second", override_defaults=False)
+    @cross_origin()
+    def parse_entities():
+        if request.method == "POST":
+            response = work(request)
+
+            response_jsonlike = cast_response_entity_representation(response)
 
             jy = jsonify(response_jsonlike)
             return jy, 200

@@ -69,3 +69,4 @@ def test_mapping(
     map_eindex_entity, map_c2e = link_unlinked_entities(
         map_candidate2entity, muindex_candidate
     )
+    assert len(map_c2e) > 0

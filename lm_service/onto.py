@@ -700,13 +700,13 @@ class Relation(Candidate):
             # find auxpass, inflect it to was
             for s in self.stokens:
                 token = self.token(s)
-                if token.dep_ in ("auxpass", "ccomp", "acl"):
+                if token.dep_ in ("auxpass", "ccomp", "acl", "relcl"):
                     lemmas = getLemma(token.text, upos="VERB")
                     if lemmas:
                         # -> "was"
                         # inflected = getInflection(lemmas[0], tag="VBD")
                         # -> "is"
-                        if token.dep_ == "auxpass":
+                        if token.dep_ in ("auxpass", "relcl"):
                             inflected = getInflection(lemmas[0], tag="VBZ")
                         elif token.dep_ == "acl":
                             inflected = getInflection(lemmas[0], tag="VBD")
@@ -788,10 +788,6 @@ class TripleCandidate(JSONWizard):
         new.source.drop_articles()
         new.target.drop_articles()
         return new
-
-    def normalize_relation(self):
-        self.relation.normalize()
-        return self
 
     def has_pronouns(self):
         return self.source.has_pronoun() or self.source.has_pronoun()

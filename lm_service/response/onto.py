@@ -20,9 +20,9 @@ class TripleExplicit(BaseDataclass):
 
 @dataclasses.dataclass(frozen=True, eq=True)
 class TripleFormal(BaseDataclass):
-    object: EntityHash
     subject: EntityHash
     predicate: EntityHash
+    object: EntityHash
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
@@ -45,10 +45,6 @@ class REELResponse(BaseDataclass):
     eindex_entity: dict[str, Entity]
     muindex_eindex: list[tuple[MuIndex, str]]
     _muindex_candidate: list[tuple[MuIndex, SimplifiedCandidate]]
-
-    # @property
-    # def triples(self):
-    #     return {k: v for k, v in self._triples}
 
     @property
     def muindex_candidate(self):
