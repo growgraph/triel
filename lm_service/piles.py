@@ -115,9 +115,9 @@ class CandidatePile:
 
     def normalize(self):
         new = deepcopy(self)
-        new._root_to_candidate = {
-            k: c.normalize() for k, c in new._root_to_candidate.items()
-        }
+        r2c = {k: c.normalize() for k, c in new._root_to_candidate.items()}
+        r2c = {k: v for k, v in r2c.items() if v._root is not None}
+        new._root_to_candidate = r2c
         return new
 
     def clean_dangling_edges(self):

@@ -224,15 +224,30 @@ def cast_response_entity_representation(response: REELResponse) -> REELResponseE
             ],
         ]
     ] = deque(response.triples)
-
+    predicate_compound_entity_map: defaultdict[MuIndex, list] = defaultdict(list)
+    predicates = set(tri[1] for _, tri in response.triples)
     while deq:
         mu, tri = deq.popleft()
-        if all(x in map_muindex_eindexes for x in tri):
-            s, p, o = tri
+        s, p, o = tri
+        if (s in predicates and s not in predicate_compound_entity_map) or (
+            o in predicates and o not in predicate_compound_entity_map
+        ):
+            deq.append((mu, tri))
+        else:
+            if s in predicates:
+                s_eindexes = predicate_compound_entity_map[s]
+            else:
+                s_eindexes = map_muindex_eindexes[s]
+
+            if o in predicates:
+                o_eindexes = predicate_compound_entity_map[o]
+            else:
+                o_eindexes = map_muindex_eindexes[o]
+
             for es, ep, eo in product(
-                map_muindex_eindexes[o],
+                o_eindexes,
                 map_muindex_eindexes[p],
-                map_muindex_eindexes[s],
+                s_eindexes,
             ):
                 acc += [TripleFormal(subject=es, predicate=ep, object=eo)]
                 original_form = f"s:{es}, p:{ep}, o:{eo}"
@@ -243,9 +258,7 @@ def cast_response_entity_representation(response: REELResponse) -> REELResponseE
                     ent_db_type="_",
                 )
 
-                map_muindex_eindexes[mu] += [e.hash]
+                predicate_compound_entity_map[p] += [e.hash]
                 map_eindex_entity[e.hash] = e
-        else:
-            deq.append((mu, tri))
 
     return REELResponseEntity(triples=acc, entities=list(map_eindex_entity.values()))

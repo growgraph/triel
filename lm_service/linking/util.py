@@ -73,6 +73,8 @@ def link_unlinked_entities(
     for i_mu in mentions_not_in_entities:
         c = map_muindex_candidate[i_mu]
         c = c.normalize()
+        if c._root is None:
+            pass
         lemmatized = [x.lemma for x in c.tokens]
 
         zipf_freqs = [
@@ -93,7 +95,7 @@ def link_unlinked_entities(
         least_frequent = [w for j, w in enumerate(lemmatized) if j in lucky_indices]
         least_frequent_phrase = "_".join(least_frequent)
         # e_id = hashme(" ".join(least_frequent))
-        e_id = " ".join(least_frequent)
+        e_id = "_".join(least_frequent)
 
         new_entity = Entity(
             linker_type=EntityLinker.GG,

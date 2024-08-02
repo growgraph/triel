@@ -96,14 +96,7 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
         logger.info(request0.json)
         json_data = request0.json
         text = json_data["text"]
-        try:
-            response = text_to_graph_mentions_entities(text, nlp, rules, elm)
-        except EntityLinkerFailed as e:
-            return {"error": get_exception_traceback_str(e)}, 502
-        except EntityLinkerTypeNotAvailable as e:
-            return {"error": get_exception_traceback_str(e)}, 501
-        except Exception as e:
-            return {"error": get_exception_traceback_str(e)}, 500
+        response = text_to_graph_mentions_entities(text, nlp, rules, elm)
         return response
 
     @app.route(wsgi_re.paths["parse"], methods=["POST"])
@@ -112,10 +105,19 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
     @cross_origin()
     def parse():
         if request.method == "POST":
-            response = work(request)
+            try:
+                response = work(request)
+            except EntityLinkerFailed as e:
+                logger.error(f"EntityLinkerFailed : {e}")
+                return {"error": get_exception_traceback_str(e)}, 502
+            except EntityLinkerTypeNotAvailable as e:
+                logger.error(f"EntityLinkerTypeNotAvailable : {e}")
+                return {"error": get_exception_traceback_str(e)}, 501
+            except Exception as e:
+                logger.error(f"Exception: {e}")
+                return {"error": get_exception_traceback_str(e)}, 500
 
             response_jsonlike = cast_response_redux(response)
-
             jy = jsonify(response_jsonlike)
             return jy, 200
 
@@ -124,15 +126,21 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
     @cross_origin()
     def parse_entities():
         if request.method == "POST":
-            response = work(request)
-
+            try:
+                response = work(request)
+            except EntityLinkerFailed as e:
+                return {"error": get_exception_traceback_str(e)}, 502
+            except EntityLinkerTypeNotAvailable as e:
+                return {"error": get_exception_traceback_str(e)}, 501
+            except Exception as e:
+                return {"error": get_exception_traceback_str(e)}, 500
             response_jsonlike = cast_response_entity_representation(response)
 
             jy = jsonify(response_jsonlike)
             return jy, 200
 
-    logger.info(f" wsgi: host {wsgi_re.host}")
-    logger.info(" re model loaded")
+    logger.info(f"wsgi: host {wsgi_re.host}")
+    logger.info("REEL model loaded")
     serve(app, host=wsgi_re.host, port=wsgi_re.port, threads=threads)
 
 

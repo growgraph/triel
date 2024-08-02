@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import logging
+import re
 from enum import Enum
 
 import requests
@@ -11,7 +12,6 @@ from lm_service.linking.string import render_gap_mappers, render_index_mapper
 from lm_service.onto import BaseDataclass
 
 logger = logging.getLogger(__name__)
-
 
 EntityHash = str
 
@@ -238,25 +238,18 @@ class EntityLinkerManager(BaseDataclass):
             ent_type = item.pop("obj")
         except KeyError:
             logger.warning(f" {item} does not contain obj key")
-            return None
+            ent_type = "NA"
 
         if prob0 > prob_thr:
-            if id0 == "CUI-less":
+            item_spec = id0.split(":")
+            try:
+                ent_db_type, item_id = item_spec
+            except:
                 doc = item["mention"]
-                sub_id = "_".join(doc.split(" ")).lower()
+                doc2 = re.sub(r"[^a-zA-Z0-9\s]+", " ", doc).lower()
+                sub_id = re.sub(r"\s+", "_", doc2)
                 item_id = f"{ent_type}:{sub_id}"
                 ent_db_type = "NA"
-            else:
-                item_spec = id0.split(":")
-                try:
-                    ent_db_type, item_id = item_spec
-                except:
-                    logger.warning(
-                        " non standard bern entity (does not look like"
-                        f" `<ent_type>:<id>`: {item}. NB: most likely CUI-less"
-                        " entity"
-                    )
-                    return None
             try:
                 span = item.pop("span")
                 a = span.pop("begin")

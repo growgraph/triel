@@ -300,7 +300,7 @@ class Candidate(AbsCandidate):
         elif len(roots) == 1:
             self._root = next(iter(roots))
         else:
-            raise ValueError(f" {len(roots)} roots : inconsistent candidate")
+            self._root = None
 
     @property
     def sroot(self):
@@ -442,11 +442,13 @@ class Candidate(AbsCandidate):
             self._sort_wrt_tree(s, sorter)
 
     def sort_index(self):
-        proposed_sorter = {self.sroot: (0, len(self))}
-        self._sort_wrt_tree(self.sroot, sorter=proposed_sorter)
-        self._index_vec = [
-            x for x, _ in sorted(proposed_sorter.items(), key=lambda item: item[1][0])
-        ]
+        if self._root is not None:
+            proposed_sorter = {self.sroot: (0, len(self))}
+            self._sort_wrt_tree(self.sroot, sorter=proposed_sorter)
+            self._index_vec = [
+                x
+                for x, _ in sorted(proposed_sorter.items(), key=lambda item: item[1][0])
+            ]
         return self
 
     def insert_before(self, ac: Candidate, s: TokenIndexT):
@@ -583,14 +585,6 @@ class Candidate(AbsCandidate):
 
         j = self._index_vec.index(i)
         self._index_vec = self._index_vec[:j] + self._index_vec[j + 1 :]
-
-    def print(self):
-        content = []
-        for s in self.stokens:
-            t = self._tokens[s]
-            content += [f" {t.text}"]
-
-        return f"{self.__class__.__name__} tokens : (" + " |".join(content) + ")"
 
     @property
     def lemmas(self):

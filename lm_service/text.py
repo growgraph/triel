@@ -219,6 +219,7 @@ def phrases_to_triples(
             meta_triples[meta_tri_index] = tri
             # update relation -> triple map
             relation_triple_map[tri[1]] = meta_tri_index
+
     global_triples = {**fundamental_triples, **meta_triples}
 
     candidate_likes = set(
