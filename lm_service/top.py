@@ -212,7 +212,7 @@ def cast_response_entity_representation(response: REELResponse) -> REELResponseE
     for mu_index, e_index in response.muindex_eindex:
         map_muindex_eindexes[mu_index] += [e_index]
 
-    acc: list[TripleFormal] = []
+    triples_set: set[TripleFormal] = set()
 
     deq: deque[
         tuple[
@@ -224,7 +224,7 @@ def cast_response_entity_representation(response: REELResponse) -> REELResponseE
             ],
         ]
     ] = deque(response.triples)
-    predicate_compound_entity_map: defaultdict[MuIndex, list] = defaultdict(list)
+    predicate_compound_entity_map: defaultdict[MuIndex, set] = defaultdict(set)
     predicates = set(tri[1] for _, tri in response.triples)
     while deq:
         mu, tri = deq.popleft()
@@ -235,12 +235,12 @@ def cast_response_entity_representation(response: REELResponse) -> REELResponseE
             deq.append((mu, tri))
         else:
             if s in predicates:
-                s_eindexes = predicate_compound_entity_map[s]
+                s_eindexes = list(predicate_compound_entity_map[s])
             else:
                 s_eindexes = map_muindex_eindexes[s]
 
             if o in predicates:
-                o_eindexes = predicate_compound_entity_map[o]
+                o_eindexes = list(predicate_compound_entity_map[o])
             else:
                 o_eindexes = map_muindex_eindexes[o]
 
@@ -249,7 +249,7 @@ def cast_response_entity_representation(response: REELResponse) -> REELResponseE
                 map_muindex_eindexes[p],
                 s_eindexes,
             ):
-                acc += [TripleFormal(subject=es, predicate=ep, object=eo)]
+                triples_set.add(TripleFormal(subject=es, predicate=ep, object=eo))
                 original_form = f"s:{es}, p:{ep}, o:{eo}"
                 e = Entity(
                     id=hashme(original_form),
@@ -258,7 +258,13 @@ def cast_response_entity_representation(response: REELResponse) -> REELResponseE
                     ent_db_type="_",
                 )
 
-                predicate_compound_entity_map[p] += [e.hash]
+                predicate_compound_entity_map[p].add(e.hash)
                 map_eindex_entity[e.hash] = e
 
-    return REELResponseEntity(triples=acc, entities=list(map_eindex_entity.values()))
+    set_present_entities = sorted(
+        set([t.subject for t in triples_set])
+        | set([t.object for t in triples_set])
+        | set([t.predicate for t in triples_set])
+    )
+    entities = [map_eindex_entity[k] for k in set_present_entities]
+    return REELResponseEntity(triples=sorted(triples_set), entities=entities)

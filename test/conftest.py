@@ -182,3 +182,8 @@ def documents():
         ),
         "He treated her unfairly.",
     ]
+
+
+@pytest.fixture(scope="module")
+def sample_a():
+    return suthing.FileHandle.load("test.data", "sample.a.json")

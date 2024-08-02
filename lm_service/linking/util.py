@@ -74,7 +74,7 @@ def link_unlinked_entities(
         c = map_muindex_candidate[i_mu]
         c = c.normalize()
         if c._root is None:
-            pass
+            continue
         lemmatized = [x.lemma for x in c.tokens]
 
         zipf_freqs = [

@@ -18,11 +18,17 @@ class TripleExplicit(BaseDataclass):
     target: SimplifiedCandidate
 
 
-@dataclasses.dataclass(frozen=True, eq=True)
+@dataclasses.dataclass(frozen=True, eq=True, unsafe_hash=True)
 class TripleFormal(BaseDataclass):
     subject: EntityHash
     predicate: EntityHash
     object: EntityHash
+
+    def __lt__(self, other):
+        order = ("subject", "predicate", "object")
+        return tuple(self.__dict__[k] for k in order) < tuple(
+            other.__dict__[k] for k in order
+        )
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
