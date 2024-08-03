@@ -20,7 +20,9 @@ logger = logging.getLogger(__name__)
 @click.option("--host", type=click.STRING, default="localhost")
 @click.option("--input-path", type=click.Path(path_type=pathlib.Path), multiple=True)
 @click.option("--conf-el-path", type=click.Path(path_type=pathlib.Path))
-@click.option("--output", type=click.Path(path_type=pathlib.Path), required=False)
+@click.option(
+    "--output", type=click.Path(path_type=pathlib.Path), required=False, default=None
+)
 def run(host, conf_el_path, input_path, output):
     el_conf = FileHandle.load(fpath=conf_el_path)
     for c in el_conf["linkers"]:
@@ -49,17 +51,20 @@ def run(host, conf_el_path, input_path, output):
         response_redux = cast_response_redux(response)
         response_jsonlike = response_redux.to_dict()
         pprint(response_jsonlike)
-        if output:
+        if output is not None:
             FileHandle.dump(
                 response_jsonlike, (output / f"{name}.kg.detailed.json").as_posix()
             )
 
         response_ent = cast_response_entity_representation(response)
-        response_jsonlike = response_ent.to_dict()
-        pprint(response_jsonlike)
-        if output:
+
+        if output is not None:
+            response_jsonlike = response_ent.to_dict()
+            pprint(response_jsonlike)
+
             FileHandle.dump(
-                response_jsonlike, (output / f"{name}.kg.entities.json").as_posix()
+                response_jsonlike,
+                (output.expanduser() / f"{name}.kg.entities.json").as_posix(),
             )
 
 
