@@ -30,8 +30,11 @@ logger = logging.getLogger(__name__)
 
 
 @profile
-def text_to_graph_mentions_entities(text, nlp, rules, elm, **kwargs):
+def text_to_graph_mentions_entities(text, nlp, rules, elm, ix_phrases=None, **kwargs):
     phrases = normalize_text(text, nlp)
+
+    if ix_phrases is not None:
+        phrases = [phrases[ix] for ix in ix_phrases]
 
     triples_dict, map_muindex_candidate = phrases_to_triples(
         phrases, nlp, rules, **kwargs
@@ -245,9 +248,9 @@ def cast_response_entity_representation(response: REELResponse) -> REELResponseE
                 o_eindexes = map_muindex_eindexes[o]
 
             for es, ep, eo in product(
-                o_eindexes,
-                map_muindex_eindexes[p],
                 s_eindexes,
+                map_muindex_eindexes[p],
+                o_eindexes,
             ):
                 triples_set.add(TripleFormal(subject=es, predicate=ep, object=eo))
                 original_form = f"s:{es}, p:{ep}, o:{eo}"

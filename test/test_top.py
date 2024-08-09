@@ -34,14 +34,14 @@ def test_cast_response_er(reel_response):
     assert len(r.entities) == 79
 
 
-def test_complete(nlp_fixture, rules, el_conf, sample_a):
+def test_complete(nlp_fixture, rules_v2, el_conf, sample_a):
     elm = EntityLinkerManager.from_dict(el_conf)
 
     response = text_to_graph_mentions_entities(
-        sample_a["text"], nlp_fixture, rules, elm
+        sample_a["text"], nlp_fixture, rules_v2, elm
     )
 
     _ = cast_response_redux(response)
     response_ent = cast_response_entity_representation(response)
-    assert len(response_ent.entities) == 53
-    assert len(response_ent.triples) == 68
+    assert len(response_ent.entities) == 45
+    assert len(response_ent.triples) == 53

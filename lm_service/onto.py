@@ -660,11 +660,11 @@ class Candidate(AbsCandidate):
         return partition_conjunctive_wrapper(self)
 
 
-class ACandidateKind(Enum):
-    RELATION = 1
-    SOURCE_TARGET = 2
-    SOURCE = 3
-    TARGET = 4
+class ACandidateKind(str, Enum):
+    RELATION = "relation"
+    SOURCE_TARGET = "source_target"
+    SOURCE = "source"
+    TARGET = "target"
 
 
 @dataclasses.dataclass(repr=False)

@@ -45,9 +45,10 @@ def find_candidates_bfs(
     rules=None,
 ):
     """
+    tree search to find candidates
 
-    :param graph: please provide a copy graph, find_candidates_bfs potentially modifies graph structure
-    :param original_graph: to assign edges for candi ates correctly
+    :param graph: provide a copy of graph, find_candidates_bfs potentially modifies graph structure
+    :param original_graph: to assign edges for candidates correctly
     :param deq: deque to keep track of vertices while traversing
     :param candidate_pile: pile to accumulate candidates
     :param how:
@@ -65,11 +66,8 @@ def find_candidates_bfs(
         ACandidateKind.SOURCE_TARGET: SourceOrTarget,
     }
 
-    rules_current = (
-        rules["sourcetarget"]
-        if how == ACandidateKind.SOURCE_TARGET
-        else rules["relation"]
-    )
+    rules_current = rules[how]
+
     if not deq:
         return
 

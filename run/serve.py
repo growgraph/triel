@@ -77,7 +77,7 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
 
     wsgi_config = FileHandle.load(fpath=wsgi_self)
     wsgi_re = ConfigFactory.create_config(dict_like=wsgi_config)
-    rules = FileHandle.load("lm_service.config", "prune_noun_compound_v2.yaml")
+    rules = FileHandle.load("lm_service.config", "prune_noun_compound_v3.yaml")
 
     el_config = FileHandle.load(fpath=entity_linker_config)
     if host is not None:

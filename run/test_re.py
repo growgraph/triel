@@ -23,11 +23,15 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--output", type=click.Path(path_type=pathlib.Path), required=False, default=None
 )
-def run(host, conf_el_path, input_path, output):
+@click.option("--phrase-indexes", "-i", type=click.INT, multiple=True)
+@click.option("--localhost-linkers", type=click.STRING, multiple=True)
+def run(host, conf_el_path, input_path, output, phrase_indexes, localhost_linkers):
     el_conf = FileHandle.load(fpath=conf_el_path)
     for c in el_conf["linkers"]:
         if "host" not in c:
             c["host"] = host
+        if c["keyword"] in localhost_linkers:
+            c["host"] = "localhost"
 
     elm = EntityLinkerManager.from_dict(el_conf)
     rules = FileHandle.load("lm_service.config", "prune_noun_compound_v2.yaml")
@@ -46,7 +50,9 @@ def run(host, conf_el_path, input_path, output):
     ]
 
     for name, data in inputs:
-        response = text_to_graph_mentions_entities(data["text"], nlp, rules, elm)
+        response = text_to_graph_mentions_entities(
+            data["text"], nlp, rules, elm, ix_phrases=phrase_indexes
+        )
 
         response_redux = cast_response_redux(response)
         response_jsonlike = response_redux.to_dict()

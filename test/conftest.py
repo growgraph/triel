@@ -50,8 +50,13 @@ def pelinker_example():
 
 
 @pytest.fixture(scope="module")
-def rules():
+def rules_v2():
     return suthing.FileHandle.load("lm_service.config", "prune_noun_compound_v2.yaml")
+
+
+@pytest.fixture(scope="module")
+def rules_v3():
+    return suthing.FileHandle.load("lm_service.config", "prune_noun_compound_v3.yaml")
 
 
 @pytest.fixture(scope="module")
@@ -173,6 +178,7 @@ def text_cheops():
 @pytest.fixture(scope="module")
 def documents():
     return [
+        "TAMs can also secrete in the TME a number of immunosuppressive cytokines, such as IL-6, TGF-β, and IL-10 that are able to suppress CD8+ T-cell function.",
         "The medium was affected by the near-field radiation",
         (
             "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"

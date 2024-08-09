@@ -19,7 +19,7 @@ from lm_service.relation import find_candidates_bfs, find_subtree_dfs
 logger = logging.getLogger(__name__)
 
 
-def test_relation_candidates(nlp_fixture, rules, documents):
+def test_relation_candidates(nlp_fixture, rules_v3, documents):
     piles = []
     for document in documents:
         rdoc, graph = phrase_to_deptree(nlp_fixture, document)
@@ -32,21 +32,22 @@ def test_relation_candidates(nlp_fixture, rules, documents):
             deque(roots),
             rp,
             ACandidateKind.RELATION,
-            rules=rules,
+            rules=rules_v3,
         )
         piles += [rp]
 
     reference = {
-        0: [["be", "affect", "by"]],
-        1: [["be"], ["determine"], ["will", "allow"]],
-        2: [["treat"]],
+        0: [["can", "secrete", "in"], ["be", "able", "to", "suppress"]],
+        1: [["be", "affect", "by"]],
+        2: [["be"], ["to", "determine"], ["will", "allow"]],
+        3: [["treat"]],
     }
     derived = {k: [c.lemmas for c in p.candidates] for k, p in enumerate(piles)}
-    assert [len(rp) for rp in piles] == [1, 3, 1]
+    assert [len(rp) for rp in piles] == [2, 1, 3, 1]
     assert derived == reference
 
 
-def test_st_candidates(documents, nlp_fixture, rules):
+def test_st_candidates(documents, nlp_fixture, rules_v3):
     piles = []
     for document in documents:
         rdoc, graph = phrase_to_deptree(nlp_fixture, document)
@@ -59,18 +60,39 @@ def test_st_candidates(documents, nlp_fixture, rules):
             deque(roots),
             rp,
             ACandidateKind.SOURCE_TARGET,
-            rules=rules,
+            rules=rules_v3,
         )
         piles += [rp.sort_index()]
 
-    assert [len(rp) for rp in piles] == [2, 5, 2]
+    assert [len(rp) for rp in piles] == [5, 2, 5, 2]
 
     assert {k: [c.lemmas for c in p.candidates] for k, p in enumerate(piles)} == {
         0: [
-            ["the", "medium"],
-            ["the", "near", "-", "field", "radiation"],
+            ["TAMs"],
+            [
+                "a",
+                "number",
+                "of",
+                "immunosuppressive",
+                "cytokine",
+                ",",
+                "such",
+                "as",
+                "il-6",
+                ",",
+                "tgf",
+                "-",
+                "β",
+                ",",
+                "and",
+                "il-10",
+            ],
+            ["the", "TME"],
+            ["t", "-", "cell", "function"],
+            ["cd8", "+"],
         ],
-        1: [
+        1: [["the", "medium"], ["the", "near", "-", "field", "radiation"]],
+        2: [
             ["CHEOPS", "(", ")"],
             ["a", "european", "space", "telescope"],
             ["CHaracterising", "ExOPlanets", "Satellite"],
@@ -90,19 +112,19 @@ def test_st_candidates(documents, nlp_fixture, rules):
                 "formation",
             ],
         ],
-        2: [["he"], ["she"]],
+        3: [["he"], ["she"]],
     }
 
 
-def test_relation_subtree_dfs(documents, nlp_fixture, rules):
+def test_relation_subtree_dfs(documents, nlp_fixture, rules_v3):
     piles = []
     vertices_of_interest = [3, 22, 1]
     vertices_of_interest = [deque([(x, 0)]) for x in vertices_of_interest]
-    for deq, document in zip(vertices_of_interest, documents):
+    for deq, document in zip(vertices_of_interest, documents[1:]):
         rdoc, graph = phrase_to_deptree(nlp_fixture, document)
         ograph = graph.copy()
         cr = Relation()
-        find_subtree_dfs(graph, ograph, deq, cr, rules=rules["relation"])
+        find_subtree_dfs(graph, ograph, deq, cr, rules=rules_v3["relation"])
         cr.clean_dangling_edges().sort_index()
         piles += [cr]
 
@@ -115,11 +137,11 @@ def test_relation_subtree_dfs(documents, nlp_fixture, rules):
     }
 
 
-def test_st_subtree_dfs(documents, nlp_fixture, rules):
+def test_st_subtree_dfs(documents, nlp_fixture, rules_v3):
     piles = []
     vertices_of_interest = [9, 24, 2]
     vertices_of_interest = [deque([(x, 0)]) for x in vertices_of_interest]
-    for deq, document in zip(vertices_of_interest, documents):
+    for deq, document in zip(vertices_of_interest, documents[1:]):
         rdoc, graph = phrase_to_deptree(nlp_fixture, document)
         original_graph = graph.copy()
         st = SourceOrTarget()
@@ -128,7 +150,7 @@ def test_st_subtree_dfs(documents, nlp_fixture, rules):
             original_graph,
             deq,
             st,
-            rules=rules["sourcetarget"],
+            rules=rules_v3["source_target"],
         )
         st.sort_index()
         piles += [st]
@@ -155,7 +177,7 @@ def test_st_subtree_dfs(documents, nlp_fixture, rules):
     }
 
 
-def test_consecutive_candidates(documents, nlp_fixture, rules):
+def test_consecutive_candidates(documents, nlp_fixture, rules_v3):
     """
     this test demonstrates that when a relation or a source/target are identified,
     the subgraph corresponding to it is excised, leaving only the root node
@@ -176,7 +198,7 @@ def test_consecutive_candidates(documents, nlp_fixture, rules):
             deque(roots),
             relation_pile,
             ACandidateKind.RELATION,
-            rules=rules,
+            rules=rules_v3,
         )
         sb = len(graph.nodes)
         find_candidates_bfs(
@@ -185,14 +207,14 @@ def test_consecutive_candidates(documents, nlp_fixture, rules):
             deque(roots),
             source_target_pile,
             ACandidateKind.SOURCE_TARGET,
-            rules=rules,
+            rules=rules_v3,
         )
         sc = len(graph.nodes)
         sizes += [(sa, sb, sc)]
-    assert sizes == [(10, 8, 3), (36, 35, 12), (5, 5, 5)]
+    assert sizes == [(35, 30, 10), (10, 8, 3), (36, 34, 11), (5, 5, 5)]
 
 
-def test_sort_index_tree(nlp_fixture, rules, documents):
+def test_sort_index_tree(nlp_fixture, rules_v3, documents):
     tokens = [
         Token(**{"s": 2, "text": "a0", "successors": {1, 0}}),
         Token(**{"s": 1, "text": "a1", "predecessors": {2}}),
