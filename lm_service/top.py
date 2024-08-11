@@ -34,7 +34,8 @@ def text_to_graph_mentions_entities(text, nlp, rules, elm, ix_phrases=None, **kw
     phrases = normalize_text(text, nlp)
 
     if ix_phrases is not None:
-        phrases = [phrases[ix] for ix in ix_phrases]
+        if ix_phrases:
+            phrases = [phrases[ix] for ix in ix_phrases]
 
     triples_dict, map_muindex_candidate = phrases_to_triples(
         phrases, nlp, rules, **kwargs
@@ -55,7 +56,8 @@ def text_to_graph_mentions_entities(text, nlp, rules, elm, ix_phrases=None, **kw
         phrases, entity_pack, map_muindex_candidate
     )
 
-    # candidate entity equivalences
+    # TODO to use in the future releases
+    # candidate entity equivalences :
     len(ee_edges)
 
     list_muindex_candidate_simplified = [

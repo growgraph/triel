@@ -34,7 +34,7 @@ def run(host, conf_el_path, input_path, output, phrase_indexes, localhost_linker
             c["host"] = "localhost"
 
     elm = EntityLinkerManager.from_dict(el_conf)
-    rules = FileHandle.load("lm_service.config", "prune_noun_compound_v2.yaml")
+    rules = FileHandle.load("lm_service.config", "prune_noun_compound_v3.yaml")
 
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")

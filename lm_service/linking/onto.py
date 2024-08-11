@@ -135,35 +135,37 @@ class EntityLinkerManager(BaseDataclass):
     def normalize(
         self, response, link_mode, original_text, **kwargs
     ) -> list[LocalEntity]:
-        normalized_text = response[self[link_mode].normalized_text_key]
-        _, mapper_n2o = render_gap_mappers(original_text, normalized_text)
-        map_io = render_index_mapper(list(range(len(normalized_text))), mapper_n2o)
-
-        ents = (
+        entities = (
             response[self[link_mode].entities_key]
             if self[link_mode].entities_key in response
             else []
         )
+        if not entities:
+            return []
+        normalized_text = response[self[link_mode].normalized_text_key]
+        _, mapper_n2o = render_gap_mappers(original_text, normalized_text)
+        map_io = render_index_mapper(list(range(len(normalized_text))), mapper_n2o)
+
         if link_mode == EntityLinker.BERN_V2:
             normalized = [
                 EntityLinkerManager._normalize_bern_entity(
                     item, prob_thr=self[link_mode].threshold, mapper_io=map_io, **kwargs
                 )
-                for item in ents
+                for item in entities
             ]
         elif link_mode == EntityLinker.FISHING:
             normalized = [
                 EntityLinkerManager._normalize_fishing_entity(
                     item, prob_thr=self[link_mode].threshold, mapper_io=map_io
                 )
-                for item in ents
+                for item in entities
             ]
         elif link_mode == EntityLinker.PELINKER:
             normalized = [
                 EntityLinkerManager._normalize_pelinker_entity(
                     item, prob_thr=self[link_mode].threshold, mapper_io=map_io
                 )
-                for item in ents
+                for item in entities
             ]
         else:
             normalized = []
@@ -185,7 +187,7 @@ class EntityLinkerManager(BaseDataclass):
             logger.warning(f" {item} does not contain prob key")
             prob0 = 1.0
         if prob0 > prob_thr:
-            id0 = item["entity"]
+            id0 = item["entity_id_predicted"]
             item_spec = id0.split(".")
             ent_db_type, item_id = item_spec
             ent_type = None

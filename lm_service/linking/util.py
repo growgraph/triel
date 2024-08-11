@@ -226,7 +226,7 @@ def map_mentions_to_entities(
 @profile(_argnames="link_simple")
 def link_simple(
     link_mode: EntityLinker, text: str, elm: EntityLinkerManager, **kwargs
-) -> dict:
+) -> dict | None:
     """
 
     :param text:
@@ -236,10 +236,13 @@ def link_simple(
 
     try:
         entity_pack = elm.query(text, link_mode)
+        return entity_pack
     except EntityLinkerFailed as e:
-        logging.error(f"EntityLinkerFailed es {e}")
-        entity_pack = dict()
-    return entity_pack
+        logging.error(f"EntityLinkerFailed as {e}")
+        return None
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        return None
 
 
 @profile
@@ -254,6 +257,7 @@ def map_linkers(text: str, entity_linker_manager: EntityLinkerManager, **kwargs)
             ),
             entity_linker_manager.linker_types,
         )
+    responses = [r for r in responses if r is not None]
     return responses
 
 
@@ -301,19 +305,22 @@ def process_entity_cluster(
 def render_entity_clusters(entity_pack: list[LocalEntity]) -> list[list[LocalEntity]]:
     clusters: list[list[LocalEntity]] = []
 
-    current_cluster: list[LocalEntity] = [entity_pack[0]]
-    pnt = 1
-    while pnt < len(entity_pack):
-        xs = current_cluster[-1].a, current_cluster[-1].b
-        ys = entity_pack[pnt].a, entity_pack[pnt].b
-        if interval_overlap_metric(xs, ys) > 0:
-            current_cluster += [entity_pack[pnt]]
-        else:
-            clusters += [current_cluster]
-            current_cluster = [entity_pack[pnt]]
-        pnt += 1
-    clusters += [current_cluster]
-    return clusters
+    if entity_pack:
+        current_cluster: list[LocalEntity] = [entity_pack[0]]
+        pnt = 1
+        while pnt < len(entity_pack):
+            xs = current_cluster[-1].a, current_cluster[-1].b
+            ys = entity_pack[pnt].a, entity_pack[pnt].b
+            if interval_overlap_metric(xs, ys) > 0:
+                current_cluster += [entity_pack[pnt]]
+            else:
+                clusters += [current_cluster]
+                current_cluster = [entity_pack[pnt]]
+            pnt += 1
+        clusters += [current_cluster]
+        return clusters
+    else:
+        return []
 
 
 def process_entities(

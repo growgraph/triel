@@ -1,32 +1,39 @@
-def render_gap_mappers(s1, s2):
+def render_gap_mappers(s1, s2, k_max_check=5):
     """
     given strings s1 and s2,
     return two lists of tuples: [(pos, gap)]
 
     where the first contains index `pos` where an insertion of size `gap` happens in s2 wrt to s1
     and vice versa
+
+    the gaps are mostly due to Unicode and punctuation interpretation, hence k_max_check = 5 by default
     :param s1:
     :param s2:
+    :param k_max_check:
     :return:
     """
-    max_len = max([len(s1), len(s2)])
     p1, p2 = 0, 0
 
     ix1 = []
     ix2 = []
 
-    while p1 < max_len and p2 < max_len:
+    while p1 < len(s1) and p2 < len(s2):
         if s1[p1] != s2[p2]:
-            for k in range(1, 5):
-                if s1[p1 + k] == s2[p2]:
-                    ix2 += [(p2, k)]
-                    p1 += k
+            for k in range(1, k_max_check):
+                if p1 + k < len(s1):
+                    if s1[p1 + k] == s2[p2]:
+                        ix2 += [(p2, k)]
+                        p1 += k
+                        break
+                else:
                     break
                 if s1[p1] == s2[p2 + k]:
-                    ix1 += [(p1, k)]
-                    p2 += k
-                    break
-
+                    if p2 + k < len(s2):
+                        ix1 += [(p1, k)]
+                        p2 += k
+                        break
+                    else:
+                        break
         p1 += 1
         p2 += 1
     return ix1, ix2
