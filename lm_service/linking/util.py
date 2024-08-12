@@ -265,6 +265,7 @@ def process_entity_cluster(
     cluster: list[LocalEntity], score_mapper: ScoreMapper | None = None
 ) -> tuple[LocalEntity, list[tuple[str, str, float]]]:
     # pick leading candidate
+
     if score_mapper is not None:
         score_obj = [score_mapper(e.linker_type, e.score) for e in cluster]
     else:

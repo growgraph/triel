@@ -39,6 +39,7 @@ class EntityLinker(str, Enum):
     GG = "GG"
     PELINKER = "PELINKER"
     META = "__META"
+    NA = "NA"
 
 
 ent_db_type_gg_verbatim = "verbatim"
@@ -46,9 +47,9 @@ ent_db_type_gg_verbatim = "verbatim"
 
 @dataclasses.dataclass
 class Entity(BaseDataclass):
-    linker_type: EntityLinker
     ent_db_type: str
     id: str
+    linker_type: EntityLinker = EntityLinker.NA
     hash: EntityHash = ""
     ent_type: str | None = None
     original_form: str | None = None

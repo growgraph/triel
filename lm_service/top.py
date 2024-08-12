@@ -272,4 +272,9 @@ def cast_response_entity_representation(response: REELResponse) -> REELResponseE
         | set([t.predicate for t in triples_set])
     )
     entities = [map_eindex_entity[k] for k in set_present_entities]
+
+    # strip linker_type
+
+    for e in entities:
+        e.linker_type = EntityLinker.NA
     return REELResponseEntity(triples=sorted(triples_set), entities=entities)

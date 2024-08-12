@@ -54,4 +54,4 @@ RUN poetry run python -m coreferee install en
 COPY run ./run
 COPY README.md logging.conf ./
 
-CMD ["poetry", "run", "python", "run/serve.py", "--wsgi-self", "wsgi_self.json", "--entity-linker-config", "el_config.yaml"]
+CMD ["poetry", "run", "python", "run/serve.py", "--wsgi-self", "self.json", "--entity-linker-config", "el_config.yaml"]
