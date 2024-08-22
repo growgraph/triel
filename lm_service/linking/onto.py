@@ -33,13 +33,13 @@ class EntityLinkerFailed(Exception):
 
 
 class EntityLinker(str, Enum):
+    NA = None
     BERN_V2 = "BERN_V2"
     FISHING = "FISHING"
     SPACY_BASIC = "SPACY_BASIC"
     GG = "GG"
     PELINKER = "PELINKER"
     META = "__META"
-    NA = "NA"
 
 
 ent_db_type_gg_verbatim = "verbatim"
