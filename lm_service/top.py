@@ -266,12 +266,12 @@ def cast_response_entity_representation(response: REELResponse) -> REELResponseE
                 predicate_compound_entity_map[p].add(e.hash)
                 map_eindex_entity[e.hash] = e
 
-    set_present_entities = sorted(
+    set_present_entities: list[str] = sorted(
         set([t.subject for t in triples_set])
         | set([t.object for t in triples_set])
         | set([t.predicate for t in triples_set])
     )
-    entities = [map_eindex_entity[k] for k in set_present_entities]
+    entities: list[Entity] = [map_eindex_entity[k] for k in set_present_entities]
 
     # strip linker_type
 

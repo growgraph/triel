@@ -117,8 +117,9 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
                 logger.error(f"Exception: {e}")
                 return {"error": get_exception_traceback_str(e)}, 500
 
-            response_jsonlike = cast_response_redux(response)
-            jy = jsonify(response_jsonlike)
+            response_cast = cast_response_redux(response)
+            response_dictlike = response_cast.to_dict()
+            jy = jsonify(response_dictlike)
             return jy, 200
 
     @app.route(wsgi_re.paths["parse/entities"], methods=["POST"])
@@ -134,9 +135,10 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
                 return {"error": get_exception_traceback_str(e)}, 501
             except Exception as e:
                 return {"error": get_exception_traceback_str(e)}, 500
-            response_jsonlike = cast_response_entity_representation(response)
 
-            jy = jsonify(response_jsonlike)
+            response_cast = cast_response_entity_representation(response)
+            response_dictlike = response_cast.to_dict()
+            jy = jsonify(response_dictlike)
             return jy, 200
 
     logger.info(f"wsgi: host {wsgi_re.host}")
