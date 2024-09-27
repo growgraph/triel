@@ -5,7 +5,7 @@ from collections import defaultdict, deque
 from itertools import product
 
 import networkx as nx
-from suthing import profile
+from suthing import Timer, profile
 
 from lm_service.coref import stitch_coreference
 from lm_service.hash import hashme
@@ -40,89 +40,97 @@ def text_to_graph_mentions_entities(text, nlp, rules, elm, ix_phrases=None, **kw
     triples_dict, map_muindex_candidate = phrases_to_triples(
         phrases, nlp, rules, **kwargs
     )
+    with Timer() as t_coref:
+        edges_chain_token_global, edges_chain_order_global = stitch_coreference(
+            nlp=nlp, phrases_for_coref=phrases, window_size=2
+        )
 
-    edges_chain_token_global, edges_chain_order_global = stitch_coreference(
-        nlp=nlp, phrases_for_coref=phrases, window_size=2
+    with Timer() as t_el:
+        entity_pack = iterate_over_linkers(
+            phrases=phrases,
+            entity_linker_manager=elm,
+            **kwargs,
+        )
+
+    with Timer() as t_rest:
+        # chain2entities
+        map_eindex_entity, map_c2e, ee_edges = map_mentions_to_entities(
+            phrases, entity_pack, map_muindex_candidate
+        )
+
+        # TODO to use in the future releases
+        # candidate entity equivalences :
+        len(ee_edges)
+
+        list_muindex_candidate_simplified = [
+            (k, v.to_simplified()) for k, v in map_muindex_candidate.items()
+        ]
+
+        phrase_candidates: dict[int, list[tuple]] = {}
+        for mu, v in map_muindex_candidate.items():
+            if mu.phrase in phrase_candidates:
+                phrase_candidates[mu.phrase] += [(mu, v)]
+            else:
+                phrase_candidates[mu.phrase] = [(mu, v)]
+
+        # chain -> entities
+
+        graph_chain_tokens = nx.DiGraph()
+        graph_chain_tokens.add_edges_from(edges_chain_token_global)
+
+        chain_mu_edges = []
+
+        for c in graph_chain_tokens.nodes:
+            if graph_chain_tokens.in_degree(c) == 0:
+                tokens_equivalence_class = list(graph_chain_tokens.successors(c))
+                iphrases = set(
+                    x for token in tokens_equivalence_class for x, _ in token
+                )
+                for iphrase in iphrases:
+                    for mu, candidate in phrase_candidates[iphrase]:
+                        if any(
+                            set(candidate.stokens) & set(tokens)
+                            for tokens in tokens_equivalence_class
+                        ):
+                            chain_mu_edges += [(c, mu)]
+
+        graph_chain_mus = nx.DiGraph()
+        graph_chain_mus.add_edges_from(chain_mu_edges)
+
+        graph_c2e = nx.DiGraph()
+        graph_c2e.add_edges_from(map_c2e)
+        c2e_edges_extra = []
+
+        for c in graph_chain_mus.nodes:
+            if graph_chain_mus.in_degree(c) == 0:
+                es = set(
+                    [
+                        e
+                        for mu in graph_chain_mus.successors(c)
+                        if mu in graph_c2e.nodes
+                        for e in graph_c2e.successors(mu)
+                    ]
+                )
+                for mu in graph_chain_mus.successors(c):
+                    c2e_edges_extra += [(mu, e) for e in es]
+
+        graph_c2e.add_edges_from(c2e_edges_extra)
+        map_c2e = list(graph_c2e.edges())
+
+        map_eindex_entity_extra, map_c2e_extra = link_unlinked_entities(
+            map_c2e, map_muindex_candidate
+        )
+
+        map_c2e += map_c2e_extra
+
+        map_eindex_entity_total = {**map_eindex_entity, **map_eindex_entity_extra}
+
+        list_triples = [(k, v) for k, v in triples_dict.items()]
+
+    logger.info(
+        f"coref: {t_coref.elapsed:.2f}s; el: {t_el.elapsed:.2f}s; "
+        f"rest: {t_rest.elapsed:.2f}s; for text '{text[:20]}...'"
     )
-
-    entity_pack = iterate_over_linkers(
-        phrases=phrases,
-        entity_linker_manager=elm,
-        **kwargs,
-    )
-
-    # chain2entities
-    map_eindex_entity, map_c2e, ee_edges = map_mentions_to_entities(
-        phrases, entity_pack, map_muindex_candidate
-    )
-
-    # TODO to use in the future releases
-    # candidate entity equivalences :
-    len(ee_edges)
-
-    list_muindex_candidate_simplified = [
-        (k, v.to_simplified()) for k, v in map_muindex_candidate.items()
-    ]
-
-    phrase_candidates: dict[int, list[tuple]] = {}
-    for mu, v in map_muindex_candidate.items():
-        if mu.phrase in phrase_candidates:
-            phrase_candidates[mu.phrase] += [(mu, v)]
-        else:
-            phrase_candidates[mu.phrase] = [(mu, v)]
-
-    # chain -> entities
-
-    graph_chain_tokens = nx.DiGraph()
-    graph_chain_tokens.add_edges_from(edges_chain_token_global)
-
-    chain_mu_edges = []
-
-    for c in graph_chain_tokens.nodes:
-        if graph_chain_tokens.in_degree(c) == 0:
-            tokens_equivalence_class = list(graph_chain_tokens.successors(c))
-            iphrases = set(x for token in tokens_equivalence_class for x, _ in token)
-            for iphrase in iphrases:
-                for mu, candidate in phrase_candidates[iphrase]:
-                    if any(
-                        set(candidate.stokens) & set(tokens)
-                        for tokens in tokens_equivalence_class
-                    ):
-                        chain_mu_edges += [(c, mu)]
-
-    graph_chain_mus = nx.DiGraph()
-    graph_chain_mus.add_edges_from(chain_mu_edges)
-
-    graph_c2e = nx.DiGraph()
-    graph_c2e.add_edges_from(map_c2e)
-    c2e_edges_extra = []
-
-    for c in graph_chain_mus.nodes:
-        if graph_chain_mus.in_degree(c) == 0:
-            es = set(
-                [
-                    e
-                    for mu in graph_chain_mus.successors(c)
-                    if mu in graph_c2e.nodes
-                    for e in graph_c2e.successors(mu)
-                ]
-            )
-            for mu in graph_chain_mus.successors(c):
-                c2e_edges_extra += [(mu, e) for e in es]
-
-    graph_c2e.add_edges_from(c2e_edges_extra)
-    map_c2e = list(graph_c2e.edges())
-
-    map_eindex_entity_extra, map_c2e_extra = link_unlinked_entities(
-        map_c2e, map_muindex_candidate
-    )
-
-    map_c2e += map_c2e_extra
-
-    map_eindex_entity_total = {**map_eindex_entity, **map_eindex_entity_extra}
-
-    list_triples = [(k, v) for k, v in triples_dict.items()]
-
     return REELResponse(
         triples=list_triples,
         _muindex_candidate=list_muindex_candidate_simplified,

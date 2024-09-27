@@ -92,8 +92,6 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
     nlp.add_pipe("coreferee")
 
     def work(request0):
-        logger.info(request0)
-        logger.info(request0.json)
         json_data = request0.json
         text = json_data["text"]
         response = text_to_graph_mentions_entities(text, nlp, rules, elm)
