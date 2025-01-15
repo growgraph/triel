@@ -2,36 +2,24 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from collections import defaultdict, deque
+from collections import deque
 from copy import deepcopy
 from itertools import product
 
 import networkx as nx
 import pandas as pd
 
-from lm_service.coref import (
-    coref_candidates,
-    graph_component_maps,
-    render_coref_maps_wrapper,
-)
 from lm_service.folding import get_flag
-from lm_service.graph import (
-    excise_node,
-    phrase_to_deptree,
-    relabel_nodes_and_key,
-)
+from lm_service.graph import excise_node
 from lm_service.onto import (
-    AbsToken,
     ACandidateKind,
-    Candidate,
     CandidateType,
     Relation,
     SourceOrTarget,
     Token,
     TokenIndexT,
-    apply_map,
 )
-from lm_service.piles import CandidatePile, ExtCandidateList, SRTPile
+from lm_service.piles import CandidatePile, SRTPile
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +45,10 @@ def find_candidates_bfs(
     rules=None,
 ):
     """
+    tree search to find candidates
 
-    :param graph: please provide a copy graph, find_candidates_bfs potentially modifies graph structure
-    :param original_graph: to assign edges for candi ates correctly
+    :param graph: provide a copy of graph, find_candidates_bfs potentially modifies graph structure
+    :param original_graph: to assign edges for candidates correctly
     :param deq: deque to keep track of vertices while traversing
     :param candidate_pile: pile to accumulate candidates
     :param how:
@@ -77,11 +66,8 @@ def find_candidates_bfs(
         ACandidateKind.SOURCE_TARGET: SourceOrTarget,
     }
 
-    rules_current = (
-        rules["sourcetarget"]
-        if how == ACandidateKind.SOURCE_TARGET
-        else rules["relation"]
-    )
+    rules_current = rules[how]
+
     if not deq:
         return
 
@@ -231,11 +217,9 @@ def graph_to_candidate_pile(
         robust_mode=robust_mode,
     )
 
-    source_candidates, target_candidates = sieve_sources_targets(
-        candidate_pile
-    )
+    source_candidates, target_candidates = sieve_sources_targets(candidate_pile)
 
-    logger.info(f" relations: {relation_pile}")
+    logger.debug(f" relations: {relation_pile}")
 
     return (
         SRTPile(
@@ -263,10 +247,7 @@ def generate_extra_graphs(
     # distance wrt to weights defined in this way will be 0 for the same level
     # +1 or -1 for level k to k+1 and vice versa
     g_weighted.add_weighted_edges_from(
-        [
-            (u, v, g_reversed.edges[u, v]["weight"])
-            for u, v in g_reversed.edges
-        ],
+        [(u, v, g_reversed.edges[u, v]["weight"]) for u, v in g_reversed.edges],
         weight="weight",
     )
 
@@ -371,9 +352,7 @@ def derive_sources_per_relation(
     decision = decision.merge(targetlike_penalty, how="left", on="s")
     decision = decision[decision["ud"] != 0]
 
-    decision["mcost"] = (
-        decision["ud"] + decision["ld"] + decision["syn_penalty"]
-    )
+    decision["mcost"] = decision["ud"] + decision["ld"] + decision["syn_penalty"]
 
     # source decisions are based on mcost
 
@@ -384,14 +363,13 @@ def derive_sources_per_relation(
     mask_ud = decision.groupby("r")["ud"].transform("min")
 
     decision = decision[decision["ud"].eq(mask_ud)]
+    sources_per_relation: dict[TokenIndexT, set[TokenIndexT]]
 
     if decision.empty:
-        sources_per_relation: dict[TokenIndexT, set[TokenIndexT]] = {
-            t: set() for t in relation_candidate_roots
-        }
+        sources_per_relation = {t: set() for t in relation_candidate_roots}
     else:
         sources_per_relation = (
-            decision.groupby("r", group_keys=False)
+            decision.groupby("r", group_keys=True)[["s"]]
             .apply(lambda x: set(x["s"]))  # type: ignore
             .to_dict()
         )
@@ -414,8 +392,7 @@ def derive_targets_per_relaton(
     }
 
     min_dists: dict[TokenIndexT, int] = {
-        r: min(item.values()) if item else -1
-        for r, item in dist_to_targets.items()
+        r: min(item.values()) if item else -1 for r, item in dist_to_targets.items()
     }
 
     targets_per_relation: dict[TokenIndexT, set[TokenIndexT]] = {
@@ -429,9 +406,7 @@ def derive_targets_per_relaton(
     return targets_per_relation
 
 
-def align_relation_to_target(
-    r: Relation, t: SourceOrTarget, graph: nx.DiGraph
-):
+def align_relation_to_target(r: Relation, t: SourceOrTarget, graph: nx.DiGraph):
     """
     remove prepositions that on the path from relation to target
 
@@ -443,9 +418,7 @@ def align_relation_to_target(
     :return:
     """
     r = deepcopy(r)
-    preposition_tokens = [
-        t.s for t in r.tokens if t.dep_ == "prep" and t.tag_ == "IN"
-    ]
+    preposition_tokens = [t.s for t in r.tokens if t.dep_ == "prep" and t.tag_ == "IN"]
     for prep in preposition_tokens:
         try:
             path = nx.shortest_path(graph, r.sroot, t.sroot)
@@ -494,8 +467,7 @@ def derive_relations_per_relation(
     }
 
     min_dists: dict[TokenIndexT, int] = {
-        r: min(item.values()) if item else -1
-        for r, item in dist_rr_rev.items()
+        r: min(item.values()) if item else -1 for r, item in dist_rr_rev.items()
     }
 
     rel_sources_per_relation: dict[TokenIndexT, set[TokenIndexT]] = {
@@ -655,8 +627,7 @@ def form_triples(
                 if s != t:
                     if flag_only_relation_in_path:
                         if (
-                            s in pile.sources.sroots
-                            and t in pile.targets.sroots
+                            s in pile.sources.sroots and t in pile.targets.sroots
                             # s not in relation_sroots
                             # and t not in relation_sroots
                         ):
@@ -674,16 +645,12 @@ def form_triples(
                                 if rel_sources_per_relation[sroot]:
                                     # TODO clear up next-iter hack
                                     # currently only first element is used (in practice there should be only one)
-                                    s = next(
-                                        iter(rel_sources_per_relation[sroot])
-                                    )
+                                    s = next(iter(rel_sources_per_relation[sroot]))
                                 else:
                                     s = (0, "nil")
                             if set(path[index_sroot + 1 :]) & relation_sroots:
                                 if rel_targets_per_relation[sroot]:
-                                    t = next(
-                                        iter(rel_targets_per_relation[sroot])
-                                    )
+                                    t = next(iter(rel_targets_per_relation[sroot]))
                                 else:
                                     t = (0, "nil")
                             if s != (0, "nil") and t != (0, "nil"):
@@ -716,86 +683,6 @@ def sieve_sources_targets(
     return sources, targets
 
 
-def text_to_compound_index_graph(
-    nlp, text, initial_phrase_index, single_phrase_mode=False
-):
-    rdoc, graph = phrase_to_deptree(nlp, text)
-
-    if single_phrase_mode and nx.number_weakly_connected_components(graph) > 1:
-        components = sorted(
-            nx.weakly_connected_components(graph), key=lambda x: len(x)
-        )
-        sg = nx.subgraph(graph, components[-1])
-        logger.warning(
-            f" with single_phrase_mode from text <fail>{text}<fail> only"
-            f" largest component [representing {sg.size()}/{graph.size()}] was"
-            " kept."
-        )
-        graph = sg
-
-    # cast index to compound index
-    map_tree_subtree_index = graph_component_maps(graph, initial_phrase_index)
-
-    map_tree_subtree_index = {
-        k: AbsToken.ituple2stuple(v) for k, v in map_tree_subtree_index.items()
-    }
-    graph_relabeled = relabel_nodes_and_key(graph, map_tree_subtree_index, "s")
-    return graph_relabeled, rdoc, map_tree_subtree_index
-
-
-def text_to_coref_sourcetarget(
-    nlp, text, ext_candidate_list: ExtCandidateList, initial_phrase_index
-) -> defaultdict[TokenIndexT, list[Candidate]]:
-    """
-
-    :param nlp:
-    :param text:
-    :param  ext_candidate_list: ExtCandidateList
-    :param  initial_phrase_index
-    :return:
-    """
-    (
-        graph_relabeled,
-        rdoc,
-        map_tree_subtree_index,
-    ) = text_to_compound_index_graph(nlp, text, initial_phrase_index)
-
-    # coref maps
-    (
-        map_subbable_to_chain,
-        map_chain_to_most_specific,
-    ) = render_coref_maps_wrapper(rdoc)
-
-    (
-        map_subbable_to_chain_str,
-        map_chain_to_most_specific_str,
-    ) = apply_map(
-        [map_subbable_to_chain, map_chain_to_most_specific],
-        map_tree_subtree_index,
-    )
-
-    tokens = [
-        Token(
-            **graph_relabeled.nodes[i],
-            successors=graph_relabeled.successors(i),
-            predecessors=graph_relabeled.predecessors(i),
-        )
-        for i in graph_relabeled.nodes()
-    ]
-
-    token_dict = {t.s: t for t in tokens}
-
-    # ncp : dict[TokenIndexT, list[Candidate]]
-    # for each root -> a list of relevant candidates
-    ncp = coref_candidates(
-        ext_candidate_list,
-        map_subbable_to_chain_str,
-        map_chain_to_most_specific_str,
-        token_dict,
-    )
-    return ncp
-
-
 def add_hash(triples_expanded):
     agg = []
 
@@ -811,9 +698,7 @@ def add_hash(triples_expanded):
                 "type": "source",
             },
             {
-                "hash": hashlib.sha256(
-                    relation_txt.encode("utf-8")
-                ).hexdigest(),
+                "hash": hashlib.sha256(relation_txt.encode("utf-8")).hexdigest(),
                 "text": relation_txt,
                 "type": "relation",
             },

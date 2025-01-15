@@ -1,0 +1,12 @@
+{
+    "db_type": "wsgi",
+    "ip_addr": "localhost",
+    "paths": {
+        "parse": "/v3/parse",
+        "parse/entities": "/v3/parse/entities",
+        "parse/detailed": "/v3/parse/detailed"
+    },
+    "port": 8592,
+    "protocol": "http",
+    "host": "0.0.0.0"
+}

@@ -26,8 +26,7 @@ def split_tokens_into_phrases(tokens_list, terminal_puncts=None):
         cur_phrase.append(token1)
         if (
             # not token0[-1].isupper() and
-            token1 in terminal_puncts
-            and token2[0].isupper()
+            token1 in terminal_puncts and token2[0].isupper()
             # and not token2[0].islower()
         ):
             phrases.append(cur_phrase)
@@ -58,9 +57,7 @@ def normalize_input_text(text, terminal_full_stop=True):
         # TODO breaking example :
         #  text =  "The program is freely available at \\url{http://graphics.med.yale.edu/cgi-bin/lib_comp.pl}."
         # in \\url is interpreted as the beginning of escape sequence
-        logger.error(
-            f"unicode decoding failed: {e}; more latex in text? {text}"
-        )
+        logger.error(f"unicode decoding failed: {e}; more latex in text? {text}")
 
     # condense white spaces
     text = re.sub(r"\s+", " ", text)
@@ -103,8 +100,7 @@ def pivot_around_advcl(nlp: Language, phrase, max_symbols=600) -> list[str]:
     advcls = [
         u
         for u in graph.nodes()
-        if graph.nodes[u]["tag_"] == "VBN"
-        and graph.nodes[u]["dep_"] == "advcl"
+        if graph.nodes[u]["tag_"] == "VBN" and graph.nodes[u]["dep_"] == "advcl"
     ]
 
     for advcl in advcls:
@@ -121,7 +117,7 @@ def pivot_around_advcl(nlp: Language, phrase, max_symbols=600) -> list[str]:
                 and graph.nodes[next_]["tag_"] == ","
             ):
                 if len(list(graph.successors(next_))) != 0:
-                    raise Exception(f" `,` punct has successors")
+                    raise Exception(" `,` punct has successors")
                 graph.remove_node(next_)
 
         # refresh succs just in case: advcl has the same index
@@ -139,10 +135,7 @@ def pivot_around_advcl(nlp: Language, phrase, max_symbols=600) -> list[str]:
             next_nodes = sorted(get_subtree_wrapper(graph, next_))
             root_nodes = sorted(get_subtree_wrapper(graph, root))
 
-            if (
-                list(range(adv_nodes[0], adv_nodes[0] + len(adv_nodes)))
-                != adv_nodes
-            ):
+            if list(range(adv_nodes[0], adv_nodes[0] + len(adv_nodes))) != adv_nodes:
                 raise Exception(f" subtree nodes are not a sequence {phrase}")
             if (
                 list(range(next_nodes[0], next_nodes[0] + len(next_nodes)))
@@ -164,9 +157,7 @@ def pivot_around_advcl(nlp: Language, phrase, max_symbols=600) -> list[str]:
             graph = nx.relabel_nodes(graph, mapping)
 
     tphrases = []
-    sgraphs = sorted(
-        nx.weakly_connected_components(graph), key=lambda x: min(x)
-    )
+    sgraphs = sorted(nx.weakly_connected_components(graph), key=lambda x: min(x))
     for sg in sgraphs:
         phrase_rep = [graph.nodes[i]["text"] for i in sorted(sg)]
         phrase_rep[0] = phrase_rep[0][0].capitalize() + phrase_rep[0][1:]

@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Belikov"
+  given-names: "Alexander"
+  orcid: "https://orcid.org/0000-0002-5649-0913"
+title: "TriEl: package for triple generation and entity linking"
+version: 2.0.4
+# doi: 10.5281/zenodo.1234
+date-released: 2025-01-20
+url: "https://github.com/growgraph/triel"

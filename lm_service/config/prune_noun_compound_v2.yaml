@@ -1,4 +1,4 @@
-sourcetarget:
+source_target:
     primary:
     -   -   how: startswith
             key: tag_
@@ -12,10 +12,6 @@ sourcetarget:
             value: DT
         -   key: dep_
             value: nsubj
-    -   -   key: tag_
-            value: VB
-        -   key: dep_
-            value: xcomp
     -   -   key: tag_
             value: VBN
         -   key: dep_
@@ -79,6 +75,10 @@ sourcetarget:
             value: pobj
     -   -   key: tag_
             value: CD
+        -   key: dep_
+            value: nummod
+    -   -   key: tag_
+            value: NN
         -   key: dep_
             value: nummod
     -   -   key: tag_

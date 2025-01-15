@@ -6,12 +6,6 @@ subs = {"ne": "__ne__"}
 
 
 def get_flag(props, rules):
-    hows = {"eq"}
-    for r in rules:
-        for sr in r:
-            if "how" in sr:
-                hows |= {sr["how"]}
-
     conclusion = []
     for r in rules:
         flag = []

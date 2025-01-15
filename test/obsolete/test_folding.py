@@ -351,9 +351,7 @@ class TestMetagraph(unittest.TestCase):
 
     @unittest.skip("obsolete")
     def test_fold_graph(self):
-        fp = pkgutil.get_data(
-            "lm_service.config", "prune_noun_compound_v2.yaml"
-        )
+        fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
         rules = yaml.load(fp, Loader=yaml.FullLoader)
 
         metagraph = nx.DiGraph()
@@ -365,21 +363,14 @@ class TestMetagraph(unittest.TestCase):
         )
 
         metagraph_name = "test_fold_graph"
-        plot_graph(
-            metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}"
-        )
+        plot_graph(metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}")
 
-        plot_leaves(
-            metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}"
-        )
+        plot_leaves(metagraph, os.path.join(self.path, "figs"), f"{metagraph_name}")
 
         self.assertEqual(len(metagraph.nodes), 10)
         size_ggs = [3, 1, 2, 1, 4, 2, 7, 1, 2, 12]
         self.assertEqual(
-            [
-                len(metagraph.nodes[n]["leaf"])
-                for n in sorted(metagraph.nodes())
-            ],
+            [len(metagraph.nodes[n]["leaf"]) for n in sorted(metagraph.nodes())],
             size_ggs,
         )
 

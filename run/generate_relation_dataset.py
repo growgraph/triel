@@ -4,7 +4,6 @@ import os
 import pkgutil
 import sys
 
-import coreferee
 import networkx as nx
 import pandas as pd
 import spacy
@@ -24,11 +23,7 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
 
     phrases = normalize_text(text, nlp, head)
     triples, map_mu_index_triple, _ = phrases_to_triples(
-        phrases,
-        nlp,
-        rules,
-        window_size=window_size,
-        plot_path=plot_path,
+        phrases, nlp, rules, plot_path=plot_path
     )
 
     triples_text = cast_simplified_triples_table(triples, map_mu_index_triple)
@@ -49,7 +44,7 @@ def main(nlp, text, fig_path, head=None, window_size=2, plot_path=None):
         g.add_node(ti, label=t)
         g.add_edge(si, ti, label=r)
     if plot_path:
-        plot_graph(g, fig_path, f"doc", prog="sfdp")
+        plot_graph(g, fig_path, "doc", prog="sfdp")
 
     df_acc = []
     for mu_key in triples:
@@ -97,9 +92,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     logging.basicConfig(
-        format=(
-            "%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s"
-        ),
+        format=("%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s"),
         datefmt="%Y-%m-%d %H:%M:%S",
         level=logging.ERROR,
         # filemode="w",

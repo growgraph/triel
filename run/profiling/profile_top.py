@@ -1,15 +1,16 @@
+# pylint: disable=E1101
+
 import os
 import pkgutil
 from multiprocessing.managers import BaseManager
 from pprint import pprint
 
-import coreferee
 import spacy
 import yaml
 from suthing import SProfiler
 
-from lm_service.linking import EntityLinkerManager
-from lm_service.top import cast_response_to_unfolded, text_to_rel_graph
+from lm_service.linking.onto import EntityLinkerManager
+from lm_service.top import cast_response_redux, text_to_graph_mentions_entities
 
 
 def main():
@@ -23,12 +24,12 @@ def main():
 
     conf = {
         "BERN_V2": {
-            "url": "http://10.0.0.3:8888/plain",
+            "url": "http://192.168.1.11:8888/plain",
             "text_field": "text",
             "threshold": 0.75,
         },
         "FISHING": {
-            "url": "http://10.0.0.3:8090/service/disambiguate",
+            "url": "http://192.168.1.11:8090/service/disambiguate",
             "text_field": "text",
             "extra_args": {
                 "language": {"lang": "en"},
@@ -55,10 +56,8 @@ def main():
     with LocalManager() as manager:
         sp = manager.SProfiler()
 
-        response = text_to_rel_graph(text, nlp, rules, elm, _profiler=sp)
-        response_jsonlike = cast_response_to_unfolded(
-            response, cast_triple_version="v1"
-        )
+        response = text_to_graph_mentions_entities(text, nlp, rules, elm, _profiler=sp)
+        response_jsonlike = cast_response_redux(response)
         stats = sp.view_stats()
     print(response_jsonlike)
     pprint(stats)

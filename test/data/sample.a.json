@@ -1,0 +1,7 @@
+{
+    "text": "TAMs can also secrete in the TME a number of immunosuppressive cytokines, such as IL-6, TGF-\u03b2, and IL-10 that are able to suppress CD8+ T-cell function (76). Specifically, IL-6 is expressed at high levels in PDAC, and its increasing circulating level is associated with advanced disease and poor prognosis (77). The inhibition of IL-6 signaling along with CD40 blockade is able to revert the TME to support an antitumor immune response, by reducing TGF-\u03b2 activation and fibrosis deposition due to a decreased collagen type I production (78). Moreover, chemokines such as CCL2, CCL17, CCL20, and CCL22 induce the recruitment of Tregs to the tumor sites, activating their regulatory function by IL10 and TGF\u03b2 signaling, leading to the accumulation of Tregs and impairing the migration and activation of T cytotoxic effector cells (79\u201382). TAMs can also express arginase I that is involved in reducing L-arginine in the TME impairing T-cell function (83). TAMs are also responsible for a reduced NK cell function, due to the secretion of the above-mentioned cytokines resulting in a limited production of IFN-\u03b3, perforin, and IL-12 by NK cells, which determines a lower cytotoxicity and proliferation in the TME (84). TAMs are able to reduce NK cell functioning also by direct cell\u2013cell interactions, since PDL-1 expressed on TAMs can bind to PD-1 on NK cells, avoiding the activation of their cytotoxic receptors (85).",
+    "linkerTypes": [
+        "BERN_V2",
+        "FISHING"
+    ]
+}

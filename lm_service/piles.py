@@ -3,17 +3,30 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from copy import deepcopy
+from typing import Callable
 
-from lm_service.onto import Candidate, CandidateType, Token, TokenIndexT
+import pandas as pd
+
+from lm_service.onto import (
+    Candidate,
+    CandidateType,
+    Relation,
+    SourceOrTarget,
+    Token,
+    TokenIndexT,
+)
 
 
 @dataclasses.dataclass(repr=False)
 class CandidatePile:
     """
     pile of candidates of one type
+    TokenIndexT -> Candidate (SourceOrTarget | Relation)
     """
 
-    _root_to_candidate: dict[TokenIndexT, Candidate] = dataclasses.field(default_factory=dict)  # type: ignore
+    _root_to_candidate: dict[TokenIndexT, SourceOrTarget | Relation] = (
+        dataclasses.field(default_factory=dict)
+    )
 
     def __len__(self) -> int:
         return len(self._root_to_candidate)
@@ -27,7 +40,7 @@ class CandidatePile:
         return self._root_to_candidate[key]
 
     def __repr__(self):
-        s = f""
+        s = ""
         for k, v in self._root_to_candidate.items():
             s += f"{k} : {v.__repr__()} \n"
         return s
@@ -70,9 +83,7 @@ class CandidatePile:
         self._root_to_candidate[r.root.s] = r
 
     def project_to_text(self):
-        return [
-            c.project_to_text_str() for c in self._root_to_candidate.values()
-        ]
+        return [c.project_to_text_str() for c in self._root_to_candidate.values()]
 
     def drop_amod_vbn(self):
         new = deepcopy(self)
@@ -104,16 +115,15 @@ class CandidatePile:
 
     def normalize(self):
         new = deepcopy(self)
-        new._root_to_candidate = {
-            k: c.normalize() for k, c in new._root_to_candidate.items()
-        }
+        r2c = {k: c.normalize() for k, c in new._root_to_candidate.items()}
+        r2c = {k: v for k, v in r2c.items() if v._root is not None}
+        new._root_to_candidate = r2c
         return new
 
     def clean_dangling_edges(self):
         new = deepcopy(self)
         new._root_to_candidate = {
-            k: c.clean_dangling_edges()
-            for k, c in new._root_to_candidate.items()
+            k: c.clean_dangling_edges() for k, c in new._root_to_candidate.items()
         }
         return new
 
@@ -138,15 +148,32 @@ class CandidatePile:
                 dd_pile[sroot] += [c_unfolded]
         return dd_pile
 
+    def dump_to_table(self):
+        arr = [
+            (
+                *k,
+                min([vv.idx for vv in v.tokens]),
+                max([vv.idx_eot for vv in v.tokens]),
+                " ".join(v.project_to_text()),
+            )
+            for k, v in self._root_to_candidate.items()
+        ]
+        return pd.DataFrame(arr, columns=["iphrase", "itoken", "a", "b", "text"])
+
 
 class ExtCandidateList:
     """
     ext list of candidates
+
+    necessary because under the same root there can be several candidate (e.g. conjunction)
+    TokenIndexT -> [Candidate] (SourceOrTarget | Relation)
     """
 
     def __init__(self):
-        self._filter = None
-        self._root_to_lists: defaultdict[TokenIndexT, list[CandidateType]] = defaultdict(list)  # type: ignore
+        self._filter: None | Callable = None
+        self._root_to_lists: defaultdict[TokenIndexT, list[CandidateType]] = (
+            defaultdict(list)
+        )  # type: ignore
 
     def __len__(self) -> int:
         return sum(len(x) for x in self._root_to_lists.values())
@@ -154,10 +181,10 @@ class ExtCandidateList:
     def __contains__(self, item):
         return item in self._root_to_lists
 
-    def set_filter(self, key):
+    def set_filter(self, foo: Callable):
         # eg consider only candidates from a phrase range
         # self.set_filter(lambda x: i <= x[0] < i + window_size)
-        self._filter = key
+        self._filter = foo
 
     def __setitem__(self, key, value):
         self._root_to_lists[key] = value
@@ -165,9 +192,15 @@ class ExtCandidateList:
     def __getitem__(self, item):
         return self._root_to_lists[item]
 
+    def select(self, ip):
+        return (
+            self._root_to_lists[k] for k in self._root_to_lists.keys() if k[0] == ip
+        )
+
     def append(self, key, value: CandidateType):
-        if tuple(value.stokens) not in {
-            tuple(x.stokens) for x in self._root_to_lists[key]  # type: ignore
+        if tuple(value.stokens) not in {  # type: ignore
+            tuple(x.stokens)  # type: ignore
+            for x in self._root_to_lists[key]  # type: ignore
         }:
             self._root_to_lists[key] += [value]
 
@@ -175,17 +208,17 @@ class ExtCandidateList:
         if self._filter is None:
             return ((k, v) for k, v in self._root_to_lists.items())
         else:
-            return (
-                (k, v)
-                for k, v in self._root_to_lists.items()
-                if self._filter(k)
-            )
+            return ((k, v) for k, v in self._root_to_lists.items() if self._filter(k))
 
     def filter_out_pronouns(self):
         for k, vlist in self._root_to_lists.items():
-            self._root_to_lists[k] = [
-                item for item in vlist if not item.has_pronoun()
-            ]
+            self._root_to_lists[k] = [item for item in vlist if not item.has_pronoun()]
+
+    def get_phrase(self, iphrase):
+        return sorted(
+            [(k, v) for k, v in self._root_to_lists.items() if k[0] == iphrase],
+            key=lambda x: x[0][1],
+        )
 
 
 @dataclasses.dataclass

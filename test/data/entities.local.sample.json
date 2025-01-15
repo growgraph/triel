@@ -1,0 +1,2262 @@
+[
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tams",
+        "hash": "BERN_V2.NA.cell_type:tams",
+        "ent_type": "cell_type",
+        "a": 0,
+        "b": 4,
+        "score": 0.9078095555305481
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3569",
+        "hash": "BERN_V2.NCBIGene.3569",
+        "ent_type": "gene",
+        "a": 83,
+        "b": 87,
+        "score": 0.9587329030036926
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "7040",
+        "hash": "BERN_V2.NCBIGene.7040",
+        "ent_type": "gene",
+        "a": 90,
+        "b": 97,
+        "score": 0.9948606491088867
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3586",
+        "hash": "BERN_V2.NCBIGene.3586",
+        "ent_type": "gene",
+        "a": 104,
+        "b": 109,
+        "score": 0.9036038517951965
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:cd8_+_t_-_cell",
+        "hash": "BERN_V2.NA.cell_type:cd8_+_t_-_cell",
+        "ent_type": "cell_type",
+        "a": 136,
+        "b": 150,
+        "score": 0.8454045057296753
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "925",
+        "hash": "BERN_V2.NCBIGene.925",
+        "ent_type": "gene",
+        "a": 136,
+        "b": 141,
+        "score": 0.93408203125
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3569",
+        "hash": "BERN_V2.NCBIGene.3569",
+        "ent_type": "gene",
+        "a": 184,
+        "b": 188,
+        "score": 0.985564112663269
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D010190",
+        "hash": "BERN_V2.mesh.D010190",
+        "ent_type": "disease",
+        "a": 220,
+        "b": 224,
+        "score": 0.9980660080909729
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3569",
+        "hash": "BERN_V2.NCBIGene.3569",
+        "ent_type": "gene",
+        "a": 346,
+        "b": 350,
+        "score": 0.9690083265304565
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "958",
+        "hash": "BERN_V2.NCBIGene.958",
+        "ent_type": "gene",
+        "a": 372,
+        "b": 376,
+        "score": 0.9765301942825317
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "7040",
+        "hash": "BERN_V2.NCBIGene.7040",
+        "ent_type": "gene",
+        "a": 466,
+        "b": 473,
+        "score": 0.993360161781311
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D015001",
+        "hash": "BERN_V2.mesh.D015001",
+        "ent_type": "disease",
+        "a": 489,
+        "b": 497,
+        "score": 0.9999921321868896
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "1277",
+        "hash": "BERN_V2.NCBIGene.1277",
+        "ent_type": "gene",
+        "a": 528,
+        "b": 543,
+        "score": 0.9959996938705444
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tregs",
+        "hash": "BERN_V2.NA.cell_type:tregs",
+        "ent_type": "cell_type",
+        "a": 653,
+        "b": 658,
+        "score": 0.837649405002594
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 666,
+        "b": 671,
+        "score": 0.9995355606079102
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3586",
+        "hash": "BERN_V2.NCBIGene.3586",
+        "ent_type": "gene",
+        "a": 720,
+        "b": 724,
+        "score": 0.9050513505935669
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "7040",
+        "hash": "BERN_V2.NCBIGene.7040",
+        "ent_type": "gene",
+        "a": 729,
+        "b": 733,
+        "score": 0.9923540353775024
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_line:tregs",
+        "hash": "BERN_V2.NA.cell_line:tregs",
+        "ent_type": "cell_line",
+        "a": 777,
+        "b": 782,
+        "score": 0.8225365877151489
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:t_cytotoxic_effector_cells",
+        "hash": "BERN_V2.NA.cell_type:t_cytotoxic_effector_cells",
+        "ent_type": "cell_type",
+        "a": 829,
+        "b": 855,
+        "score": 0.6934665441513062
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tams",
+        "hash": "BERN_V2.NA.cell_type:tams",
+        "ent_type": "cell_type",
+        "a": 870,
+        "b": 874,
+        "score": 0.7020759582519531
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "383",
+        "hash": "BERN_V2.NCBIGene.383",
+        "ent_type": "gene",
+        "a": 892,
+        "b": 902,
+        "score": 0.9884436726570129
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D001120",
+        "hash": "BERN_V2.mesh.D001120",
+        "ent_type": "drug",
+        "a": 932,
+        "b": 944,
+        "score": 0.9991462826728821
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tams",
+        "hash": "BERN_V2.NA.cell_type:tams",
+        "ent_type": "cell_type",
+        "a": 993,
+        "b": 997,
+        "score": 0.8968544602394104
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "CL",
+        "id": "0000623",
+        "hash": "BERN_V2.CL.0000623",
+        "ent_type": "cell_type",
+        "a": 1033,
+        "b": 1040,
+        "score": 0.8393134474754333
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3458",
+        "hash": "BERN_V2.NCBIGene.3458",
+        "ent_type": "gene",
+        "a": 1145,
+        "b": 1152,
+        "score": 0.9941002130508423
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "5551",
+        "hash": "BERN_V2.NCBIGene.5551",
+        "ent_type": "gene",
+        "a": 1155,
+        "b": 1163,
+        "score": 0.9855711460113525
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3592",
+        "hash": "BERN_V2.NCBIGene.3592",
+        "ent_type": "gene",
+        "a": 1170,
+        "b": 1175,
+        "score": 0.9876061677932739
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:nk_cells",
+        "hash": "BERN_V2.NA.cell_type:nk_cells",
+        "ent_type": "cell_type",
+        "a": 1179,
+        "b": 1187,
+        "score": 0.7311558127403259
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tams",
+        "hash": "BERN_V2.NA.cell_type:tams",
+        "ent_type": "cell_type",
+        "a": 1266,
+        "b": 1270,
+        "score": 0.9264349937438965
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "CL",
+        "id": "0000623",
+        "hash": "BERN_V2.CL.0000623",
+        "ent_type": "cell_type",
+        "a": 1290,
+        "b": 1297,
+        "score": 0.8267390131950378
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "29126",
+        "hash": "BERN_V2.NCBIGene.29126",
+        "ent_type": "gene",
+        "a": 1358,
+        "b": 1363,
+        "score": 0.9896482825279236
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tams",
+        "hash": "BERN_V2.NA.cell_type:tams",
+        "ent_type": "cell_type",
+        "a": 1377,
+        "b": 1381,
+        "score": 0.6012045741081238
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "5133",
+        "hash": "BERN_V2.NCBIGene.5133",
+        "ent_type": "gene",
+        "a": 1394,
+        "b": 1398,
+        "score": 0.9952489733695984
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:nk_cells",
+        "hash": "BERN_V2.NA.cell_type:nk_cells",
+        "ent_type": "cell_type",
+        "a": 1402,
+        "b": 1410,
+        "score": 0.8156856894493103
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:cafs",
+        "hash": "BERN_V2.NA.cell_type:cafs",
+        "ent_type": "cell_type",
+        "a": 1500,
+        "b": 1504,
+        "score": 0.8908559083938599
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D010190",
+        "hash": "BERN_V2.mesh.D010190",
+        "ent_type": "disease",
+        "a": 1552,
+        "b": 1569,
+        "score": 0.999992311000824
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:myofibroblastic",
+        "hash": "BERN_V2.NA.cell_type:myofibroblastic",
+        "ent_type": "cell_type",
+        "a": 1572,
+        "b": 1587,
+        "score": 0.8694179654121399
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:mycafs",
+        "hash": "BERN_V2.NA.cell_type:mycafs",
+        "ent_type": "cell_type",
+        "a": 1590,
+        "b": 1596,
+        "score": 0.8789846897125244
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 1632,
+        "b": 1637,
+        "score": 0.9723338484764099
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 1664,
+        "b": 1669,
+        "score": 0.9999709129333496
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:inflammatory_cafs",
+        "hash": "BERN_V2.NA.cell_type:inflammatory_cafs",
+        "ent_type": "cell_type",
+        "a": 1688,
+        "b": 1705,
+        "score": 0.6918350458145142
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:icafs",
+        "hash": "BERN_V2.NA.cell_type:icafs",
+        "ent_type": "cell_type",
+        "a": 1708,
+        "b": 1713,
+        "score": 0.7418149709701538
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 1758,
+        "b": 1763,
+        "score": 0.9999827146530151
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:myeloid_cells",
+        "hash": "BERN_V2.NA.cell_type:myeloid_cells",
+        "ent_type": "cell_type",
+        "a": 1931,
+        "b": 1944,
+        "score": 0.7981667518615723
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:myeloid_-_derived_suppressor_cells",
+        "hash": "BERN_V2.NA.cell_type:myeloid_-_derived_suppressor_cells",
+        "ent_type": "cell_type",
+        "a": 1953,
+        "b": 1987,
+        "score": 0.672351062297821
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:mdsc",
+        "hash": "BERN_V2.NA.cell_type:mdsc",
+        "ent_type": "cell_type",
+        "a": 1990,
+        "b": 1994,
+        "score": 0.903684139251709
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_line:m2_macrophages",
+        "hash": "BERN_V2.NA.cell_line:m2_macrophages",
+        "ent_type": "cell_line",
+        "a": 1999,
+        "b": 2013,
+        "score": 0.6683288812637329
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:dendritic_cells",
+        "hash": "BERN_V2.NA.cell_type:dendritic_cells",
+        "ent_type": "cell_type",
+        "a": 2020,
+        "b": 2035,
+        "score": 0.7768009305000305
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:dc",
+        "hash": "BERN_V2.NA.cell_type:dc",
+        "ent_type": "cell_type",
+        "a": 2038,
+        "b": 2040,
+        "score": 0.5523739457130432
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:t_-_cell",
+        "hash": "BERN_V2.NA.cell_type:t_-_cell",
+        "ent_type": "cell_type",
+        "a": 2065,
+        "b": 2073,
+        "score": 0.8537023067474365
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:t_-_cell",
+        "hash": "BERN_V2.NA.cell_type:t_-_cell",
+        "ent_type": "cell_type",
+        "a": 2155,
+        "b": 2163,
+        "score": 0.7042741179466248
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "5133",
+        "hash": "BERN_V2.NCBIGene.5133",
+        "ent_type": "gene",
+        "a": 2236,
+        "b": 2240,
+        "score": 0.9936536550521851
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "84868",
+        "hash": "BERN_V2.NCBIGene.84868",
+        "ent_type": "gene",
+        "a": 2243,
+        "b": 2248,
+        "score": 0.9946383833885193
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 2296,
+        "b": 2301,
+        "score": 0.9993727803230286
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:t_regulatory_cells",
+        "hash": "BERN_V2.NA.cell_type:t_regulatory_cells",
+        "ent_type": "cell_type",
+        "a": 2324,
+        "b": 2342,
+        "score": 0.7844736576080322
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tregs",
+        "hash": "BERN_V2.NA.cell_type:tregs",
+        "ent_type": "cell_type",
+        "a": 2345,
+        "b": 2350,
+        "score": 0.7026181817054749
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:cafs",
+        "hash": "BERN_V2.NA.cell_type:cafs",
+        "ent_type": "cell_type",
+        "a": 2355,
+        "b": 2359,
+        "score": 0.92542964220047
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:t_cells",
+        "hash": "BERN_V2.NA.cell_type:t_cells",
+        "ent_type": "cell_type",
+        "a": 2371,
+        "b": 2378,
+        "score": 0.8348013162612915
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 2386,
+        "b": 2391,
+        "score": 0.9986120462417603
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "6387",
+        "hash": "BERN_V2.NCBIGene.6387",
+        "ent_type": "gene",
+        "a": 2411,
+        "b": 2417,
+        "score": 0.920478105545044
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "7852",
+        "hash": "BERN_V2.NCBIGene.7852",
+        "ent_type": "gene",
+        "a": 2420,
+        "b": 2425,
+        "score": 0.9883831143379211
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:mdscs",
+        "hash": "BERN_V2.NA.cell_type:mdscs",
+        "ent_type": "cell_type",
+        "a": 2443,
+        "b": 2448,
+        "score": 0.809295117855072
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_line:m2_-_type_macrophages",
+        "hash": "BERN_V2.NA.cell_line:m2_-_type_macrophages",
+        "ent_type": "cell_line",
+        "a": 2451,
+        "b": 2472,
+        "score": 0.6334437131881714
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:neutrophils",
+        "hash": "BERN_V2.NA.cell_type:neutrophils",
+        "ent_type": "cell_type",
+        "a": 2479,
+        "b": 2490,
+        "score": 0.7256214618682861
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "6347",
+        "hash": "BERN_V2.NCBIGene.6347",
+        "ent_type": "gene",
+        "a": 2503,
+        "b": 2507,
+        "score": 0.6133509278297424
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "729230",
+        "hash": "BERN_V2.NCBIGene.729230",
+        "ent_type": "gene",
+        "a": 2510,
+        "b": 2514,
+        "score": 0.9863277673721313
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3579",
+        "hash": "BERN_V2.NCBIGene.3579",
+        "ent_type": "gene",
+        "a": 2524,
+        "b": 2529,
+        "score": 0.9836943745613098
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "mesh",
+        "id": "D009369",
+        "hash": "BERN_V2.mesh.D009369",
+        "ent_type": "disease",
+        "a": 2565,
+        "b": 2570,
+        "score": 0.9997760653495789
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "3627",
+        "hash": "BERN_V2.NCBIGene.3627",
+        "ent_type": "gene",
+        "a": 2596,
+        "b": 2602,
+        "score": 0.8400051593780518
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NCBIGene",
+        "id": "6352",
+        "hash": "BERN_V2.NCBIGene.6352",
+        "ent_type": "gene",
+        "a": 2607,
+        "b": 2611,
+        "score": 0.581311047077179
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:t_cells",
+        "hash": "BERN_V2.NA.cell_type:t_cells",
+        "ent_type": "cell_type",
+        "a": 2666,
+        "b": 2673,
+        "score": 0.8255712389945984
+    },
+    {
+        "linker_type": "BERN_V2",
+        "ent_db_type": "NA",
+        "id": "cell_type:tregs",
+        "hash": "BERN_V2.NA.cell_type:tregs",
+        "ent_type": "cell_type",
+        "a": 2686,
+        "b": 2691,
+        "score": 0.6615484952926636
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q17121648",
+        "hash": "FISHING.wikidataId.Q17121648",
+        "a": 0,
+        "b": 4,
+        "score": 0.6267
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q17128073",
+        "hash": "FISHING.wikidataId.Q17128073",
+        "a": 14,
+        "b": 21,
+        "score": 0.3952
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1786433",
+        "hash": "FISHING.wikidataId.Q1786433",
+        "a": 29,
+        "b": 32,
+        "score": 0.637
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q249619",
+        "hash": "FISHING.wikidataId.Q249619",
+        "a": 45,
+        "b": 62,
+        "score": 0.7985
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q212354",
+        "hash": "FISHING.wikidataId.Q212354",
+        "a": 63,
+        "b": 72,
+        "score": 0.8529
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q412889",
+        "hash": "FISHING.wikidataId.Q412889",
+        "a": 83,
+        "b": 87,
+        "score": 0.8804
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q423671",
+        "hash": "FISHING.wikidataId.Q423671",
+        "a": 90,
+        "b": 93,
+        "score": 0.3915
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q423698",
+        "hash": "FISHING.wikidataId.Q423698",
+        "a": 104,
+        "b": 109,
+        "score": 0.9029
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q55634263",
+        "hash": "FISHING.wikidataId.Q55634263",
+        "a": 127,
+        "b": 135,
+        "score": 0.3694
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q376266",
+        "hash": "FISHING.wikidataId.Q376266",
+        "a": 136,
+        "b": 139,
+        "score": 0.8945
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q7868",
+        "hash": "FISHING.wikidataId.Q7868",
+        "a": 146,
+        "b": 159,
+        "score": 0.4984
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q412889",
+        "hash": "FISHING.wikidataId.Q412889",
+        "a": 184,
+        "b": 188,
+        "score": 0.8804
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q2366307",
+        "hash": "FISHING.wikidataId.Q2366307",
+        "a": 205,
+        "b": 216,
+        "score": 0.3503
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q7250843",
+        "hash": "FISHING.wikidataId.Q7250843",
+        "a": 220,
+        "b": 224,
+        "score": 0.5209
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q11068",
+        "hash": "FISHING.wikidataId.Q11068",
+        "a": 246,
+        "b": 257,
+        "score": 0.3644
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q592442",
+        "hash": "FISHING.wikidataId.Q592442",
+        "a": 309,
+        "b": 318,
+        "score": 0.6093
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q427492",
+        "hash": "FISHING.wikidataId.Q427492",
+        "a": 332,
+        "b": 342,
+        "score": 0.5178
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q412889",
+        "hash": "FISHING.wikidataId.Q412889",
+        "a": 346,
+        "b": 350,
+        "score": 0.8804
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q210973",
+        "hash": "FISHING.wikidataId.Q210973",
+        "a": 351,
+        "b": 360,
+        "score": 0.5117
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q21135811",
+        "hash": "FISHING.wikidataId.Q21135811",
+        "a": 372,
+        "b": 376,
+        "score": 0.9024
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q653112",
+        "hash": "FISHING.wikidataId.Q653112",
+        "a": 377,
+        "b": 385,
+        "score": 0.525
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q7318316",
+        "hash": "FISHING.wikidataId.Q7318316",
+        "a": 397,
+        "b": 403,
+        "score": 0.3748
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1786433",
+        "hash": "FISHING.wikidataId.Q1786433",
+        "a": 408,
+        "b": 411,
+        "score": 0.637
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q974135",
+        "hash": "FISHING.wikidataId.Q974135",
+        "a": 426,
+        "b": 435,
+        "score": 0.5048
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1059",
+        "hash": "FISHING.wikidataId.Q1059",
+        "a": 436,
+        "b": 451,
+        "score": 0.8011
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q423671",
+        "hash": "FISHING.wikidataId.Q423671",
+        "a": 466,
+        "b": 469,
+        "score": 0.3915
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1154097",
+        "hash": "FISHING.wikidataId.Q1154097",
+        "a": 474,
+        "b": 484,
+        "score": 0.3719
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1156802",
+        "hash": "FISHING.wikidataId.Q1156802",
+        "a": 498,
+        "b": 508,
+        "score": 0.4701
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q675391",
+        "hash": "FISHING.wikidataId.Q675391",
+        "a": 518,
+        "b": 527,
+        "score": 0.3624
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q26868",
+        "hash": "FISHING.wikidataId.Q26868",
+        "a": 528,
+        "b": 536,
+        "score": 0.774
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q421866",
+        "hash": "FISHING.wikidataId.Q421866",
+        "a": 575,
+        "b": 585,
+        "score": 0.8502
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q2587862",
+        "hash": "FISHING.wikidataId.Q2587862",
+        "a": 594,
+        "b": 598,
+        "score": 0.9137
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1069599",
+        "hash": "FISHING.wikidataId.Q1069599",
+        "a": 601,
+        "b": 606,
+        "score": 0.9154
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q5009615",
+        "hash": "FISHING.wikidataId.Q5009615",
+        "a": 609,
+        "b": 614,
+        "score": 0.9094
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q3776878",
+        "hash": "FISHING.wikidataId.Q3776878",
+        "a": 621,
+        "b": 626,
+        "score": 0.9084
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q988780",
+        "hash": "FISHING.wikidataId.Q988780",
+        "a": 627,
+        "b": 633,
+        "score": 0.3697
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q899277",
+        "hash": "FISHING.wikidataId.Q899277",
+        "a": 638,
+        "b": 649,
+        "score": 0.3971
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1550619",
+        "hash": "FISHING.wikidataId.Q1550619",
+        "a": 653,
+        "b": 658,
+        "score": 0.8387
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1216998",
+        "hash": "FISHING.wikidataId.Q1216998",
+        "a": 666,
+        "b": 671,
+        "score": 0.6192
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q389934",
+        "hash": "FISHING.wikidataId.Q389934",
+        "a": 680,
+        "b": 690,
+        "score": 0.5058
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q423698",
+        "hash": "FISHING.wikidataId.Q423698",
+        "a": 720,
+        "b": 724,
+        "score": 0.9026
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q24785672",
+        "hash": "FISHING.wikidataId.Q24785672",
+        "a": 729,
+        "b": 733,
+        "score": 0.8413
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q210973",
+        "hash": "FISHING.wikidataId.Q210973",
+        "a": 734,
+        "b": 743,
+        "score": 0.5117
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q420062",
+        "hash": "FISHING.wikidataId.Q420062",
+        "a": 761,
+        "b": 773,
+        "score": 0.3697
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1550619",
+        "hash": "FISHING.wikidataId.Q1550619",
+        "a": 777,
+        "b": 782,
+        "score": 0.8387
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1154097",
+        "hash": "FISHING.wikidataId.Q1154097",
+        "a": 815,
+        "b": 825,
+        "score": 0.3719
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q246181",
+        "hash": "FISHING.wikidataId.Q246181",
+        "a": 831,
+        "b": 840,
+        "score": 0.8422
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q250694",
+        "hash": "FISHING.wikidataId.Q250694",
+        "a": 841,
+        "b": 855,
+        "score": 0.6166
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q17121648",
+        "hash": "FISHING.wikidataId.Q17121648",
+        "a": 870,
+        "b": 874,
+        "score": 0.6267
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q24721374",
+        "hash": "FISHING.wikidataId.Q24721374",
+        "a": 892,
+        "b": 900,
+        "score": 0.8957
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q173670",
+        "hash": "FISHING.wikidataId.Q173670",
+        "a": 936,
+        "b": 944,
+        "score": 0.9059
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1786433",
+        "hash": "FISHING.wikidataId.Q1786433",
+        "a": 952,
+        "b": 955,
+        "score": 0.637
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q7868",
+        "hash": "FISHING.wikidataId.Q7868",
+        "a": 970,
+        "b": 983,
+        "score": 0.4984
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q17121648",
+        "hash": "FISHING.wikidataId.Q17121648",
+        "a": 993,
+        "b": 997,
+        "score": 0.6267
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q332181",
+        "hash": "FISHING.wikidataId.Q332181",
+        "a": 1033,
+        "b": 1040,
+        "score": 0.8986
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q84230",
+        "hash": "FISHING.wikidataId.Q84230",
+        "a": 1063,
+        "b": 1072,
+        "score": 0.5004
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q212354",
+        "hash": "FISHING.wikidataId.Q212354",
+        "a": 1098,
+        "b": 1107,
+        "score": 0.8529
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1341283",
+        "hash": "FISHING.wikidataId.Q1341283",
+        "a": 1123,
+        "b": 1141,
+        "score": 0.3806
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q24741149",
+        "hash": "FISHING.wikidataId.Q24741149",
+        "a": 1145,
+        "b": 1148,
+        "score": 0.594
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q21103279",
+        "hash": "FISHING.wikidataId.Q21103279",
+        "a": 1155,
+        "b": 1163,
+        "score": 0.9128
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q2409681",
+        "hash": "FISHING.wikidataId.Q2409681",
+        "a": 1170,
+        "b": 1175,
+        "score": 0.8764
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q332181",
+        "hash": "FISHING.wikidataId.Q332181",
+        "a": 1179,
+        "b": 1187,
+        "score": 0.8966
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q5610722",
+        "hash": "FISHING.wikidataId.Q5610722",
+        "a": 1196,
+        "b": 1206,
+        "score": 0.3597
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q246181",
+        "hash": "FISHING.wikidataId.Q246181",
+        "a": 1215,
+        "b": 1227,
+        "score": 0.8604
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q189159",
+        "hash": "FISHING.wikidataId.Q189159",
+        "a": 1232,
+        "b": 1245,
+        "score": 0.5571
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1786433",
+        "hash": "FISHING.wikidataId.Q1786433",
+        "a": 1253,
+        "b": 1256,
+        "score": 0.637
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q17121648",
+        "hash": "FISHING.wikidataId.Q17121648",
+        "a": 1266,
+        "b": 1270,
+        "score": 0.6267
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q332181",
+        "hash": "FISHING.wikidataId.Q332181",
+        "a": 1290,
+        "b": 1297,
+        "score": 0.8986
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q5058397",
+        "hash": "FISHING.wikidataId.Q5058397",
+        "a": 1332,
+        "b": 1349,
+        "score": 0.5721
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q21100639",
+        "hash": "FISHING.wikidataId.Q21100639",
+        "a": 1358,
+        "b": 1363,
+        "score": 0.9075
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q17121648",
+        "hash": "FISHING.wikidataId.Q17121648",
+        "a": 1377,
+        "b": 1381,
+        "score": 0.6267
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q240471",
+        "hash": "FISHING.wikidataId.Q240471",
+        "a": 1386,
+        "b": 1390,
+        "score": 0.3776
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q21208025",
+        "hash": "FISHING.wikidataId.Q21208025",
+        "a": 1394,
+        "b": 1398,
+        "score": 0.8382
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q332181",
+        "hash": "FISHING.wikidataId.Q332181",
+        "a": 1402,
+        "b": 1410,
+        "score": 0.8966
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1154097",
+        "hash": "FISHING.wikidataId.Q1154097",
+        "a": 1426,
+        "b": 1436,
+        "score": 0.3719
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q246181",
+        "hash": "FISHING.wikidataId.Q246181",
+        "a": 1446,
+        "b": 1455,
+        "score": 0.8422
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q142851",
+        "hash": "FISHING.wikidataId.Q142851",
+        "a": 1456,
+        "b": 1465,
+        "score": 0.5797
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q205170",
+        "hash": "FISHING.wikidataId.Q205170",
+        "a": 1489,
+        "b": 1496,
+        "score": 0.3743
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q467836",
+        "hash": "FISHING.wikidataId.Q467836",
+        "a": 1500,
+        "b": 1504,
+        "score": 0.3903
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q212961",
+        "hash": "FISHING.wikidataId.Q212961",
+        "a": 1552,
+        "b": 1569,
+        "score": 0.9023
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1467330",
+        "hash": "FISHING.wikidataId.Q1467330",
+        "a": 1572,
+        "b": 1587,
+        "score": 0.5941
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1216998",
+        "hash": "FISHING.wikidataId.Q1216998",
+        "a": 1632,
+        "b": 1637,
+        "score": 0.6192
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1137226",
+        "hash": "FISHING.wikidataId.Q1137226",
+        "a": 1638,
+        "b": 1643,
+        "score": 0.3995
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q55634263",
+        "hash": "FISHING.wikidataId.Q55634263",
+        "a": 1655,
+        "b": 1663,
+        "score": 0.3694
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1216998",
+        "hash": "FISHING.wikidataId.Q1216998",
+        "a": 1664,
+        "b": 1669,
+        "score": 0.6192
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q189159",
+        "hash": "FISHING.wikidataId.Q189159",
+        "a": 1670,
+        "b": 1681,
+        "score": 0.7744
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q101991",
+        "hash": "FISHING.wikidataId.Q101991",
+        "a": 1688,
+        "b": 1700,
+        "score": 0.5658
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q467836",
+        "hash": "FISHING.wikidataId.Q467836",
+        "a": 1701,
+        "b": 1705,
+        "score": 0.3903
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1216998",
+        "hash": "FISHING.wikidataId.Q1216998",
+        "a": 1758,
+        "b": 1763,
+        "score": 0.6192
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1137226",
+        "hash": "FISHING.wikidataId.Q1137226",
+        "a": 1764,
+        "b": 1769,
+        "score": 0.3995
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q84230",
+        "hash": "FISHING.wikidataId.Q84230",
+        "a": 1774,
+        "b": 1781,
+        "score": 0.4105
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q212354",
+        "hash": "FISHING.wikidataId.Q212354",
+        "a": 1782,
+        "b": 1802,
+        "score": 0.6369
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1637543",
+        "hash": "FISHING.wikidataId.Q1637543",
+        "a": 1814,
+        "b": 1825,
+        "score": 0.8279
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1637543",
+        "hash": "FISHING.wikidataId.Q1637543",
+        "a": 1848,
+        "b": 1859,
+        "score": 0.8279
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q411391",
+        "hash": "FISHING.wikidataId.Q411391",
+        "a": 1872,
+        "b": 1880,
+        "score": 0.3694
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q210861",
+        "hash": "FISHING.wikidataId.Q210861",
+        "a": 1885,
+        "b": 1900,
+        "score": 0.591
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q3270846",
+        "hash": "FISHING.wikidataId.Q3270846",
+        "a": 1931,
+        "b": 1944,
+        "score": 0.8213
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q11688946",
+        "hash": "FISHING.wikidataId.Q11688946",
+        "a": 1953,
+        "b": 1960,
+        "score": 0.6147
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q751748",
+        "hash": "FISHING.wikidataId.Q751748",
+        "a": 1971,
+        "b": 1981,
+        "score": 0.4969
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q184204",
+        "hash": "FISHING.wikidataId.Q184204",
+        "a": 1999,
+        "b": 2013,
+        "score": 0.8588
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q506253",
+        "hash": "FISHING.wikidataId.Q506253",
+        "a": 2020,
+        "b": 2035,
+        "score": 0.8689
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q61",
+        "hash": "FISHING.wikidataId.Q61",
+        "a": 2038,
+        "b": 2040,
+        "score": 0.4272
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q427492",
+        "hash": "FISHING.wikidataId.Q427492",
+        "a": 2057,
+        "b": 2064,
+        "score": 0.3932
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q189092",
+        "hash": "FISHING.wikidataId.Q189092",
+        "a": 2069,
+        "b": 2083,
+        "score": 0.8429
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1154097",
+        "hash": "FISHING.wikidataId.Q1154097",
+        "a": 2086,
+        "b": 2096,
+        "score": 0.3719
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q189159",
+        "hash": "FISHING.wikidataId.Q189159",
+        "a": 2099,
+        "b": 2112,
+        "score": 0.5571
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q210861",
+        "hash": "FISHING.wikidataId.Q210861",
+        "a": 2119,
+        "b": 2134,
+        "score": 0.591
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q467836",
+        "hash": "FISHING.wikidataId.Q467836",
+        "a": 2137,
+        "b": 2141,
+        "score": 0.3903
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1192297",
+        "hash": "FISHING.wikidataId.Q1192297",
+        "a": 2147,
+        "b": 2154,
+        "score": 0.3672
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q2528683",
+        "hash": "FISHING.wikidataId.Q2528683",
+        "a": 2164,
+        "b": 2177,
+        "score": 0.3697
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q2012719",
+        "hash": "FISHING.wikidataId.Q2012719",
+        "a": 2205,
+        "b": 2233,
+        "score": 0.6965
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q21208025",
+        "hash": "FISHING.wikidataId.Q21208025",
+        "a": 2236,
+        "b": 2240,
+        "score": 0.8382
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q7670426",
+        "hash": "FISHING.wikidataId.Q7670426",
+        "a": 2243,
+        "b": 2248,
+        "score": 0.6828
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1308999",
+        "hash": "FISHING.wikidataId.Q1308999",
+        "a": 2253,
+        "b": 2264,
+        "score": 0.3654
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1127330",
+        "hash": "FISHING.wikidataId.Q1127330",
+        "a": 2274,
+        "b": 2286,
+        "score": 0.4716
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1216998",
+        "hash": "FISHING.wikidataId.Q1216998",
+        "a": 2296,
+        "b": 2301,
+        "score": 0.6192
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1137226",
+        "hash": "FISHING.wikidataId.Q1137226",
+        "a": 2302,
+        "b": 2307,
+        "score": 0.3995
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1550619",
+        "hash": "FISHING.wikidataId.Q1550619",
+        "a": 2345,
+        "b": 2350,
+        "score": 0.8387
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q467836",
+        "hash": "FISHING.wikidataId.Q467836",
+        "a": 2355,
+        "b": 2359,
+        "score": 0.3903
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1066302",
+        "hash": "FISHING.wikidataId.Q1066302",
+        "a": 2364,
+        "b": 2370,
+        "score": 0.4333
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1216998",
+        "hash": "FISHING.wikidataId.Q1216998",
+        "a": 2386,
+        "b": 2391,
+        "score": 0.6192
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q4381253",
+        "hash": "FISHING.wikidataId.Q4381253",
+        "a": 2392,
+        "b": 2398,
+        "score": 0.8337
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q408598",
+        "hash": "FISHING.wikidataId.Q408598",
+        "a": 2411,
+        "b": 2417,
+        "score": 0.9149
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q415718",
+        "hash": "FISHING.wikidataId.Q415718",
+        "a": 2420,
+        "b": 2425,
+        "score": 0.9151
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q7303106",
+        "hash": "FISHING.wikidataId.Q7303106",
+        "a": 2435,
+        "b": 2442,
+        "score": 0.4003
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q15220362",
+        "hash": "FISHING.wikidataId.Q15220362",
+        "a": 2443,
+        "b": 2448,
+        "score": 0.6705
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q746894",
+        "hash": "FISHING.wikidataId.Q746894",
+        "a": 2451,
+        "b": 2453,
+        "score": 0.5073
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q184204",
+        "hash": "FISHING.wikidataId.Q184204",
+        "a": 2461,
+        "b": 2472,
+        "score": 0.8688
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q188417",
+        "hash": "FISHING.wikidataId.Q188417",
+        "a": 2479,
+        "b": 2490,
+        "score": 0.8889
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q2587862",
+        "hash": "FISHING.wikidataId.Q2587862",
+        "a": 2503,
+        "b": 2507,
+        "score": 0.9137
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q4035572",
+        "hash": "FISHING.wikidataId.Q4035572",
+        "a": 2510,
+        "b": 2514,
+        "score": 0.8919
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q5014892",
+        "hash": "FISHING.wikidataId.Q5014892",
+        "a": 2524,
+        "b": 2529,
+        "score": 0.8934
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q127920",
+        "hash": "FISHING.wikidataId.Q127920",
+        "a": 2530,
+        "b": 2538,
+        "score": 0.5071
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q421866",
+        "hash": "FISHING.wikidataId.Q421866",
+        "a": 2547,
+        "b": 2557,
+        "score": 0.8502
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1786433",
+        "hash": "FISHING.wikidataId.Q1786433",
+        "a": 2565,
+        "b": 2587,
+        "score": 0.8662
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q986112",
+        "hash": "FISHING.wikidataId.Q986112",
+        "a": 2596,
+        "b": 2602,
+        "score": 0.9161
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q3492926",
+        "hash": "FISHING.wikidataId.Q3492926",
+        "a": 2607,
+        "b": 2611,
+        "score": 0.9129
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q500430",
+        "hash": "FISHING.wikidataId.Q500430",
+        "a": 2623,
+        "b": 2632,
+        "score": 0.4516
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1127330",
+        "hash": "FISHING.wikidataId.Q1127330",
+        "a": 2650,
+        "b": 2662,
+        "score": 0.4716
+    },
+    {
+        "linker_type": "FISHING",
+        "ent_db_type": "wikidataId",
+        "id": "Q1550619",
+        "hash": "FISHING.wikidataId.Q1550619",
+        "a": 2686,
+        "b": 2691,
+        "score": 0.8387
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000031",
+        "hash": "PELINKER.GG.000031",
+        "original_form": "suppress",
+        "a": 127,
+        "b": 135,
+        "score": 1.0
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0002292",
+        "hash": "PELINKER.RO.0002292",
+        "original_form": "expresses",
+        "a": 189,
+        "b": 201,
+        "score": 0.8298
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000015",
+        "hash": "PELINKER.GG.000015",
+        "original_form": "increases",
+        "a": 235,
+        "b": 257,
+        "score": 0.5882
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0002326",
+        "hash": "PELINKER.RO.0002326",
+        "original_form": "contributes to",
+        "a": 264,
+        "b": 277,
+        "score": 0.6338
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "BFO",
+        "id": "0000066",
+        "hash": "PELINKER.BFO.0000066",
+        "original_form": "occurs in",
+        "a": 386,
+        "b": 388,
+        "score": 0.5126
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "HOM0000009",
+        "hash": "PELINKER.RO.HOM0000009",
+        "original_form": "in reversal relationship with",
+        "a": 397,
+        "b": 403,
+        "score": 0.5602
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000011",
+        "hash": "PELINKER.GG.000011",
+        "original_form": "facilitates",
+        "a": 415,
+        "b": 422,
+        "score": 0.6108
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000027",
+        "hash": "PELINKER.GG.000027",
+        "original_form": "reduces",
+        "a": 457,
+        "b": 465,
+        "score": 0.9043
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0015008",
+        "hash": "PELINKER.RO.0015008",
+        "original_form": "decreased in magnitude relative to",
+        "a": 518,
+        "b": 527,
+        "score": 0.7585
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000016",
+        "hash": "PELINKER.GG.000016",
+        "original_form": "induces",
+        "a": 627,
+        "b": 633,
+        "score": 0.8604
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000000",
+        "hash": "PELINKER.GG.000000",
+        "original_form": "activates",
+        "a": 680,
+        "b": 690,
+        "score": 0.8071
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0002503",
+        "hash": "PELINKER.RO.0002503",
+        "original_form": "towards",
+        "a": 746,
+        "b": 753,
+        "score": 0.5229
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0002292",
+        "hash": "PELINKER.RO.0002292",
+        "original_form": "expresses",
+        "a": 884,
+        "b": 891,
+        "score": 0.8343
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0002331",
+        "hash": "PELINKER.RO.0002331",
+        "original_form": "involved in",
+        "a": 908,
+        "b": 919,
+        "score": 0.7537
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000027",
+        "hash": "PELINKER.GG.000027",
+        "original_form": "reduces",
+        "a": 923,
+        "b": 931,
+        "score": 0.9043
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0002508",
+        "hash": "PELINKER.RO.0002508",
+        "original_form": "determines",
+        "a": 1196,
+        "b": 1206,
+        "score": 1.0
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000027",
+        "hash": "PELINKER.GG.000027",
+        "original_form": "reduces",
+        "a": 1283,
+        "b": 1289,
+        "score": 0.8349
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0000085",
+        "hash": "PELINKER.RO.0000085",
+        "original_form": "has function",
+        "a": 1298,
+        "b": 1309,
+        "score": 0.7142
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0002019",
+        "hash": "PELINKER.RO.0002019",
+        "original_form": "has ligand",
+        "a": 1386,
+        "b": 1390,
+        "score": 0.5473
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0001025",
+        "hash": "PELINKER.RO.0001025",
+        "original_form": "located in",
+        "a": 1607,
+        "b": 1618,
+        "score": 0.7734
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0001025",
+        "hash": "PELINKER.RO.0001025",
+        "original_form": "located in",
+        "a": 1722,
+        "b": 1733,
+        "score": 0.7734
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0002211",
+        "hash": "PELINKER.RO.0002211",
+        "original_form": "regulates",
+        "a": 1872,
+        "b": 1880,
+        "score": 0.8707
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "RO",
+        "id": "0001000",
+        "hash": "PELINKER.RO.0001000",
+        "original_form": "derives from",
+        "a": 1963,
+        "b": 1970,
+        "score": 0.686
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000025",
+        "hash": "PELINKER.GG.000025",
+        "original_form": "promotes",
+        "a": 2181,
+        "b": 2190,
+        "score": 0.8966
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000021",
+        "hash": "PELINKER.GG.000021",
+        "original_form": "limits",
+        "a": 2253,
+        "b": 2264,
+        "score": 0.62
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000025",
+        "hash": "PELINKER.GG.000025",
+        "original_form": "promotes",
+        "a": 2314,
+        "b": 2323,
+        "score": 0.8966
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "BFO",
+        "id": "0000051",
+        "hash": "PELINKER.BFO.0000051",
+        "original_form": "has part",
+        "a": 2616,
+        "b": 2620,
+        "score": 0.5714
+    },
+    {
+        "linker_type": "PELINKER",
+        "ent_db_type": "GG",
+        "id": "000025",
+        "hash": "PELINKER.GG.000025",
+        "original_form": "promotes",
+        "a": 2636,
+        "b": 2645,
+        "score": 0.8966
+    }
+]

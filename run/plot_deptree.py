@@ -2,12 +2,9 @@ import hashlib
 import os
 import pathlib
 
-import coreferee
 import spacy
 
-from lm_service.coref import render_coref_graph
-from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
-from lm_service.relation import text_to_compound_index_graph
+from lm_service.coref import render_coref_graph, text_to_compound_index_graph
 from lm_service.util import plot_graph
 
 
@@ -81,7 +78,14 @@ if __name__ == "__main__":
         #     " orbiting a star of 0.9 R☉ in 60 days detected with a S/Ntransit"
         #     " >10 (100 ppm transit depth)."
         # ),
-        "The medium was affected by the near-field radiation"
+        # "The medium was affected by the near-field radiation"
+        # (
+        #     "CHEOPS (CHaracterising ExOPlanets Satellite) is a European space"
+        #     " telescope to determine the size of known extrasolar planets,"
+        #     " which will allow the estimation of their mass, density,"
+        #     " composition and their formation."
+        # ),
+        "TAMs can also secrete in the TME a number of immunosuppressive cytokines, such as IL-6, TGF-β, and IL-10 that are able to suppress CD8+ T-cell function (76)"
     ]
 
     # phrases = [

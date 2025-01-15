@@ -1,0 +1,23 @@
+linkers:
+-   keyword: BERN_V2
+    route: plain
+    port: 8888
+    text_field: text
+    entities_key: annotations
+    threshold: 0.0
+-   keyword: PELINKER
+    route: link
+    port: 8599
+    text_field: text
+    normalized_text_key: normalized_text
+    threshold: 0.5
+-   keyword: FISHING
+    route: service/disambiguate
+    port: 8590
+    protocol: http
+    text_field: text
+    threshold: 0.55
+    extra_args:
+        language:
+            lang: en
+        mentions: [ner, wikipedia]

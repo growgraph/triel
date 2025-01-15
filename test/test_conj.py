@@ -22,7 +22,7 @@ class TestR(unittest.TestCase):
     fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
-    with open(os.path.join(path, f"./data/cheops.txt"), "r") as f:
+    with open(os.path.join(path, "./data/cheops.txt"), "r") as f:
         text = f.read()
 
     nlp = spacy.load("en_core_web_trf")
@@ -183,8 +183,7 @@ class TestR(unittest.TestCase):
             for c in pile.sources:
                 accum = partition_conjunctive_wrapper(c)
                 accum = [
-                    x.sort_index().drop_punct().drop_cc().drop_articles()
-                    for x in accum
+                    x.sort_index().drop_punct().drop_cc().drop_articles() for x in accum
                 ]
                 apile += accum
             text = [x.project_to_text() for x in apile]

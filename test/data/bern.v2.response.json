@@ -1,0 +1,892 @@
+{
+    "annotations": [
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "TAMs",
+            "obj": "cell_type",
+            "prob": 0.9091679453849792,
+            "span": {
+                "begin": 0,
+                "end": 4
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:3569"
+            ],
+            "is_neural_normalized": false,
+            "mention": "IL-6",
+            "obj": "gene",
+            "prob": 0.9733055233955383,
+            "span": {
+                "begin": 82,
+                "end": 86
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:7039"
+            ],
+            "is_neural_normalized": true,
+            "mention": "TGF-",
+            "obj": "gene",
+            "prob": 0.9807039499282837,
+            "span": {
+                "begin": 88,
+                "end": 92
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:3586"
+            ],
+            "is_neural_normalized": false,
+            "mention": "IL-10",
+            "obj": "gene",
+            "prob": 0.9554975032806396,
+            "span": {
+                "begin": 98,
+                "end": 103
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "CD8+ T-cell",
+            "obj": "cell_type",
+            "prob": 0.8203046917915344,
+            "span": {
+                "begin": 130,
+                "end": 141
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:925"
+            ],
+            "is_neural_normalized": false,
+            "mention": "CD8+",
+            "obj": "gene",
+            "prob": 0.9439983367919922,
+            "span": {
+                "begin": 130,
+                "end": 134
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:3569"
+            ],
+            "is_neural_normalized": false,
+            "mention": "IL-6",
+            "obj": "gene",
+            "prob": 0.985564112663269,
+            "span": {
+                "begin": 171,
+                "end": 175
+            }
+        },
+        {
+            "id": [
+                "omim:260350",
+                "mesh:D010190"
+            ],
+            "is_neural_normalized": true,
+            "mention": "PDAC",
+            "obj": "disease",
+            "prob": 0.9980660080909729,
+            "span": {
+                "begin": 207,
+                "end": 211
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:3569"
+            ],
+            "is_neural_normalized": false,
+            "mention": "IL-6",
+            "obj": "gene",
+            "prob": 0.9728359580039978,
+            "span": {
+                "begin": 329,
+                "end": 333
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:958"
+            ],
+            "is_neural_normalized": false,
+            "mention": "CD40",
+            "obj": "gene",
+            "prob": 0.9774762988090515,
+            "span": {
+                "begin": 355,
+                "end": 359
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:7039"
+            ],
+            "is_neural_normalized": true,
+            "mention": "TGF-",
+            "obj": "gene",
+            "prob": 0.976250171661377,
+            "span": {
+                "begin": 448,
+                "end": 452
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:1277"
+            ],
+            "is_neural_normalized": true,
+            "mention": "collagen type I",
+            "obj": "gene",
+            "prob": 0.9956538677215576,
+            "span": {
+                "begin": 507,
+                "end": 522
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "Tregs",
+            "obj": "cell_type",
+            "prob": 0.837649405002594,
+            "span": {
+                "begin": 625,
+                "end": 630
+            }
+        },
+        {
+            "id": [
+                "mesh:D009369"
+            ],
+            "is_neural_normalized": false,
+            "mention": "tumor",
+            "obj": "disease",
+            "prob": 0.9995355606079102,
+            "span": {
+                "begin": 638,
+                "end": 643
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:3586"
+            ],
+            "is_neural_normalized": false,
+            "mention": "IL10",
+            "obj": "gene",
+            "prob": 0.9050513505935669,
+            "span": {
+                "begin": 691,
+                "end": 695
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:7039"
+            ],
+            "is_neural_normalized": true,
+            "mention": "TGF",
+            "obj": "gene",
+            "prob": 0.9783756136894226,
+            "span": {
+                "begin": 700,
+                "end": 703
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "Tregs",
+            "obj": "cell_line",
+            "prob": 0.8144814372062683,
+            "span": {
+                "begin": 746,
+                "end": 751
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "T cytotoxic effector cells",
+            "obj": "cell_type",
+            "prob": 0.6124723553657532,
+            "span": {
+                "begin": 798,
+                "end": 824
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "TAMs",
+            "obj": "cell_type",
+            "prob": 0.7008094787597656,
+            "span": {
+                "begin": 833,
+                "end": 837
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:383"
+            ],
+            "is_neural_normalized": true,
+            "mention": "arginase I",
+            "obj": "gene",
+            "prob": 0.9884436726570129,
+            "span": {
+                "begin": 855,
+                "end": 865
+            }
+        },
+        {
+            "id": [
+                "mesh:D001120"
+            ],
+            "is_neural_normalized": false,
+            "mention": "L-arginine",
+            "obj": "drug",
+            "prob": 0.9991462826728821,
+            "span": {
+                "begin": 895,
+                "end": 905
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "TAMs",
+            "obj": "cell_type",
+            "prob": 0.8968544602394104,
+            "span": {
+                "begin": 949,
+                "end": 953
+            }
+        },
+        {
+            "id": [
+                "CL:0000623"
+            ],
+            "is_neural_normalized": false,
+            "mention": "NK cell",
+            "obj": "cell_type",
+            "prob": 0.8346501588821411,
+            "span": {
+                "begin": 989,
+                "end": 996
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:3439"
+            ],
+            "is_neural_normalized": false,
+            "mention": "IFN-,",
+            "obj": "gene",
+            "prob": 0.9918856620788574,
+            "span": {
+                "begin": 1098,
+                "end": 1103
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:5551"
+            ],
+            "is_neural_normalized": true,
+            "mention": "perforin",
+            "obj": "gene",
+            "prob": 0.9699354767799377,
+            "span": {
+                "begin": 1104,
+                "end": 1112
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:3592"
+            ],
+            "is_neural_normalized": true,
+            "mention": "IL-12",
+            "obj": "gene",
+            "prob": 0.9925719499588013,
+            "span": {
+                "begin": 1118,
+                "end": 1123
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "NK cells",
+            "obj": "cell_type",
+            "prob": 0.7244408130645752,
+            "span": {
+                "begin": 1127,
+                "end": 1135
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "TAMs",
+            "obj": "cell_type",
+            "prob": 0.9191293120384216,
+            "span": {
+                "begin": 1210,
+                "end": 1214
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:29126"
+            ],
+            "is_neural_normalized": false,
+            "mention": "PDL-1",
+            "obj": "gene",
+            "prob": 0.9867202639579773,
+            "span": {
+                "begin": 1298,
+                "end": 1303
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "TAMs",
+            "obj": "cell_type",
+            "prob": 0.7858226299285889,
+            "span": {
+                "begin": 1317,
+                "end": 1321
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:5133"
+            ],
+            "is_neural_normalized": false,
+            "mention": "PD-1",
+            "obj": "gene",
+            "prob": 0.990058958530426,
+            "span": {
+                "begin": 1334,
+                "end": 1338
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "NK cells",
+            "obj": "cell_type",
+            "prob": 0.8062090277671814,
+            "span": {
+                "begin": 1342,
+                "end": 1350
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "CAFs",
+            "obj": "cell_type",
+            "prob": 0.8719189167022705,
+            "span": {
+                "begin": 1436,
+                "end": 1440
+            }
+        },
+        {
+            "id": [
+                "omim:260350",
+                "mesh:D010190"
+            ],
+            "is_neural_normalized": false,
+            "mention": "pancreatic cancer",
+            "obj": "disease",
+            "prob": 0.999992311000824,
+            "span": {
+                "begin": 1488,
+                "end": 1505
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "myofibroblastic",
+            "obj": "cell_type",
+            "prob": 0.8694179654121399,
+            "span": {
+                "begin": 1507,
+                "end": 1522
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "myCAFs",
+            "obj": "cell_type",
+            "prob": 0.8789846897125244,
+            "span": {
+                "begin": 1524,
+                "end": 1530
+            }
+        },
+        {
+            "id": [
+                "mesh:D009369"
+            ],
+            "is_neural_normalized": false,
+            "mention": "tumor",
+            "obj": "disease",
+            "prob": 0.9723338484764099,
+            "span": {
+                "begin": 1564,
+                "end": 1569
+            }
+        },
+        {
+            "id": [
+                "mesh:D009369"
+            ],
+            "is_neural_normalized": false,
+            "mention": "tumor",
+            "obj": "disease",
+            "prob": 0.9999709129333496,
+            "span": {
+                "begin": 1596,
+                "end": 1601
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "inflammatory CAFs",
+            "obj": "cell_type",
+            "prob": 0.6764715909957886,
+            "span": {
+                "begin": 1619,
+                "end": 1636
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "iCAFs",
+            "obj": "cell_line",
+            "prob": 0.650159478187561,
+            "span": {
+                "begin": 1638,
+                "end": 1643
+            }
+        },
+        {
+            "id": [
+                "mesh:D009369"
+            ],
+            "is_neural_normalized": false,
+            "mention": "tumor",
+            "obj": "disease",
+            "prob": 0.9999827146530151,
+            "span": {
+                "begin": 1687,
+                "end": 1692
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "myeloid cells",
+            "obj": "cell_type",
+            "prob": 0.7418149709701538,
+            "span": {
+                "begin": 1853,
+                "end": 1866
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "myeloid-derived suppressor cells",
+            "obj": "cell_type",
+            "prob": 0.8201096057891846,
+            "span": {
+                "begin": 1875,
+                "end": 1907
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "MDSC",
+            "obj": "cell_type",
+            "prob": 0.672351062297821,
+            "span": {
+                "begin": 1909,
+                "end": 1913
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "M2 macrophages",
+            "obj": "cell_line",
+            "prob": 0.6334437131881714,
+            "span": {
+                "begin": 1916,
+                "end": 1930
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "dendritic cells",
+            "obj": "cell_type",
+            "prob": 0.903684139251709,
+            "span": {
+                "begin": 1936,
+                "end": 1951
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "DC",
+            "obj": "cell_type",
+            "prob": 0.7772570848464966,
+            "span": {
+                "begin": 1953,
+                "end": 1955
+            }
+        },
+        {
+            "id": [
+                "CL:0000084"
+            ],
+            "is_neural_normalized": false,
+            "mention": "T-cell",
+            "obj": "cell_type",
+            "prob": 0.5523739457130432,
+            "span": {
+                "begin": 1979,
+                "end": 1985
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "CAFs",
+            "obj": "cell_type",
+            "prob": 0.8537023067474365,
+            "span": {
+                "begin": 2045,
+                "end": 2049
+            }
+        },
+        {
+            "id": [
+                "CL:0000084"
+            ],
+            "is_neural_normalized": false,
+            "mention": "T-cell",
+            "obj": "cell_type",
+            "prob": 0.763196587562561,
+            "span": {
+                "begin": 2063,
+                "end": 2069
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:5133"
+            ],
+            "is_neural_normalized": false,
+            "mention": "PD-1",
+            "obj": "gene",
+            "prob": 0.9959729909896851,
+            "span": {
+                "begin": 2141,
+                "end": 2145
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:84868"
+            ],
+            "is_neural_normalized": false,
+            "mention": "TIM-3",
+            "obj": "gene",
+            "prob": 0.9946383833885193,
+            "span": {
+                "begin": 2147,
+                "end": 2152
+            }
+        },
+        {
+            "id": [
+                "mesh:D009369"
+            ],
+            "is_neural_normalized": false,
+            "mention": "tumor",
+            "obj": "disease",
+            "prob": 0.9993727803230286,
+            "span": {
+                "begin": 2196,
+                "end": 2201
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "T regulatory cells",
+            "obj": "cell_type",
+            "prob": 0.7042741179466248,
+            "span": {
+                "begin": 2223,
+                "end": 2241
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "Tregs",
+            "obj": "cell_line",
+            "prob": 0.7840202450752258,
+            "span": {
+                "begin": 2243,
+                "end": 2248
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "CAFs",
+            "obj": "cell_type",
+            "prob": 0.7844736576080322,
+            "span": {
+                "begin": 2251,
+                "end": 2255
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "T cells",
+            "obj": "cell_type",
+            "prob": 0.7026181817054749,
+            "span": {
+                "begin": 2267,
+                "end": 2274
+            }
+        },
+        {
+            "id": [
+                "mesh:D009369"
+            ],
+            "is_neural_normalized": false,
+            "mention": "tumor",
+            "obj": "disease",
+            "prob": 0.9980719089508057,
+            "span": {
+                "begin": 2282,
+                "end": 2287
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:7852"
+            ],
+            "is_neural_normalized": true,
+            "mention": "CXCL12CXCR4",
+            "obj": "gene",
+            "prob": 0.5434774160385132,
+            "span": {
+                "begin": 2307,
+                "end": 2318
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "MDSCs",
+            "obj": "cell_type",
+            "prob": 0.92542964220047,
+            "span": {
+                "begin": 2336,
+                "end": 2341
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "M2-type macrophages",
+            "obj": "cell_type",
+            "prob": 0.8298847675323486,
+            "span": {
+                "begin": 2343,
+                "end": 2362
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "neutrophils",
+            "obj": "cell_type",
+            "prob": 0.8191183805465698,
+            "span": {
+                "begin": 2368,
+                "end": 2379
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:3579"
+            ],
+            "is_neural_normalized": false,
+            "mention": "CXCR2",
+            "obj": "gene",
+            "prob": 0.9810956120491028,
+            "span": {
+                "begin": 2410,
+                "end": 2415
+            }
+        },
+        {
+            "id": [
+                "mesh:D009369"
+            ],
+            "is_neural_normalized": false,
+            "mention": "tumor",
+            "obj": "disease",
+            "prob": 0.9997760653495789,
+            "span": {
+                "begin": 2450,
+                "end": 2455
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:3627"
+            ],
+            "is_neural_normalized": false,
+            "mention": "CXCL10",
+            "obj": "gene",
+            "prob": 0.8400051593780518,
+            "span": {
+                "begin": 2481,
+                "end": 2487
+            }
+        },
+        {
+            "id": [
+                "NCBIGene:6352"
+            ],
+            "is_neural_normalized": false,
+            "mention": "CCL5",
+            "obj": "gene",
+            "prob": 0.581311047077179,
+            "span": {
+                "begin": 2492,
+                "end": 2496
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "T cells",
+            "obj": "cell_type",
+            "prob": 0.7610777616500854,
+            "span": {
+                "begin": 2551,
+                "end": 2558
+            }
+        },
+        {
+            "id": [
+                "CUI-less"
+            ],
+            "is_neural_normalized": false,
+            "mention": "Tregs",
+            "obj": "cell_type",
+            "prob": 0.8239643573760986,
+            "span": {
+                "begin": 2571,
+                "end": 2576
+            }
+        }
+    ],
+    "text": "TAMs can also secrete in the TME a number of immunosuppressive cytokines, such as IL-6, TGF-, and IL-10 that are able to suppress CD8+ T-cell function (76). Specifically, IL-6 is expressed at high levels in PDAC, and its increasing circulating level is associated with advanced disease and poor prognosis (77). The inhibition of IL-6 signaling along with CD40 blockade is able to revert the TME to support an antitumor immune response, by reducing TGF- activation and firbosis deposition due to a decreased collagen type I production (78). Moreover, chemokines such as CCL2, CCL17, CCL20, and CCL22 induce the recruitment of Tregs to the tumor sites, activating their regulatory function by IL10 and TGF signaling, leading to the accumulation of Tregs and impairing the migration and activation of T cytotoxic effector cells (7982). TAMs can also express arginase I that is involved in reducing L-arginine in the TME impairing T-cell function (83). TAMs are also responsible for a reduced NK cell function, due to the secretion of the above-mentioned cytokines resulting in a limited production of IFN-, perforin, and IL-12 by NK cells, which determines a lower cytotoxicity and proliferation in the TME (84). TAMs are able to reduce NK cell functioning also by direct cellcell interactions, since PDL-1 expressed on TAMs can bind to PD-1 on NK cells, avoiding the activation of their cytotoxic receptors (85). Two different subsets of CAFs with diverse functions have been identified in pancreatic cancer: myofibroblastic (myCAFs), which are located close to the tumor nests and likely suppress tumor cell growth, and inflammatory CAFs (iCAFs) which are located more distantly from the tumor nests and secrete inflammatory factors with pro-tumorigenic functions. The pro-tumorigenic factors can regulate the differentiation, migration, and function of myeloid cells such as myeloid-derived suppressor cells (MDSC), M2 macrophages, and dendritic cells (DC) which in turn inhibit T-cell migration, activation, proliferation, and differentiation. CAFs also disrupt T-cell functionality by promoting expression of immune checkpoint inhibitors (PD-1, TIM-3), restricting T-cell infiltration into the tumor nests, and promoting T regulatory cells (Tregs). CAFs can entrap T cells in the tumor stroma through the CXCL12CXCR4 axis and recruit MDSCs, M2-type macrophages, and neutrophils through the CCL2CCR2 axis and CXCR2 ligation. Other chemokines in the tumor microenvironment such as CXCL10 and CCL5 can have a dual role by promoting the infiltration of T cells but also of Tregs.",
+    "timestamp": "Thu Jul 25 12:00:00 +0000 2024"
+}
