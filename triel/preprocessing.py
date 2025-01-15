@@ -87,6 +87,7 @@ def pivot_around_advcl(nlp: Language, phrase, max_symbols=600) -> list[str]:
     """
         coreference works better after pivot_around_advcl is applied
         idea take advcl component and move complement to the end of the subtree with advcl root
+
     :param nlp:
     :param phrase:
     :param max_symbols:

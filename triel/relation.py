@@ -185,7 +185,7 @@ def graph_to_candidate_pile(
     :param rules:
     :param robust_mode:
     :return: tuple[SRTPile, nx.DiGraph]
-        a tuple of SourceRelationTarget Pile and a modified graph
+            a tuple of SourceRelationTarget Pile and a modified graph
             (that does not contain vertices that became parts of Candidates,
             so only one node (root note) per candidate is preserved)
     """

@@ -394,10 +394,10 @@ def text_to_coref_classes(
     list[tuple[ChainIndex, ChainIndex]],
 ]:
     """
-
     :param nlp:
     :param text:
-    :param  initial_phrase_index
+    :param initial_phrase_index:
+
     :return:
     """
     (
