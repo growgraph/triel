@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS builder
+FROM nvidia/cuda:12.2.2-runtime-ubuntu22.04 AS builder
 
 RUN apt update -y && apt upgrade -y && apt install curl git -y
 
