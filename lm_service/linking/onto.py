@@ -188,7 +188,7 @@ class EntityLinkerManager(BaseDataclass):
             logger.warning(f" {item} does not contain prob key")
             prob0 = 1.0
         if prob0 > prob_thr:
-            id0 = item["entity_id_predicted"]
+            id0 = item["entity"]
             item_spec = id0.split(".")
             ent_db_type, item_id = item_spec
             ent_type = None
