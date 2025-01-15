@@ -1,8 +1,4 @@
-FROM nvidia/cuda:12.1.0-base-ubuntu20.04 AS builder
-
-
-ENV TZ=Europe/Paris
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+FROM nvidia/cuda:12.2.2-runtime-ubuntu22.04 AS builder
 
 RUN apt update -y && apt upgrade -y && apt install curl git -y
 
