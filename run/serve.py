@@ -85,8 +85,8 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
             c["host"] = host
     elm = EntityLinkerManager.from_dict(el_config)
 
-    if gpu:
-        spacy.prefer_gpu()
+    # if gpu:
+    #     spacy.prefer_gpu()
 
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")
