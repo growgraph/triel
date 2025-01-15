@@ -6,7 +6,7 @@ import spacy
 import suthing
 from suthing import FileHandle
 
-from lm_service.linking.onto import APISpec, EntityLinker, LocalEntity
+from triel.linking.onto import APISpec, EntityLinker, LocalEntity
 
 
 def pytest_addoption(parser):
@@ -51,12 +51,12 @@ def pelinker_example():
 
 @pytest.fixture(scope="module")
 def rules_v2():
-    return suthing.FileHandle.load("lm_service.config", "prune_noun_compound_v2.yaml")
+    return suthing.FileHandle.load("triel.config", "prune_noun_compound_v2.yaml")
 
 
 @pytest.fixture(scope="module")
 def rules_v3():
-    return suthing.FileHandle.load("lm_service.config", "prune_noun_compound_v3.yaml")
+    return suthing.FileHandle.load("triel.config", "prune_noun_compound_v3.yaml")
 
 
 @pytest.fixture(scope="module")

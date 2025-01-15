@@ -1,13 +1,13 @@
 import pytest
 from suthing import FileHandle
 
-from lm_service.linking.onto import EntityLinkerManager
-from lm_service.response.onto import (
+from triel.linking.onto import EntityLinkerManager
+from triel.response.onto import (
     REELResponse,
     REELResponseEntity,
     REELResponseRedux,
 )
-from lm_service.top import (
+from triel.top import (
     cast_response_entity_representation,
     cast_response_redux,
     text_to_graph_mentions_entities,

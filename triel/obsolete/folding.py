@@ -2,7 +2,7 @@ from typing import Optional
 
 import networkx as nx
 
-from lm_service.folding import get_flag
+from triel.folding import get_flag
 
 
 class Leaf:

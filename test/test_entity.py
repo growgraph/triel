@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-from lm_service.linking.onto import EntityLinkerManager
+from triel.linking.onto import EntityLinkerManager
 
 logger = logging.getLogger(__name__)
 

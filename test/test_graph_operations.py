@@ -3,7 +3,7 @@ import unittest
 
 import spacy
 
-from lm_service.graph import excise_node, phrase_to_deptree
+from triel.graph import excise_node, phrase_to_deptree
 
 logger = logging.getLogger(__name__)
 

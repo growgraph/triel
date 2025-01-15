@@ -8,9 +8,9 @@ from pathlib import Path
 import spacy
 import yaml
 
-from lm_service.graph import phrase_to_deptree
-from lm_service.onto import partition_conjunctive_wrapper
-from lm_service.relation import graph_to_candidate_pile
+from triel.graph import phrase_to_deptree
+from triel.onto import partition_conjunctive_wrapper
+from triel.relation import graph_to_candidate_pile
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class TestR(unittest.TestCase):
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     path = Path(__file__).parent
 
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
+    fp = pkgutil.get_data("triel.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     with open(os.path.join(path, "./data/cheops.txt"), "r") as f:

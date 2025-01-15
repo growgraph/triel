@@ -9,14 +9,14 @@ import spacy
 import yaml
 from suthing import SProfiler
 
-from lm_service.linking.onto import EntityLinkerManager
-from lm_service.top import cast_response_redux, text_to_graph_mentions_entities
+from triel.linking.onto import EntityLinkerManager
+from triel.top import cast_response_redux, text_to_graph_mentions_entities
 
 
 def main():
     os.path.dirname(os.path.realpath(__file__))
 
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
+    fp = pkgutil.get_data("triel.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     nlp = spacy.load("en_core_web_trf")

@@ -8,17 +8,17 @@ import networkx as nx
 import spacy
 from suthing import profile
 
-from lm_service.coref import text_to_compound_index_graph
-from lm_service.onto import Candidate, MuIndex, Relation, TokenIndexT
-from lm_service.piles import CandidatePile
-from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
-from lm_service.relation import (
+from triel.coref import text_to_compound_index_graph
+from triel.onto import Candidate, MuIndex, Relation, TokenIndexT
+from triel.piles import CandidatePile
+from triel.preprocessing import normalize_input_text, pivot_around_advcl
+from triel.relation import (
     align_relation_to_target,
     form_triples,
     graph_to_candidate_pile,
     graph_to_maps,
 )
-from lm_service.util import plot_graph
+from triel.util import plot_graph
 
 logger = logging.getLogger(__name__)
 

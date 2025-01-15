@@ -8,9 +8,9 @@ from pathlib import Path
 import spacy
 import yaml
 
-from lm_service.coref import graph_component_maps
-from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
-from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
+from triel.coref import graph_component_maps
+from triel.graph import phrase_to_deptree, relabel_nodes_and_key
+from triel.preprocessing import normalize_input_text, pivot_around_advcl
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class TestR(unittest.TestCase):
     with open(os.path.join(path, "./data/cheops.txt"), "r") as f:
         text = f.read()
 
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
+    fp = pkgutil.get_data("triel.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     nlp = spacy.load("en_core_web_trf")

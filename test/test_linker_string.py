@@ -1,4 +1,4 @@
-from lm_service.linking.string import render_gap_mappers, render_index_mapper
+from triel.linking.string import render_gap_mappers, render_index_mapper
 
 
 def test_render(strings):

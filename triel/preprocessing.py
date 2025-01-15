@@ -8,7 +8,7 @@ from pylatexenc.latex2text import LatexNodes2Text
 from spacy import Language
 from unidecode import unidecode
 
-from lm_service.graph import get_subtree_wrapper, phrase_to_deptree
+from triel.graph import get_subtree_wrapper, phrase_to_deptree
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +87,7 @@ def pivot_around_advcl(nlp: Language, phrase, max_symbols=600) -> list[str]:
     """
         coreference works better after pivot_around_advcl is applied
         idea take advcl component and move complement to the end of the subtree with advcl root
+
     :param nlp:
     :param phrase:
     :param max_symbols:

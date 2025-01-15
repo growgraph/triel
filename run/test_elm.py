@@ -6,8 +6,8 @@ import click
 import pandas as pd
 from suthing import FileHandle
 
-from lm_service.linking.onto import EntityLinkerManager
-from lm_service.linking.util import map_linkers
+from triel.linking.onto import EntityLinkerManager
+from triel.linking.util import map_linkers
 
 logger = logging.getLogger(__name__)
 

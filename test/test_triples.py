@@ -4,15 +4,15 @@ from pprint import pprint
 import pytest
 from suthing import FileHandle
 
-from lm_service.coref import graph_component_maps
-from lm_service.graph import phrase_to_deptree, relabel_nodes_and_key
-from lm_service.onto import AbsToken, MuIndex
-from lm_service.relation import (
+from triel.coref import graph_component_maps
+from triel.graph import phrase_to_deptree, relabel_nodes_and_key
+from triel.onto import AbsToken, MuIndex
+from triel.relation import (
     compute_distances,
     generate_extra_graphs,
     graph_to_candidate_pile,
 )
-from lm_service.text import (
+from triel.text import (
     cast_simplified_triples_table,
     normalize_text,
     phrases_to_triples,
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def rules():
-    return FileHandle.load("lm_service.config", "prune_noun_compound_v2.yaml")
+    return FileHandle.load("triel.config", "prune_noun_compound_v2.yaml")
 
 
 @pytest.fixture

@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-from lm_service.onto import Candidate, Token
+from triel.onto import Candidate, Token
 
 logger = logging.getLogger(__name__)
 

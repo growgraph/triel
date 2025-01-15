@@ -1,7 +1,7 @@
 import logging
 
-from lm_service.folding import get_flag
-from lm_service.onto import Token
+from triel.folding import get_flag
+from triel.onto import Token
 
 logger = logging.getLogger(__name__)
 

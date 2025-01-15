@@ -6,8 +6,8 @@ import click
 import spacy
 from suthing import FileHandle
 
-from lm_service.linking.onto import EntityLinkerManager
-from lm_service.top import (
+from triel.linking.onto import EntityLinkerManager
+from triel.top import (
     cast_response_entity_representation,
     cast_response_redux,
     text_to_graph_mentions_entities,
@@ -34,7 +34,7 @@ def run(host, conf_el_path, input_path, output, phrase_indexes, localhost_linker
             c["host"] = "localhost"
 
     elm = EntityLinkerManager.from_dict(el_conf)
-    rules = FileHandle.load("lm_service.config", "prune_noun_compound_v3.yaml")
+    rules = FileHandle.load("triel.config", "prune_noun_compound_v3.yaml")
 
     nlp = spacy.load("en_core_web_trf")
     nlp.add_pipe("coreferee")

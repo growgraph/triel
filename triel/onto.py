@@ -14,7 +14,7 @@ from dataclass_wizard import JSONWizard
 from dataclass_wizard.enums import DateTimeTo
 from lemminflect import getInflection, getLemma
 
-from lm_service.hash import hashme
+from triel.hash import hashme
 
 
 class BaseDataclass(JSONWizard, JSONWizard.Meta):
@@ -369,6 +369,7 @@ class Candidate(AbsCandidate):
         """
             see https://spacy.io/api/token#attributes
             if entity - return text, otherwise return lemma
+
         :return:
         """
         pp = []
@@ -924,8 +925,7 @@ class MuIndex(JSONWizard):
     meta - flag, true if MuIndex points to a triple
     phrase - phrase number
     token - token index within phrase
-    running - in case there are several `candidates` (conjunction),
-            that exist under the same token root
+    running - in case there are several `candidates` (conjunction), that exist under the same token root
     """
 
     meta: bool

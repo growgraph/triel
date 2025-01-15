@@ -9,9 +9,9 @@ from itertools import product
 import networkx as nx
 import pandas as pd
 
-from lm_service.folding import get_flag
-from lm_service.graph import excise_node
-from lm_service.onto import (
+from triel.folding import get_flag
+from triel.graph import excise_node
+from triel.onto import (
     ACandidateKind,
     CandidateType,
     Relation,
@@ -19,7 +19,7 @@ from lm_service.onto import (
     Token,
     TokenIndexT,
 )
-from lm_service.piles import CandidatePile, SRTPile
+from triel.piles import CandidatePile, SRTPile
 
 logger = logging.getLogger(__name__)
 
@@ -185,7 +185,7 @@ def graph_to_candidate_pile(
     :param rules:
     :param robust_mode:
     :return: tuple[SRTPile, nx.DiGraph]
-        a tuple of SourceRelationTarget Pile and a modified graph
+            a tuple of SourceRelationTarget Pile and a modified graph
             (that does not contain vertices that became parts of Candidates,
             so only one node (root note) per candidate is preserved)
     """

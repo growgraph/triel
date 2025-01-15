@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import dataclasses
 
-from lm_service.linking.onto import Entity, EntityHash
-from lm_service.onto import BaseDataclass, MuIndex, SimplifiedCandidate
+from triel.linking.onto import Entity, EntityHash
+from triel.onto import BaseDataclass, MuIndex, SimplifiedCandidate
 
 
 class UnknownCastTripleVersion(Exception):

@@ -1,4 +1,4 @@
-from lm_service.coref import (
+from triel.coref import (
     render_coref_maps_wrapper,
     stitch_coreference,
     text_to_coref_classes,
