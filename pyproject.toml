@@ -15,7 +15,7 @@ name = "triel"
 packages = [
   {include = "triel"}
 ]
-version = "0.6.0"
+version = "0.6.1"
 
 [tool.poetry.dependencies]
 Flask = "^2.3.2"
@@ -56,6 +56,8 @@ waitress = "^2.1.2"
 wordfreq = "^3.0.3"
 
 [tool.poetry.group.dev.dependencies]
+myst-parser = "^4.0.0"
 pre-commit = "^3.3.3"
 pygraphviz = "^1.13"
 pylint = "^3.2.3"
+sphinx = "^8.1.3"
