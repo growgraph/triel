@@ -14,7 +14,7 @@ from dataclass_wizard import JSONWizard
 from dataclass_wizard.enums import DateTimeTo
 from lemminflect import getInflection, getLemma
 
-from lm_service.hash import hashme
+from triel.hash import hashme
 
 
 class BaseDataclass(JSONWizard, JSONWizard.Meta):

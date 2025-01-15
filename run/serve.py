@@ -15,12 +15,12 @@ from flask_restful import Api
 from suthing import ConfigFactory, FileHandle
 from waitress import serve
 
-from lm_service.linking.onto import (
+from triel.linking.onto import (
     EntityLinkerFailed,
     EntityLinkerManager,
     EntityLinkerTypeNotAvailable,
 )
-from lm_service.top import (
+from triel.top import (
     cast_response_entity_representation,
     cast_response_redux,
     text_to_graph_mentions_entities,
@@ -77,7 +77,7 @@ def main(wsgi_self, entity_linker_config, host, debug, threads, gpu):
 
     wsgi_config = FileHandle.load(fpath=wsgi_self)
     wsgi_re = ConfigFactory.create_config(dict_like=wsgi_config)
-    rules = FileHandle.load("lm_service.config", "prune_noun_compound_v3.yaml")
+    rules = FileHandle.load("triel.config", "prune_noun_compound_v3.yaml")
 
     el_config = FileHandle.load(fpath=entity_linker_config)
     if host is not None:

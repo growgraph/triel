@@ -8,7 +8,7 @@ from pylatexenc.latex2text import LatexNodes2Text
 from spacy import Language
 from unidecode import unidecode
 
-from lm_service.graph import get_subtree_wrapper, phrase_to_deptree
+from triel.graph import get_subtree_wrapper, phrase_to_deptree
 
 logger = logging.getLogger(__name__)
 

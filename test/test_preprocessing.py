@@ -2,7 +2,7 @@ import logging
 import sys
 import unittest
 
-from lm_service.preprocessing import normalize_input_text
+from triel.preprocessing import normalize_input_text
 
 logger = logging.getLogger(__name__)
 

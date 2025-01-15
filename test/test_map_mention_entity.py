@@ -1,12 +1,12 @@
-from lm_service.linking.onto import Entity, interval_overlap_metric
-from lm_service.linking.util import (
+from triel.linking.onto import Entity, interval_overlap_metric
+from triel.linking.util import (
     link_candidate_entity,
     link_unlinked_entities,
     process_entities,
     process_entity_cluster,
     render_entity_clusters,
 )
-from lm_service.piles import ExtCandidateList
+from triel.piles import ExtCandidateList
 
 
 def test_overlap():

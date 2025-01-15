@@ -3,7 +3,7 @@ import requests
 import spacy
 import suthing
 
-from lm_service.text import normalize_text
+from triel.text import normalize_text
 
 endpoint_url = "https://www.wikidata.org/w/api.php"
 

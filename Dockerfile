@@ -45,7 +45,7 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 RUN touch README.md
 
-COPY lm_service ./lm_service
+COPY triel ./triel
 
 RUN mkdir -p -m 0700 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
 RUN --mount=type=ssh poetry install --no-interaction -vvv --without dev

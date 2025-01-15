@@ -13,7 +13,7 @@ from pprint import pprint
 import spacy
 import yaml
 
-from lm_service.preprocessing import normalize_input_text, pivot_around_advcl
+from triel.preprocessing import normalize_input_text, pivot_around_advcl
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class TestR(unittest.TestCase):
     figs_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), figs_folder)
     Path(figs_path).mkdir(parents=True, exist_ok=True)
 
-    fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
+    fp = pkgutil.get_data("triel.config", "prune_noun_compound_v2.yaml")
     rules = yaml.load(fp, Loader=yaml.FullLoader)
 
     with open(os.path.join(path, "./data/cheops.txt"), "r") as f:

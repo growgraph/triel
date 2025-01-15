@@ -7,8 +7,8 @@ import joblib
 import numpy as np
 import suthing
 
-from lm_service.linking.onto import EntityLinker
-from lm_service.linking.score import ScoreMapper
+from triel.linking.onto import EntityLinker
+from triel.linking.score import ScoreMapper
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def run():
         b=1.0001,
     )
 
-    file_path = files("lm_service.models.store").joinpath("linker.scaling.model.gz")
+    file_path = files("triel.models.store").joinpath("linker.scaling.model.gz")
     joblib.dump(score_mapper, file_path, compress=3)
     model0 = joblib.load(file_path)
     _ = model0(EntityLinker.PELINKER, score_dict[EntityLinker.PELINKER])

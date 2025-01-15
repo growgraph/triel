@@ -8,8 +8,8 @@ from enum import Enum
 
 import requests
 
-from lm_service.linking.string import render_gap_mappers, render_index_mapper
-from lm_service.onto import BaseDataclass
+from triel.linking.string import render_gap_mappers, render_index_mapper
+from triel.onto import BaseDataclass
 
 logger = logging.getLogger(__name__)
 

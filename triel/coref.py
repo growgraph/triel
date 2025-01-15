@@ -8,15 +8,15 @@ import networkx as nx
 import spacy
 from spacy.tokens import Doc
 
-from lm_service.graph import (
+from triel.graph import (
     get_subtree_wrapper,
     phrase_to_deptree,
     relabel_nodes_and_key,
 )
-from lm_service.onto import AbsToken, Candidate, ChainIndex, Token, TokenIndexT
-from lm_service.piles import ExtCandidateList
-from lm_service.relation import logger
-from lm_service.util import plot_graph
+from triel.onto import AbsToken, Candidate, ChainIndex, Token, TokenIndexT
+from triel.piles import ExtCandidateList
+from triel.relation import logger
+from triel.util import plot_graph
 
 
 def graph_component_maps(

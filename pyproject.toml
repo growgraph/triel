@@ -2,12 +2,18 @@
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core>=1.0.0"]
 
+[tool.poe.poetry_hooks]
+post_build = "install_lms.sh"
+
+[tool.poe.tasks]
+run-hook = {script = "install_lms.sh"}
+
 [tool.poetry]
 authors = ["Alexander Belikov <alexander@growgraph.dev>"]
-description = "Convert text to graphs. Create candidates. Link entities"
-name = "lm_service"
+description = "Convert text to triples. Create candidates. Link entities"
+name = "triel"
 packages = [
-  {include = "lm_service"}
+  {include = "triel"}
 ]
 version = "0.6.0"
 

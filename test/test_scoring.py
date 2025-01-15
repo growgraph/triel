@@ -1,7 +1,7 @@
 import pytest
 
-from lm_service.linking.onto import EntityLinker
-from lm_service.linking.score import BoundedCubicSpline, ScoreMapper
+from triel.linking.onto import EntityLinker
+from triel.linking.score import BoundedCubicSpline, ScoreMapper
 
 
 def test_bcs(bern_score):

@@ -7,7 +7,7 @@ from typing import Callable
 
 import pandas as pd
 
-from lm_service.onto import (
+from triel.onto import (
     Candidate,
     CandidateType,
     Relation,

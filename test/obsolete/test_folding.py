@@ -9,8 +9,8 @@ from pathlib import Path
 import networkx as nx
 import yaml
 
-from lm_service.obsolete.folding import fold_graph
-from lm_service.util import plot_graph, plot_leaves
+from triel.obsolete.folding import fold_graph
+from triel.util import plot_graph, plot_leaves
 
 nl_data = {
     "directed": True,
@@ -351,7 +351,7 @@ class TestMetagraph(unittest.TestCase):
 
     @unittest.skip("obsolete")
     def test_fold_graph(self):
-        fp = pkgutil.get_data("lm_service.config", "prune_noun_compound_v2.yaml")
+        fp = pkgutil.get_data("triel.config", "prune_noun_compound_v2.yaml")
         rules = yaml.load(fp, Loader=yaml.FullLoader)
 
         metagraph = nx.DiGraph()

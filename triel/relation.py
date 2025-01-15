@@ -9,9 +9,9 @@ from itertools import product
 import networkx as nx
 import pandas as pd
 
-from lm_service.folding import get_flag
-from lm_service.graph import excise_node
-from lm_service.onto import (
+from triel.folding import get_flag
+from triel.graph import excise_node
+from triel.onto import (
     ACandidateKind,
     CandidateType,
     Relation,
@@ -19,7 +19,7 @@ from lm_service.onto import (
     Token,
     TokenIndexT,
 )
-from lm_service.piles import CandidatePile, SRTPile
+from triel.piles import CandidatePile, SRTPile
 
 logger = logging.getLogger(__name__)
 

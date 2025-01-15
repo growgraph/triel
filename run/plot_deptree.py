@@ -4,8 +4,8 @@ import pathlib
 
 import spacy
 
-from lm_service.coref import render_coref_graph, text_to_compound_index_graph
-from lm_service.util import plot_graph
+from triel.coref import render_coref_graph, text_to_compound_index_graph
+from triel.util import plot_graph
 
 
 def main(phrase, nlp):

@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
 
-from lm_service.linking.onto import EntityLinker
+from triel.linking.onto import EntityLinker
 
 
 class BoundedCubicSpline:

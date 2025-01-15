@@ -1,9 +1,5 @@
-from lm_service.linking.onto import (
-    EntityLinker,
-    EntityLinkerManager,
-    PhraseMapper,
-)
-from lm_service.linking.util import link_simple
+from triel.linking.onto import EntityLinker, EntityLinkerManager, PhraseMapper
+from triel.linking.util import link_simple
 
 
 def test_link_phrases(text, nlp_fixture, rules_v2, el_conf):

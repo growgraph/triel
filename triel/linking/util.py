@@ -11,7 +11,7 @@ from pathos.multiprocessing import ProcessPool
 from suthing import profile
 from wordfreq import zipf_frequency
 
-from lm_service.linking.onto import (
+from triel.linking.onto import (
     Entity,
     EntityLinker,
     EntityLinkerFailed,
@@ -21,8 +21,8 @@ from lm_service.linking.onto import (
     ent_db_type_gg_verbatim,
     interval_overlap_metric,
 )
-from lm_service.linking.score import ScoreMapper
-from lm_service.onto import Candidate, MuIndex
+from triel.linking.score import ScoreMapper
+from triel.onto import Candidate, MuIndex
 
 logger = logging.getLogger(__name__)
 

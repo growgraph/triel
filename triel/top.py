@@ -7,16 +7,16 @@ from itertools import product
 import networkx as nx
 from suthing import Timer, profile
 
-from lm_service.coref import stitch_coreference
-from lm_service.hash import hashme
-from lm_service.linking.onto import EntityLinker
-from lm_service.linking.util import (
+from triel.coref import stitch_coreference
+from triel.hash import hashme
+from triel.linking.onto import EntityLinker
+from triel.linking.util import (
     iterate_over_linkers,
     link_unlinked_entities,
     map_mentions_to_entities,
 )
-from lm_service.onto import MuIndex, SimplifiedCandidate
-from lm_service.response.onto import (
+from triel.onto import MuIndex, SimplifiedCandidate
+from triel.response.onto import (
     Entity,
     REELResponse,
     REELResponseEntity,
@@ -24,7 +24,7 @@ from lm_service.response.onto import (
     Triple,
     TripleFormal,
 )
-from lm_service.text import normalize_text, phrases_to_triples
+from triel.text import normalize_text, phrases_to_triples
 
 logger = logging.getLogger(__name__)
 

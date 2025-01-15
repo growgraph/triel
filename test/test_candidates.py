@@ -5,16 +5,16 @@ test candidate extraction
 import logging
 from collections import deque
 
-from lm_service.graph import phrase_to_deptree
-from lm_service.onto import (
+from triel.graph import phrase_to_deptree
+from triel.onto import (
     ACandidateKind,
     Candidate,
     Relation,
     SourceOrTarget,
     Token,
 )
-from lm_service.piles import CandidatePile
-from lm_service.relation import find_candidates_bfs, find_subtree_dfs
+from triel.piles import CandidatePile
+from triel.relation import find_candidates_bfs, find_subtree_dfs
 
 logger = logging.getLogger(__name__)
 
