@@ -149,6 +149,9 @@ def link_candidate_entity(
             phrase_candidates[k.phrase] = [(k, v)]
 
     for iphrase, candidates in phrase_candidates.items():
+        if not phrase_to_ent_spans[iphrase]:
+            # some candidates are in phrases that have no mapped entities
+            continue
         for mu, candidate in candidates:
             stoken = mu.token
             dist = np.array(
