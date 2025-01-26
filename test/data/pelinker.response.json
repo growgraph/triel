@@ -4,7 +4,7 @@
             "a": 122,
             "b": 130,
             "dif_to_next": 0.35933,
-            "entity": "GG.000031",
+            "entity_id_predicted": "GG.000031",
             "entity_label": "suppress",
             "mention": "suppress",
             "score": 1.0
@@ -13,7 +13,7 @@
             "a": 177,
             "b": 189,
             "dif_to_next": 0.05648,
-            "entity": "RO.0002292",
+            "entity_id_predicted": "RO.0002292",
             "entity_label": "expresses",
             "mention": "is expressed",
             "score": 0.8298
@@ -22,7 +22,7 @@
             "a": 222,
             "b": 244,
             "dif_to_next": 0.10761,
-            "entity": "GG.000015",
+            "entity_id_predicted": "GG.000015",
             "entity_label": "increases",
             "mention": "increasing circulating",
             "score": 0.5882
@@ -31,7 +31,7 @@
             "a": 251,
             "b": 264,
             "dif_to_next": 0.04559,
-            "entity": "RO.0002326",
+            "entity_id_predicted": "RO.0002326",
             "entity_label": "contributes to",
             "mention": "is associated",
             "score": 0.6338
@@ -40,7 +40,7 @@
             "a": 370,
             "b": 372,
             "dif_to_next": 0.06197,
-            "entity": "BFO.0000066",
+            "entity_id_predicted": "BFO.0000066",
             "entity_label": "occurs in",
             "mention": "is",
             "score": 0.5126
@@ -49,7 +49,7 @@
             "a": 381,
             "b": 387,
             "dif_to_next": 0.0525,
-            "entity": "RO.HOM0000009",
+            "entity_id_predicted": "RO.HOM0000009",
             "entity_label": "in reversal relationship with",
             "mention": "revert",
             "score": 0.5602
@@ -58,7 +58,7 @@
             "a": 399,
             "b": 406,
             "dif_to_next": 0.08896,
-            "entity": "GG.000011",
+            "entity_id_predicted": "GG.000011",
             "entity_label": "facilitates",
             "mention": "support",
             "score": 0.6108
@@ -67,7 +67,7 @@
             "a": 440,
             "b": 448,
             "dif_to_next": 0.31002,
-            "entity": "GG.000027",
+            "entity_id_predicted": "GG.000027",
             "entity_label": "reduces",
             "mention": "reducing",
             "score": 0.9043
@@ -76,7 +76,7 @@
             "a": 499,
             "b": 508,
             "dif_to_next": 0.07714,
-            "entity": "RO.0015008",
+            "entity_id_predicted": "RO.0015008",
             "entity_label": "decreased in magnitude relative to",
             "mention": "decreased",
             "score": 0.7585
@@ -85,7 +85,7 @@
             "a": 601,
             "b": 607,
             "dif_to_next": 0.20372,
-            "entity": "GG.000016",
+            "entity_id_predicted": "GG.000016",
             "entity_label": "induces",
             "mention": "induce",
             "score": 0.8604
@@ -94,7 +94,7 @@
             "a": 653,
             "b": 663,
             "dif_to_next": 0.13326,
-            "entity": "GG.000000",
+            "entity_id_predicted": "GG.000000",
             "entity_label": "activates",
             "mention": "activating",
             "score": 0.8071
@@ -103,7 +103,7 @@
             "a": 718,
             "b": 725,
             "dif_to_next": 0.05968,
-            "entity": "RO.0002503",
+            "entity_id_predicted": "RO.0002503",
             "entity_label": "towards",
             "mention": "leading",
             "score": 0.5229
@@ -112,7 +112,7 @@
             "a": 851,
             "b": 858,
             "dif_to_next": 0.09213,
-            "entity": "RO.0002292",
+            "entity_id_predicted": "RO.0002292",
             "entity_label": "expresses",
             "mention": "express",
             "score": 0.8343
@@ -121,7 +121,7 @@
             "a": 875,
             "b": 886,
             "dif_to_next": 0.09744,
-            "entity": "RO.0002331",
+            "entity_id_predicted": "RO.0002331",
             "entity_label": "involved in",
             "mention": "is involved",
             "score": 0.7537
@@ -130,7 +130,7 @@
             "a": 890,
             "b": 898,
             "dif_to_next": 0.31002,
-            "entity": "GG.000027",
+            "entity_id_predicted": "GG.000027",
             "entity_label": "reduces",
             "mention": "reducing",
             "score": 0.9043
@@ -139,7 +139,7 @@
             "a": 1148,
             "b": 1158,
             "dif_to_next": 0.32362,
-            "entity": "RO.0002508",
+            "entity_id_predicted": "RO.0002508",
             "entity_label": "determines",
             "mention": "determines",
             "score": 1.0
@@ -148,7 +148,7 @@
             "a": 1232,
             "b": 1238,
             "dif_to_next": 0.16503,
-            "entity": "GG.000027",
+            "entity_id_predicted": "GG.000027",
             "entity_label": "reduces",
             "mention": "reduce",
             "score": 0.8349
@@ -157,7 +157,7 @@
             "a": 1247,
             "b": 1258,
             "dif_to_next": 0.05641,
-            "entity": "RO.0000085",
+            "entity_id_predicted": "RO.0000085",
             "entity_label": "has function",
             "mention": "functioning",
             "score": 0.7142
@@ -166,7 +166,7 @@
             "a": 1332,
             "b": 1336,
             "dif_to_next": 0.07921,
-            "entity": "RO.0002019",
+            "entity_id_predicted": "RO.0002019",
             "entity_label": "has ligand",
             "mention": "bind",
             "score": 0.5473
@@ -175,7 +175,7 @@
             "a": 1545,
             "b": 1556,
             "dif_to_next": 0.23002,
-            "entity": "RO.0001025",
+            "entity_id_predicted": "RO.0001025",
             "entity_label": "located in",
             "mention": "are located",
             "score": 0.7734
@@ -184,7 +184,7 @@
             "a": 1657,
             "b": 1668,
             "dif_to_next": 0.23002,
-            "entity": "RO.0001025",
+            "entity_id_predicted": "RO.0001025",
             "entity_label": "located in",
             "mention": "are located",
             "score": 0.7734
@@ -193,7 +193,7 @@
             "a": 1802,
             "b": 1810,
             "dif_to_next": 0.05675,
-            "entity": "RO.0002211",
+            "entity_id_predicted": "RO.0002211",
             "entity_label": "regulates",
             "mention": "regulate",
             "score": 0.8707
@@ -202,7 +202,7 @@
             "a": 1889,
             "b": 1896,
             "dif_to_next": 0.04481,
-            "entity": "RO.0001000",
+            "entity_id_predicted": "RO.0001000",
             "entity_label": "derives from",
             "mention": "derived",
             "score": 0.686
@@ -211,7 +211,7 @@
             "a": 2093,
             "b": 2102,
             "dif_to_next": 0.23764,
-            "entity": "GG.000025",
+            "entity_id_predicted": "GG.000025",
             "entity_label": "promotes",
             "mention": "promoting",
             "score": 0.8966
@@ -220,7 +220,7 @@
             "a": 2161,
             "b": 2172,
             "dif_to_next": 0.08645,
-            "entity": "GG.000021",
+            "entity_id_predicted": "GG.000021",
             "entity_label": "limits",
             "mention": "restricting",
             "score": 0.62
@@ -229,7 +229,7 @@
             "a": 2219,
             "b": 2228,
             "dif_to_next": 0.23764,
-            "entity": "GG.000025",
+            "entity_id_predicted": "GG.000025",
             "entity_label": "promotes",
             "mention": "promoting",
             "score": 0.8966
@@ -238,7 +238,7 @@
             "a": 2509,
             "b": 2513,
             "dif_to_next": 0.04614,
-            "entity": "BFO.0000051",
+            "entity_id_predicted": "BFO.0000051",
             "entity_label": "has part",
             "mention": "have",
             "score": 0.5714
@@ -247,7 +247,7 @@
             "a": 2529,
             "b": 2538,
             "dif_to_next": 0.23764,
-            "entity": "GG.000025",
+            "entity_id_predicted": "GG.000025",
             "entity_label": "promotes",
             "mention": "promoting",
             "score": 0.8966

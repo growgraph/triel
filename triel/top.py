@@ -87,12 +87,15 @@ def text_to_graph_mentions_entities(text, nlp, rules, elm, ix_phrases=None, **kw
                     x for token in tokens_equivalence_class for x, _ in token
                 )
                 for iphrase in iphrases:
-                    for mu, candidate in phrase_candidates[iphrase]:
-                        if any(
-                            set(candidate.stokens) & set(tokens)
-                            for tokens in tokens_equivalence_class
-                        ):
-                            chain_mu_edges += [(c, mu)]
+                    # some candidates do not pass the filters (do not form triples)
+                    # but are references to while co-referencing
+                    if iphrase in phrase_candidates:
+                        for mu, candidate in phrase_candidates[iphrase]:
+                            if any(
+                                set(candidate.stokens) & set(tokens)
+                                for tokens in tokens_equivalence_class
+                            ):
+                                chain_mu_edges += [(c, mu)]
 
         graph_chain_mus = nx.DiGraph()
         graph_chain_mus.add_edges_from(chain_mu_edges)

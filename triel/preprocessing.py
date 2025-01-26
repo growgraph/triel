@@ -72,7 +72,7 @@ def normalize_input_text(text, terminal_full_stop=True):
     phrases = []
     for ptext in phrases_:
         try:
-            ptext = LatexNodes2Text().latex_to_text(ptext)
+            ptext = LatexNodes2Text().latex_to_text(ptext.replace("%", "\%"))
         except Exception as e:
             logger.error(
                 f" exception: {e}. LatexNodes2Text could not process : {ptext}"
