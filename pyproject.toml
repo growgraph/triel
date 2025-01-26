@@ -15,7 +15,7 @@ name = "triel"
 packages = [
   {include = "triel"}
 ]
-version = "0.6.1"
+version = "0.6.2"
 
 [tool.poetry.dependencies]
 Flask = "^2.3.2"
