@@ -435,7 +435,7 @@ def text_to_compound_index_graph(
         components = sorted(nx.weakly_connected_components(graph), key=lambda x: len(x))
         sg = nx.subgraph(graph, components[-1])
         logger.warning(
-            f" with single_phrase_mode from text <fail>{text}<fail> only"
+            f" with single_phrase_mode = {single_phrase_mode} from text <fail>{text}<fail> only"
             f" largest component [representing {sg.size()}/{graph.size()}] was"
             " kept."
         )
