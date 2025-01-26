@@ -1,3 +1,16 @@
+"""
+This module defines the data structures and methods required for extracting triples from text using spaCy.
+
+The core elements include token indices, candidate types, and utilities for processing and representing tokens
+and candidates for relation extraction tasks.
+
+Key Concepts:
+
+- Token indices are represented as tuples (sentence_index, word_index), where the word index is a string.
+- Candidates represent potential subjects, objects, or relations in the text.
+- Provides functionality for handling token relationships, sorting, and graph-based representations.
+"""
+
 from __future__ import annotations
 
 import dataclasses
@@ -18,27 +31,57 @@ from triel.hash import hashme
 
 
 class BaseDataclass(JSONWizard, JSONWizard.Meta):
+    """
+    A base class for dataclasses with JSON serialization support.
+    Provides default configurations for date-time formatting and key transformations.
+    """
+
     marshal_date_time_as = DateTimeTo.ISO_FORMAT
     key_transform_with_dump = "SNAKE"
     skip_defaults = True
 
 
+class ACandidateKind(str, Enum):
+    """
+    Enumeration of candidate types:
+
+    - RELATION: Represents a predicate in a triple.
+    - SOURCE_TARGET: Represents both subject and object.
+    - SOURCE: Represents the subject of a triple.
+    - TARGET: Represents the object of a triple.
+    """
+
+    RELATION = "relation"
+    SOURCE_TARGET = "source_target"
+    SOURCE = "source"
+    TARGET = "target"
+
+
 class MissingTokenInACandidate(Exception):
+    """Raised when a requested token is not found in a candidate."""
+
     pass
 
 
 class RelationHasNoTargetCandidatesError(Exception):
+    """Raised when a relation has no associated target candidates."""
+
     pass
 
 
 class InsertingExistingTokens(Exception):
+    """Raised when attempting to insert tokens that already exist."""
+
     pass
 
 
 class RequestedIndexDoesNotExist(Exception):
+    """Raised when a requested index does not exist in a candidate."""
+
     pass
 
 
+# Type aliases for token and chain indices
 TokenIndexT = tuple[int, str]
 ChainIndex = tuple[int, str]
 
@@ -47,6 +90,12 @@ logger = logging.getLogger(__name__)
 
 
 def is_int(s):
+    """
+    Check if an object can be converted to an integer.
+
+    :param s: Object to check.
+    :return: True if the string can be converted, False otherwise.
+    """
     try:
         int(s)
         return True
@@ -59,13 +108,24 @@ TokenType = TypeVar("TokenType", bound="AbsToken")
 
 
 class ConfigToken:
+    """Configuration for token representation.
+    word number 3 will be represented as "0003"
+    """
+
     representation_leading_zero = 3
 
 
 @dataclasses.dataclass(repr=False)
 class AbsToken(JSONWizard, ABC):
     """
-    represents a token in dep tree
+    A declarative representation of spacy.tokens.Token, base class.
+
+    Attributes include:
+
+    * text, lemma, lower: Text forms of the token
+    * `dep_`, `tag_`: Syntactic and part-of-speech tags
+    * ent_*: Entity recognition attributes
+    * idx, idx_eot: Token indices
     """
 
     class _(JSONWizard.Meta):
@@ -89,21 +149,27 @@ class AbsToken(JSONWizard, ABC):
     ent_type_: str = ""
 
     def __post_init__(self):
+        """
+        Post-initialization to set default values for lemma and lower-case text
+        if not already provided.
+        """
         if not self.lemma and self.text:
             self.lemma = self.text
         if not self.lower and self.text:
             self.lower = self.text.lower()
 
     def __repr__(self):
+        """String representation of the token's attributes."""
         content = [f" {k} : {v}" for k, v in self.__dict__.items()]
         return "Token fields:" + " |".join(content)
 
     @classmethod
     def i2s(cls, i) -> str:
         """
-        cast integer index `i` to string index s used in Token
-        :param i:
-        :return:
+        Convert an integer index to a string index.
+
+        :param i: integer index.
+        :return: string index.
         """
 
         if isinstance(i, int):
@@ -115,9 +181,10 @@ class AbsToken(JSONWizard, ABC):
     @classmethod
     def ituple2stuple(cls, i) -> tuple[int, str]:
         """
-        cast integer index `i` to string index s used in Token
-        :param i:
-        :return:
+        Convert a tuple with an integer index to a tuple with a string index.
+
+        :param i: tuple containing integer indices.
+        :return: tuple with string indices.
         """
 
         if isinstance(i, tuple):
@@ -132,7 +199,14 @@ class AbsToken(JSONWizard, ABC):
 @dataclasses.dataclass(repr=False)
 class Token(AbsToken):
     """
-    represents a token in dep tree
+    Representation of a token in a dependency tree, including relationships
+    with predecessor and successor tokens.
+
+    Attributes:
+
+    - s: Token index as a tuple.
+    - predecessors: set of predecessor token indices.
+    - successors: set of successor token indices.
     """
 
     s: TokenIndexT = (0, "")
@@ -140,6 +214,10 @@ class Token(AbsToken):
     successors: set[TokenIndexT] = dataclasses.field(default_factory=set)
 
     def __post_init__(self):
+        """
+        Post-initialization to ensure proper formatting of token indices
+        and relationships.
+        """
         if isinstance(self.s, int):
             self.s = self.i2s(self.s)
             self.predecessors = (
@@ -165,10 +243,17 @@ class Token(AbsToken):
             )
 
     def __repr__(self):
+        """String representation of the token's attributes."""
+
         content = [f" {k} : {v}" for k, v in self.__dict__.items()]
         return "Token fields:" + " |".join(content)
 
     def prior_s(self):
+        """
+        Retrieve the prior token index.
+        :return: The prior token index or a placeholder if unavailable.
+        """
+
         if isinstance(self.s, tuple):
             return self.s[0], "/"
         elif isinstance(self.s, str):
@@ -179,6 +264,12 @@ class Token(AbsToken):
 
 @dataclasses.dataclass(repr=False)
 class AbsCandidate(BaseDataclass, ABC):
+    """
+    Abstract base class for candidates (subject, object, or relation).
+    Provides methods for projecting candidates to text representations
+    and normalizing token attributes.
+    """
+
     def project_to_text_str(self):
         pass
 
@@ -211,6 +302,10 @@ class CandidateReference(AbsCandidate, JSONWizard):
 
 @dataclasses.dataclass(eq=True, order=True)
 class SimplifiedCandidate(BaseDataclass):
+    """
+    Represents a candidate entity, which can be a subject, object, or relation.
+    """
+
     hash: str
     text: str | None = None
     role: str | None = None
@@ -223,20 +318,41 @@ class SimplifiedCandidate(BaseDataclass):
 
 @dataclasses.dataclass(repr=False)
 class Candidate(AbsCandidate):
+    """
+    base class for a candidate: subject, object or relation
+    """
+
     _tokens: dict[TokenIndexT, Token] = dataclasses.field(default_factory=dict)
     _index_vec: list[TokenIndexT] = dataclasses.field(default_factory=list)
     _root: TokenIndexT | None = None
 
     def __add__(self, other: Candidate):
+        """
+        Merges the tokens from another candidate into this one.
+
+        :param other: Another Candidate to merge.
+        :return: A new Candidate containing tokens from both.
+        """
+
         new = deepcopy(self)
         for c in other.tokens:
             new.append(c)
         return new
 
     def __len__(self) -> int:
+        """
+        Returns the number of tokens in the candidate.
+
+        :return: The number of tokens.
+        """
         return len(self._tokens)
 
     def hashme(self) -> str:
+        """
+        Generates a hash based on the candidate's projected text.
+
+        :return: A hash string.
+        """
         original_form = " ".join(self.project_to_text()).lower()
         return hashme(original_form)
 
@@ -246,6 +362,12 @@ class Candidate(AbsCandidate):
         )
 
     def __repr__(self):
+        """
+        Converts the candidate to a SimplifiedCandidate instance.
+
+        :return: A SimplifiedCandidate instance.
+        """
+
         content = []
         for s in self.stokens:
             t = self._tokens[s]
@@ -411,14 +533,14 @@ class Candidate(AbsCandidate):
         ],
     ):
         """
+        TODO write a test
+
         sort tokens respecting the tree order: within each node sort succs wrt to token order
         important to correctly account for sorting order when substitution (due to coref) occur
         :param j:
         :param sorter:
         :return:
         """
-        # TODO write a test
-        #
         successors = self.token(j).successors
 
         # "of" exception => if j is "of" then force order
@@ -659,13 +781,6 @@ class Candidate(AbsCandidate):
 
     def unfold_conjuction(self) -> list[Candidate]:
         return partition_conjunctive_wrapper(self)
-
-
-class ACandidateKind(str, Enum):
-    RELATION = "relation"
-    SOURCE_TARGET = "source_target"
-    SOURCE = "source"
-    TARGET = "target"
 
 
 @dataclasses.dataclass(repr=False)
@@ -920,12 +1035,12 @@ def partition_conjunctive_wrapper(
 @dataclasses.dataclass(eq=True, frozen=True, order=True)
 class MuIndex(JSONWizard):
     """
-    Candidate index in a collections of phrases.
+    Candidate index in a collections of phrases, maps to a candidate
 
-    meta - flag, true if MuIndex points to a triple
-    phrase - phrase number
-    token - token index within phrase
-    running - in case there are several `candidates` (conjunction), that exist under the same token root
+    - meta: flag, true if MuIndex points to a triple (meta candidate), false if points to a true candidate
+    - phrase: phrase index
+    - token: token index within phrase
+    - running: in case there are several candidates (conjunction), that exist under the same token root
     """
 
     meta: bool

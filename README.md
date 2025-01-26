@@ -1,1 +1,1 @@
-# TriEl### post install notes```shellsudo apt install graphviz./install_lms.sh```### dev notes run tests as ```shpytest test --linker-host <linkers_ip>```
+# TriEL### post install notes```shellsudo apt install graphviz./install_lms.sh```### dev notes run tests as ```shpytest test --linker-host <linkers_ip>```
