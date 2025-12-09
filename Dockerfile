@@ -74,4 +74,6 @@ WORKDIR /app
 # Copy the entire app including venv from builder
 COPY --from=builder /app /app
 
-CMD ["uv", "run", "triel", "--wsgi-self", "self.json", "--entity-linker-config", "el_config.yaml"]
+# Configuration is provided via environment variables (see .env.example)
+# Use docker run -e or docker-compose to set them
+CMD ["uv", "run", "triel"]

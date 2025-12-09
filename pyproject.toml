@@ -6,8 +6,10 @@ requires = ["hatchling"]
 dev = [
   "myst-parser>=4.0.0,<5",
   "pre-commit>=3.3.3,<4",
-  "pygraphviz>=1.13,<2",
   "pytest>=7.4.0"
+]
+plot = [
+  "pygraphviz>=1.13,<2"
 ]
 
 [project]
@@ -33,6 +35,7 @@ dependencies = [
   "pathos>=0.3.0,<0.4",
   "pip>=25.3",
   "pybind11>=2.12.0,<3",
+  "pydantic>=1.10.0,<1.11.0",
   "pyinflect>=0.5.1,<0.6",
   "pylatexenc>=2.10,<3",
   "pyyaml>=6,<7",
@@ -44,7 +47,7 @@ dependencies = [
   "torch==1.13.0",
   "transformers==4.30.2",
   "viztracer>=0.15.6,<0.16",
-  "waitress>=3.0.2,<4",
+  "waitress>=3.0.2",
   "wordfreq>=3.0.3,<4"
 ]
 description = "Convert text to triples. Create candidates. Link entities"
