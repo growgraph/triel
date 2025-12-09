@@ -192,7 +192,7 @@ class AbsToken(JSONWizard, ABC):
                 return i[0], cls.i2s(i[1])
             raise ValueError(f"expected tuple of len 2, {i} received")
         raise TypeError(
-            f" Token.ituple2stuple received i={i} of type {type(i)}, tuple" " expected."
+            f" Token.ituple2stuple received i={i} of type {type(i)}, tuple expected."
         )
 
 

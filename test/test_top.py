@@ -34,6 +34,7 @@ def test_cast_response_er(reel_response):
     assert len(r.entities) == 79
 
 
+@pytest.mark.requires_linker
 def test_complete(nlp_fixture, rules_v2, el_conf, sample_a):
     elm = EntityLinkerManager.from_dict(el_conf)
 

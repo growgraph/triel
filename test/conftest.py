@@ -1,3 +1,4 @@
+import os
 import pathlib
 
 import numpy as np
@@ -11,11 +12,69 @@ from triel.linking.onto import APISpec, EntityLinker, LocalEntity
 
 def pytest_addoption(parser):
     parser.addoption("--linker-host", action="store", default="localhost")
+    parser.addoption(
+        "--skip-linker-tests",
+        action="store_true",
+        default=False,
+        help="Skip tests that require an external linker API",
+    )
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line(
+        "markers", "requires_linker: mark test as requiring an external linker API"
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Automatically skip linker tests in CI if linker-host is not provided."""
+    skip_linker = config.getoption("--skip-linker-tests", default=False)
+    linker_host = config.getoption("--linker-host", default="localhost")
+
+    # Check if we're in CI
+    ci_env = any(
+        os.getenv(key)
+        for key in ["CI", "GITHUB_ACTIONS", "GITLAB_CI", "JENKINS_URL", "TRAVIS"]
+    )
+
+    # Skip linker tests if:
+    # 1. Explicitly requested with --skip-linker-tests
+    # 2. In CI and linker-host is localhost (default)
+    should_skip = skip_linker or (ci_env and linker_host in ("localhost", "127.0.0.1"))
+
+    if should_skip:
+        skip_marker = pytest.mark.skip(
+            reason="Linker API not available in CI (use --linker-host to specify)"
+        )
+        for item in items:
+            if "requires_linker" in item.keywords:
+                item.add_marker(skip_marker)
 
 
 @pytest.fixture(scope="session")
 def linker_host(pytestconfig):
     return pytestconfig.getoption("linker_host")
+
+
+@pytest.fixture(scope="session")
+def linker_available(pytestconfig):
+    """Check if linker API is available."""
+    # Skip if explicitly requested
+    if pytestconfig.getoption("skip_linker_tests"):
+        return False
+
+    # Skip if in CI and linker-host is localhost (default)
+    linker_host = pytestconfig.getoption("linker_host")
+    ci_env = any(
+        os.getenv(key)
+        for key in ["CI", "GITHUB_ACTIONS", "GITLAB_CI", "JENKINS_URL", "TRAVIS"]
+    )
+
+    if ci_env and linker_host in ("localhost", "127.0.0.1"):
+        return False
+
+    return True
 
 
 @pytest.fixture

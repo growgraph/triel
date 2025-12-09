@@ -1,7 +1,10 @@
+import pytest
+
 from triel.linking.onto import EntityLinker, EntityLinkerManager, PhraseMapper
 from triel.linking.util import link_simple
 
 
+@pytest.mark.requires_linker
 def test_link_phrases(text, nlp_fixture, rules_v2, el_conf):
     elm = EntityLinkerManager.from_dict(el_conf)
     epack = link_simple(

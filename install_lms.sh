@@ -1,4 +1,5 @@
-python -m spacy download en_core_web_sm
-python -m spacy download en_core_web_lg
-python -m spacy download en_core_web_trf
-python -m coreferee install en
+#!/bin/bash
+.venv/bin/pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0-py3-none-any.whl
+.venv/bin/pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.5.0/en_core_web_lg-3.5.0-py3-none-any.whl
+.venv/bin/pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.5.0/en_core_web_trf-3.5.0-py3-none-any.whl
+.venv/bin/python -m coreferee install en

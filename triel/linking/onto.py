@@ -4,7 +4,7 @@ import dataclasses
 import hashlib
 import logging
 import re
-from enum import Enum
+from enum import StrEnum
 
 import requests
 
@@ -32,8 +32,8 @@ class EntityLinkerFailed(Exception):
     pass
 
 
-class EntityLinker(str, Enum):
-    NA = None
+class EntityLinker(StrEnum):
+    NA = "NA"
     BERN_V2 = "BERN_V2"
     FISHING = "FISHING"
     SPACY_BASIC = "SPACY_BASIC"
@@ -129,7 +129,7 @@ class EntityLinkerManager(BaseDataclass):
         )
         if q.status_code != 200:
             raise EntityLinkerFailed(
-                f" EntityLinker.{kind} failed, possibly down, code" f" {q.status_code}"
+                f" EntityLinker.{kind} failed, possibly down, code {q.status_code}"
             )
         return q.json()
 
