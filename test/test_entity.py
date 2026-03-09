@@ -29,8 +29,10 @@ def test_bern_normalization(bern_example, caplog):
         EntityLinkerManager._normalize_bern_entity(item, prob_thr=0.8)
         for item in bern_example["annotations"]
     ]
+    assert epack[0] is not None
     assert epack[0].id == "cell_type:tams"
     assert epack[-2] is None
+    assert epack[4] is not None
     assert epack[4].id == "cell_type:cd8_t_cell"
     dumped_entity = epack[0].to_dict()
     assert "ent_type" in dumped_entity
@@ -44,4 +46,5 @@ def test_pelinker_normalization(pelinker_example, caplog):
         EntityLinkerManager._normalize_pelinker_entity(item, prob_thr=0.8)
         for item in pelinker_example["entities"]
     ]
+    assert epack[0] is not None
     assert epack[0].original_form == "suppress"

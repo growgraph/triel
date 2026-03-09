@@ -1,3 +1,4 @@
+import os
 import pathlib
 
 import numpy as np
@@ -11,11 +12,69 @@ from triel.linking.onto import APISpec, EntityLinker, LocalEntity
 
 def pytest_addoption(parser):
     parser.addoption("--linker-host", action="store", default="localhost")
+    parser.addoption(
+        "--skip-linker-tests",
+        action="store_true",
+        default=False,
+        help="Skip tests that require an external linker API",
+    )
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line(
+        "markers", "requires_linker: mark test as requiring an external linker API"
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Automatically skip linker tests in CI if linker-host is not provided."""
+    skip_linker = config.getoption("--skip-linker-tests", default=False)
+    linker_host = config.getoption("--linker-host", default="localhost")
+
+    # Check if we're in CI
+    ci_env = any(
+        os.getenv(key)
+        for key in ["CI", "GITHUB_ACTIONS", "GITLAB_CI", "JENKINS_URL", "TRAVIS"]
+    )
+
+    # Skip linker tests if:
+    # 1. Explicitly requested with --skip-linker-tests
+    # 2. In CI and linker-host is localhost (default)
+    should_skip = skip_linker or (ci_env and linker_host in ("localhost", "127.0.0.1"))
+
+    if should_skip:
+        skip_marker = pytest.mark.skip(
+            reason="Linker API not available in CI (use --linker-host to specify)"
+        )
+        for item in items:
+            if "requires_linker" in item.keywords:
+                item.add_marker(skip_marker)
 
 
 @pytest.fixture(scope="session")
 def linker_host(pytestconfig):
     return pytestconfig.getoption("linker_host")
+
+
+@pytest.fixture(scope="session")
+def linker_available(pytestconfig):
+    """Check if linker API is available."""
+    # Skip if explicitly requested
+    if pytestconfig.getoption("skip_linker_tests"):
+        return False
+
+    # Skip if in CI and linker-host is localhost (default)
+    linker_host = pytestconfig.getoption("linker_host")
+    ci_env = any(
+        os.getenv(key)
+        for key in ["CI", "GITHUB_ACTIONS", "GITLAB_CI", "JENKINS_URL", "TRAVIS"]
+    )
+
+    if ci_env and linker_host in ("localhost", "127.0.0.1"):
+        return False
+
+    return True
 
 
 @pytest.fixture
@@ -24,6 +83,65 @@ def el_conf(linker_host):
     for c in config["linkers"]:
         c["host"] = linker_host
     return config
+
+
+@pytest.fixture(autouse=True)
+def mock_el_services(request, monkeypatch):
+    """Use deterministic local EL outputs for EL-dependent tests."""
+    target_tests = {
+        "test/test_el.py::test_link_phrases",
+        "test/test_top.py::test_complete",
+    }
+    if request.node.nodeid not in target_tests:
+        return
+
+    from triel.linking.onto import EntityLinkerManager
+
+    link_phrase_text = "Diabetic ulcers are related to burns."
+    mock_phrase_response = {
+        "annotations": [
+            {
+                "id": ["mesh:D017719"],
+                "obj": "disease",
+                "mention": "Diabetic ulcers",
+                "span": {"begin": 0, "end": 15},
+                "prob": 0.99,
+            },
+            {
+                "id": ["mesh:D002056"],
+                "obj": "disease",
+                "mention": "burns",
+                "span": {"begin": 31, "end": 36},
+                "prob": 0.98,
+            },
+        ]
+    }
+
+    def _query_mock(self, text, link_mode):
+        if link_mode == EntityLinker.BERN_V2 and text == link_phrase_text:
+            return mock_phrase_response
+        if link_mode == EntityLinker.BERN_V2:
+            return {"annotations": [], "text": text}
+        if link_mode == EntityLinker.FISHING:
+            return {"entities": [], "text": text}
+        return {"text": text}
+
+    def _iterate_over_linkers_mock(phrases, entity_linker_manager, sep=" ", **kwargs):
+        _ = (entity_linker_manager, sep, kwargs)
+        max_span = len(sep.join(phrases))
+        entities = FileHandle.load("test.data", "entities.local.sample.json")
+        return [
+            LocalEntity.from_dict(item)
+            for item in entities
+            if item["a"] < item["b"] < max_span
+            and item["linker_type"] == EntityLinker.BERN_V2
+        ]
+
+    monkeypatch.setattr(EntityLinkerManager, "query", _query_mock)
+    monkeypatch.setattr(
+        "triel.top.iterate_over_linkers",
+        _iterate_over_linkers_mock,
+    )
 
 
 @pytest.fixture

@@ -1,58 +1,79 @@
+# ─── builder stage ───────────────────────────────────────────────────────────
 FROM nvidia/cuda:12.2.2-runtime-ubuntu22.04 AS builder
 
-RUN apt update -y && apt upgrade -y && apt install curl git -y
+# Set timezone non-interactively
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
 
-RUN apt-get update && apt-get install -y \
-    software-properties-common \
-    wget \
-    curl \
-    git \
-    gnupg \
-    lsb-release
-
-# Add the deadsnakes PPA for Python 3.10
-RUN add-apt-repository ppa:deadsnakes/ppa
-
-# Install Python 3.10 and necessary tools
-RUN apt-get update && apt-get install -y \
-    python3.10 \
-    python3.10-venv \
-    python3.10-dev \
-    python3-pip
-
-# Update alternatives to set Python 3.10 as the default python
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
-
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python get-pip.py && \
-    rm get-pip.py
-
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN curl -sSL https://install.python-poetry.org | python - --version 1.8.3
+RUN apt update -y \
+ && apt install -y curl git \
+ && curl -LsSf https://astral.sh/uv/0.9.5/install.sh | sh \
+ && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="${PATH}:/root/.local/bin"
 
-ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_EXPERIMENTAL_SYSTEM_GIT_CLIENT=1 \
-    POETRY_REQUESTS_TIMEOUT=40 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
+# Add the deadsnakes PPA for Python 3.11
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    gnupg \
+    lsb-release \
+ && add-apt-repository ppa:deadsnakes/ppa \
+ && apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-venv \
+    python3.11-dev \
+ && update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml uv.lock ./
 RUN touch README.md
 
+# Copy source code so uv can install the local package
 COPY triel ./triel
 
+# uv creates a venv and installs deps (including the local package)
 RUN mkdir -p -m 0700 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
-RUN --mount=type=ssh poetry install --no-interaction -vvv --without dev
-RUN poetry run python -m spacy download en_core_web_lg
-RUN poetry run python -m spacy download en_core_web_trf
-RUN poetry run python -m coreferee install en
-COPY run ./run
+RUN --mount=type=ssh uv sync --no-group dev -v
+
+COPY install_lms.sh ./
 COPY README.md logging.conf ./
 
-CMD ["poetry", "run", "python", "run/serve.py", "--wsgi-self", "self.json", "--entity-linker-config", "el_config.yaml"]
+# Install language models
+RUN chmod +x install_lms.sh && ./install_lms.sh
+
+# ─── runtime stage ────────────────────────────────────────────────────────────
+FROM nvidia/cuda:12.2.2-runtime-ubuntu22.04 AS runtime
+
+# Set timezone non-interactively
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+RUN apt update -y \
+ && apt install -y curl git \
+ && curl -LsSf https://astral.sh/uv/0.9.5/install.sh | sh \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="${PATH}:/root/.local/bin"
+
+# Install Python 3.11
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    gnupg \
+    lsb-release \
+ && add-apt-repository ppa:deadsnakes/ppa \
+ && apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-venv \
+ && update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy the entire app including venv from builder
+COPY --from=builder /app /app
+
+# Configuration is provided via environment variables (see .env.example)
+# Use docker run -e or docker-compose to set them
+CMD ["uv", "run", "triel"]

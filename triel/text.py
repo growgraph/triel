@@ -69,7 +69,9 @@ def phrases_to_triples(
     fun_candidates: dict[MuIndex, Candidate] = dict()
     for key, item_list in ext_cand_list:
         for j, item in enumerate(item_list):
-            fun_candidates[MuIndex(False, *key, j)] = item
+            fun_candidates[
+                MuIndex(meta=False, phrase=key[0], token=key[1], running=j)
+            ] = item
 
     # iphrase -> fundamental triple
     # for each phrase - a list of triple
@@ -162,7 +164,7 @@ def phrases_to_triples(
                 f" numbers]: {failing_phrases}"
             )
             logger.error(f" Dangling metatriples : {failing_deq}")
-            for iphrase in failing_phrases:  # type: ignore
+            for iphrase in failing_phrases:
                 if iphrase < len(phrases):
                     logger.error(f" failing phrase : <B>{phrases[iphrase]}<E>")
                 else:

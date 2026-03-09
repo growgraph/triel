@@ -1,66 +1,85 @@
-# pylint: disable=E1101
+"""Profile TriEL's top-level extraction pipeline on sample text.
 
-import os
+This script is designed for quick demos:
+- load pruning rules and NLP pipeline
+- run mention/entity extraction
+- print a compact, readable response
+- print profiling stats from `suthing.SProfiler`
+"""
+
+from __future__ import annotations
+
+import json
 import pkgutil
-from multiprocessing.managers import BaseManager
-from pprint import pprint
+from typing import Any
 
+import click
 import spacy
 import yaml
+from spacy.language import Language
 from suthing import SProfiler
 
 from triel.linking.onto import EntityLinkerManager
 from triel.top import cast_response_redux, text_to_graph_mentions_entities
 
+DEFAULT_MODEL = "en_core_web_trf"
+DEFAULT_TEXT = "Diabetic ulcers are related to burns."
+PRUNING_RULES_RESOURCE = "prune_noun_compound_v2.yaml"
 
-def main():
-    os.path.dirname(os.path.realpath(__file__))
 
-    fp = pkgutil.get_data("triel.config", "prune_noun_compound_v2.yaml")
-    rules = yaml.load(fp, Loader=yaml.FullLoader)
+def load_pruning_rules() -> dict[str, Any]:
+    raw_rules = pkgutil.get_data("triel.config", PRUNING_RULES_RESOURCE)
+    if raw_rules is None:
+        raise RuntimeError(
+            f"Could not load resource: triel.config/{PRUNING_RULES_RESOURCE}"
+        )
+    return yaml.safe_load(raw_rules) or {}
 
-    nlp = spacy.load("en_core_web_trf")
-    nlp.add_pipe("coreferee")
 
-    conf = {
-        "BERN_V2": {
-            "url": "http://192.168.1.11:8888/plain",
-            "text_field": "text",
-            "threshold": 0.75,
-        },
-        "FISHING": {
-            "url": "http://192.168.1.11:8090/service/disambiguate",
-            "text_field": "text",
-            "extra_args": {
-                "language": {"lang": "en"},
-                "mentions": ["ner", "wikipedia"],
-            },
-        },
-    }
+def build_nlp(model_name: str) -> Language:
+    nlp = spacy.load(model_name)
+    if "coreferee" not in nlp.pipe_names:
+        nlp.add_pipe("coreferee")
+    return nlp
 
-    text = "Diabetic ulcers are related to burns."
-    # text = (
-    #     "Thousands of exoplanets have been discovered by the end of the"
-    #     " 2010s; some have minimum mass measurements from the radial"
-    #     " velocity method while others that are seen to transit their"
-    #     " parent stars have measures of their physical size."
-    # )
 
-    elm = EntityLinkerManager(conf)
+def run_profile(text: str, model_name: str) -> tuple[dict[str, Any], Any]:
+    rules = load_pruning_rules()
+    nlp = build_nlp(model_name)
+    entity_linker_manager = EntityLinkerManager({})
+    profiler = SProfiler()
 
-    class LocalManager(BaseManager):
-        pass
+    response = text_to_graph_mentions_entities(
+        text,
+        nlp,
+        rules,
+        entity_linker_manager,
+        _profiler=profiler,
+    )
+    response_redux = cast_response_redux(response).model_dump()
+    return response_redux, profiler.view_stats()
 
-    LocalManager.register("SProfiler", SProfiler)
 
-    with LocalManager() as manager:
-        sp = manager.SProfiler()
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
+@click.option(
+    "--text",
+    default=DEFAULT_TEXT,
+    show_default=True,
+    help="Input text to analyze.",
+)
+@click.option(
+    "--model",
+    default=DEFAULT_MODEL,
+    show_default=True,
+    help="spaCy model to load.",
+)
+def main(text: str, model: str) -> None:
+    response_redux, stats = run_profile(text, model)
 
-        response = text_to_graph_mentions_entities(text, nlp, rules, elm, _profiler=sp)
-        response_jsonlike = cast_response_redux(response)
-        stats = sp.view_stats()
-    print(response_jsonlike)
-    pprint(stats)
+    click.echo("== TriEL response (redux) ==")
+    click.echo(json.dumps(response_redux, indent=2, default=str))
+    click.echo("\n== Profiler stats ==")
+    click.echo(json.dumps(stats, indent=2, default=str))
 
 
 if __name__ == "__main__":

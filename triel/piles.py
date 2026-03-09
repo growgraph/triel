@@ -9,7 +9,6 @@ import pandas as pd
 
 from triel.onto import (
     Candidate,
-    CandidateType,
     Relation,
     SourceOrTarget,
     Token,
@@ -79,7 +78,7 @@ class CandidatePile:
     def tokens(self) -> set[TokenIndexT]:
         return set([x for r in self.candidates for x in r.stokens])
 
-    def append(self, r: CandidateType):
+    def append(self, r: Candidate):
         self._root_to_candidate[r.root.s] = r
 
     def project_to_text(self):
@@ -144,7 +143,7 @@ class CandidatePile:
     def unfold_conjunction(self) -> ExtCandidateList:
         dd_pile: ExtCandidateList = ExtCandidateList()
         for sroot, c in self._root_to_candidate.items():
-            for c_unfolded in c.unfold_conjuction():  # type: ignore
+            for c_unfolded in c.unfold_conjuction():
                 dd_pile[sroot] += [c_unfolded]
         return dd_pile
 
@@ -158,7 +157,10 @@ class CandidatePile:
             )
             for k, v in self._root_to_candidate.items()
         ]
-        return pd.DataFrame(arr, columns=["iphrase", "itoken", "a", "b", "text"])
+        return pd.DataFrame(
+            arr,
+            columns=pd.Index(["iphrase", "itoken", "a", "b", "text"]),
+        )
 
 
 class ExtCandidateList:
@@ -171,9 +173,9 @@ class ExtCandidateList:
 
     def __init__(self):
         self._filter: None | Callable = None
-        self._root_to_lists: defaultdict[TokenIndexT, list[CandidateType]] = (
-            defaultdict(list)
-        )  # type: ignore
+        self._root_to_lists: defaultdict[TokenIndexT, list[Candidate]] = defaultdict(
+            list
+        )
 
     def __len__(self) -> int:
         return sum(len(x) for x in self._root_to_lists.values())
@@ -197,10 +199,9 @@ class ExtCandidateList:
             self._root_to_lists[k] for k in self._root_to_lists.keys() if k[0] == ip
         )
 
-    def append(self, key, value: CandidateType):
-        if tuple(value.stokens) not in {  # type: ignore
-            tuple(x.stokens)  # type: ignore
-            for x in self._root_to_lists[key]  # type: ignore
+    def append(self, key: TokenIndexT, value: Candidate):
+        if tuple(value.stokens) not in {
+            tuple(x.stokens) for x in self._root_to_lists[key]
         }:
             self._root_to_lists[key] += [value]
 

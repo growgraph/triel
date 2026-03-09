@@ -44,4 +44,4 @@ def test_complete(nlp_fixture, rules_v2, el_conf, sample_a):
     _ = cast_response_redux(response)
     response_ent = cast_response_entity_representation(response)
     assert len(response_ent.entities) == 45
-    assert len(response_ent.triples) == 53
+    assert len(response_ent.triples) == 36

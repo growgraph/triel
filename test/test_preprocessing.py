@@ -13,11 +13,8 @@ def test_consecutive_candidates(phrase):
             " orbiting a star of 0.9 R in 60 days detected with a"
             " S/Ntransit >10 (100 ppm transit depth)."
         ),
-        (
-            "For example, an Earth-size transit across a G star"
-            " creates an 80 ppm depth."
-        ),
-        ("The different science objectives require 500 separate" " target pointings."),
+        ("For example, an Earth-size transit across a G star creates an 80 ppm depth."),
+        ("The different science objectives require 500 separate target pointings."),
         (
             "Assuming 1 hour per pointing the mission duration is"
             " estimated at 1175 days or 3.2 years."

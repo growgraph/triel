@@ -192,27 +192,23 @@ def candidate():
 def test_replace_with_candidate():
     tokens = [
         Token(
-            **{
-                "s": (0, "007"),
-                "lower": "his",
-                "text": "his",
-                "dep_": "poss",
-                "predecessors": {(0, "008")},
-            }
+            s=(0, "007"),
+            lower="his",
+            text="his",
+            dep_="poss",
+            predecessors={(0, "008")},
         ),
         Token(
-            **{
-                "s": (0, "008"),
-                "lower": "dog",
-                "text": "dog",
-                "successors": {(0, "007")},
-            }
+            s=(0, "008"),
+            lower="dog",
+            text="dog",
+            successors={(0, "007")},
         ),
     ]
     ac = Candidate().from_tokens(tokens)
 
     tokens_b = [
-        Token(**{"s": (0, "015"), "lower": "john", "text": "John"}),
+        Token(s=(0, "015"), lower="john", text="John"),
     ]
     bc = Candidate().from_tokens(tokens_b)
 
@@ -224,53 +220,43 @@ def test_replace_with_candidate():
 
 def test_replace_top():
     tokens = [
-        Token(
-            **{
-                "s": 7,
-                "lower": "he",
-                "text": "he",
-            }
-        ),
+        Token(s=(0, "007"), lower="he", text="he"),
     ]
     ac = Candidate().from_tokens(tokens)
 
     tokens_b = [
-        Token(**{"s": 15, "lower": "john", "text": "John"}),
+        Token(s=(0, "015"), lower="john", text="John"),
     ]
     bc = Candidate().from_tokens(tokens_b)
 
-    ac.replace_token_with_acandidate("007", bc)
-    assert ac._index_vec == ["015"]
+    ac.replace_token_with_acandidate((0, "007"), bc)
+    assert ac._index_vec == [(0, "015")]
 
 
 def test_from_subtree():
     tokens = [
-        Token(**{"s": 0, "text": "a0", "successors": {1, 2}}),
-        Token(**{"s": 1, "text": "a1", "predecessors": {0}}),
+        Token(s=(0, "000"), text="a0", successors={(0, "001"), (0, "002")}),
+        Token(s=(0, "001"), text="a1", predecessors={(0, "000")}),
         Token(
-            **{
-                "s": 2,
-                "text": "a2",
-                "predecessors": {0},
-                "successors": {15},
-            }
+            s=(0, "002"),
+            text="a2",
+            predecessors={(0, "000")},
+            successors={(0, "015")},
         ),
         Token(
-            **{
-                "s": 15,
-                "text": "b0",
-                "predecessors": {2},
-                "successors": {16, 17},
-            }
+            s=(0, "015"),
+            text="b0",
+            predecessors={(0, "002")},
+            successors={(0, "016"), (0, "017")},
         ),
-        Token(**{"s": 16, "text": "b1", "predecessors": {15}}),
-        Token(**{"s": 17, "text": "b2", "predecessors": {15}}),
+        Token(s=(0, "016"), text="b1", predecessors={(0, "015")}),
+        Token(s=(0, "017"), text="b2", predecessors={(0, "015")}),
     ]
     ac = Candidate().from_tokens(tokens)
 
-    bc = ac.from_subtree("002")
+    bc = ac.from_subtree((0, "002"))
 
-    assert bc.stokens == ["002", "015", "016", "017"]
+    assert bc.stokens == [(0, "002"), (0, "015"), (0, "016"), (0, "017")]
 
 
 def test_replace_with_candidate_extra(candidate):
