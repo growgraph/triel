@@ -8,6 +8,7 @@ import networkx as nx
 from suthing import Timer, profile
 
 from triel.coref import stitch_coreference
+from triel.coref_adapter import CorefAdapterError
 from triel.hash import hashme
 from triel.linking.onto import EntityLinker
 from triel.linking.util import (
@@ -29,9 +30,54 @@ from triel.text import normalize_text, phrases_to_triples
 logger = logging.getLogger(__name__)
 
 
+def _coref_chain_signatures(
+    edges_chain_token_global: set[tuple[MuIndex, tuple[MuIndex, ...]]] | set[tuple],
+) -> set[frozenset[tuple]]:
+    chain_map: dict[MuIndex, set[tuple]] = defaultdict(set)
+    for chain_id, mention_tokens in edges_chain_token_global:
+        chain_map[chain_id].add(tuple(mention_tokens))
+    return {frozenset(mentions) for mentions in chain_map.values()}
+
+
+def _log_dual_run_coref_diff(
+    *,
+    text_hash: str,
+    primary_backend: str,
+    shadow_backend: str,
+    primary_edges_chain_token,
+    shadow_edges_chain_token,
+    primary_edges_chain_order,
+    shadow_edges_chain_order,
+) -> None:
+    primary_signatures = _coref_chain_signatures(set(primary_edges_chain_token))
+    shadow_signatures = _coref_chain_signatures(set(shadow_edges_chain_token))
+    added_chains = len(shadow_signatures - primary_signatures)
+    removed_chains = len(primary_signatures - shadow_signatures)
+    edge_drift = abs(len(shadow_edges_chain_token) - len(primary_edges_chain_token))
+    order_edge_drift = abs(
+        len(shadow_edges_chain_order) - len(primary_edges_chain_order)
+    )
+    logger.info(
+        "coref_dual_run text_hash=%s primary=%s shadow=%s "
+        "added_chains=%s removed_chains=%s edge_drift=%s order_edge_drift=%s",
+        text_hash,
+        primary_backend,
+        shadow_backend,
+        added_chains,
+        removed_chains,
+        edge_drift,
+        order_edge_drift,
+    )
+
+
 @profile
 def text_to_graph_mentions_entities(text, nlp, rules, elm, ix_phrases=None, **kwargs):
+    coref_resolver = kwargs.pop("coref_resolver", None)
+    coref_shadow_resolver = kwargs.pop("coref_shadow_resolver", None)
+    nlp_shadow = kwargs.pop("nlp_shadow", None)
+    coref_dual_run_enabled = kwargs.pop("coref_dual_run_enabled", False)
     phrases = normalize_text(text, nlp)
+    text_hash = hashme(text)
 
     if ix_phrases is not None:
         if ix_phrases:
@@ -41,9 +87,83 @@ def text_to_graph_mentions_entities(text, nlp, rules, elm, ix_phrases=None, **kw
         phrases, nlp, rules, **kwargs
     )
     with Timer() as t_coref:
-        edges_chain_token_global, edges_chain_order_global = stitch_coreference(
-            nlp=nlp, phrases_for_coref=phrases, window_size=2
-        )
+        try:
+            edges_chain_token_global, edges_chain_order_global = stitch_coreference(
+                nlp=nlp,
+                phrases_for_coref=phrases,
+                window_size=2,
+                coref_resolver=coref_resolver,
+            )
+        except CorefAdapterError as e:
+            backend = (
+                coref_resolver.backend.value
+                if coref_resolver is not None
+                else "unknown"
+            )
+            logger.warning(
+                "coref_primary_failed text_hash=%s backend=%s error=%s",
+                text_hash,
+                backend,
+                e,
+            )
+            edges_chain_token_global, edges_chain_order_global = set(), []
+        except Exception as e:
+            backend = (
+                coref_resolver.backend.value
+                if coref_resolver is not None
+                else "unknown"
+            )
+            logger.warning(
+                "coref_primary_unexpected_error text_hash=%s backend=%s error=%s",
+                text_hash,
+                backend,
+                e,
+            )
+            edges_chain_token_global, edges_chain_order_global = set(), []
+
+    if coref_dual_run_enabled and coref_shadow_resolver is not None:
+        with Timer() as t_coref_shadow:
+            try:
+                shadow_nlp = nlp_shadow if nlp_shadow is not None else nlp
+                shadow_edges_chain_token, shadow_edges_chain_order = stitch_coreference(
+                    nlp=shadow_nlp,
+                    phrases_for_coref=phrases,
+                    window_size=2,
+                    coref_resolver=coref_shadow_resolver,
+                )
+                _log_dual_run_coref_diff(
+                    text_hash=text_hash,
+                    primary_backend=(
+                        coref_resolver.backend.value
+                        if coref_resolver is not None
+                        else "unknown"
+                    ),
+                    shadow_backend=coref_shadow_resolver.backend.value,
+                    primary_edges_chain_token=edges_chain_token_global,
+                    shadow_edges_chain_token=shadow_edges_chain_token,
+                    primary_edges_chain_order=edges_chain_order_global,
+                    shadow_edges_chain_order=shadow_edges_chain_order,
+                )
+                logger.info(
+                    "coref_dual_run_timing text_hash=%s shadow_backend=%s elapsed=%.4f",
+                    text_hash,
+                    coref_shadow_resolver.backend.value,
+                    t_coref_shadow.elapsed,
+                )
+            except CorefAdapterError as e:
+                logger.warning(
+                    "coref_shadow_failed text_hash=%s backend=%s error=%s",
+                    text_hash,
+                    coref_shadow_resolver.backend.value,
+                    e,
+                )
+            except Exception as e:
+                logger.warning(
+                    "coref_shadow_unexpected_error text_hash=%s backend=%s error=%s",
+                    text_hash,
+                    coref_shadow_resolver.backend.value,
+                    e,
+                )
 
     with Timer() as t_el:
         entity_pack = iterate_over_linkers(

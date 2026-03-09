@@ -19,6 +19,11 @@ import yaml
 from spacy.language import Language
 from suthing import SProfiler
 
+from triel.coref_adapter import (
+    CorefBackend,
+    configure_nlp_coref_backend,
+    get_coref_resolver,
+)
 from triel.linking.onto import EntityLinkerManager
 from triel.top import cast_response_redux, text_to_graph_mentions_entities
 
@@ -36,16 +41,21 @@ def load_pruning_rules() -> dict[str, Any]:
     return yaml.safe_load(raw_rules) or {}
 
 
-def build_nlp(model_name: str) -> Language:
+def build_nlp(
+    model_name: str, coref_backend: CorefBackend = CorefBackend.COREFEREE
+) -> Language:
     nlp = spacy.load(model_name)
-    if "coreferee" not in nlp.pipe_names:
-        nlp.add_pipe("coreferee")
-    return nlp
+    return configure_nlp_coref_backend(nlp, coref_backend)
 
 
-def run_profile(text: str, model_name: str) -> tuple[dict[str, Any], Any]:
+def run_profile(
+    text: str,
+    model_name: str,
+    coref_backend: CorefBackend = CorefBackend.COREFEREE,
+) -> tuple[dict[str, Any], Any]:
     rules = load_pruning_rules()
-    nlp = build_nlp(model_name)
+    nlp = build_nlp(model_name, coref_backend=coref_backend)
+    coref_resolver = get_coref_resolver(coref_backend)
     entity_linker_manager = EntityLinkerManager({})
     profiler = SProfiler()
 
@@ -54,6 +64,7 @@ def run_profile(text: str, model_name: str) -> tuple[dict[str, Any], Any]:
         nlp,
         rules,
         entity_linker_manager,
+        coref_resolver=coref_resolver,
         _profiler=profiler,
     )
     response_redux = cast_response_redux(response).model_dump()
@@ -73,8 +84,17 @@ def run_profile(text: str, model_name: str) -> tuple[dict[str, Any], Any]:
     show_default=True,
     help="spaCy model to load.",
 )
-def main(text: str, model: str) -> None:
-    response_redux, stats = run_profile(text, model)
+@click.option(
+    "--coref-backend",
+    default=CorefBackend.COREFEREE.value,
+    show_default=True,
+    type=click.Choice([item.value for item in CorefBackend]),
+    help="Coreference backend to use.",
+)
+def main(text: str, model: str, coref_backend: str) -> None:
+    response_redux, stats = run_profile(
+        text, model, coref_backend=CorefBackend(coref_backend)
+    )
 
     click.echo("== TriEL response (redux) ==")
     click.echo(json.dumps(response_redux, indent=2, default=str))

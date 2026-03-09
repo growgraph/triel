@@ -3,6 +3,7 @@ import json
 import logging
 import logging.config
 import pathlib
+import random
 import traceback
 from typing import Any
 
@@ -22,6 +23,11 @@ from triel.linking.onto import (
     EntityLinkerFailed,
     EntityLinkerManager,
     EntityLinkerTypeNotAvailable,
+)
+from triel.coref_adapter import (
+    CorefAdapterError,
+    CorefBackend,
+    get_ready_coref_runtime,
 )
 from triel.top import (
     cast_response_entity_representation,
@@ -157,6 +163,20 @@ class ModelConfig(BaseSettings):
 
     gpu: bool = Field(default=True, description="Load spaCy models to GPU")
     spacy_model: str = Field(default="en_core_web_trf", description="spaCy model name")
+    coref_backend: CorefBackend = Field(
+        default=CorefBackend.COREFEREE,
+        description="Coreference resolver backend",
+    )
+    coref_backend_shadow: CorefBackend | None = Field(
+        default=None,
+        description="Optional shadow backend for dual-run canary comparison.",
+    )
+    coref_dual_run_enabled: bool = Field(
+        default=False, description="Enable dual-run canary mode for coref."
+    )
+    coref_dual_run_sample_rate: float = Field(
+        default=0.1, description="Request sampling rate for dual-run mode."
+    )
     rules_file: str = Field(
         default="prune_noun_compound_v3.yaml",
         description="Rules configuration file name",
@@ -317,14 +337,47 @@ def main(
     if app_config.model.gpu:
         spacy.prefer_gpu()
 
-    # Load spaCy model
+    # Load spaCy model and primary coref runtime.
     nlp = spacy.load(app_config.model.spacy_model)
-    nlp.add_pipe("coreferee")
+    nlp, coref_resolver = get_ready_coref_runtime(
+        nlp, app_config.model.coref_backend, fallback_to_none=False
+    )
+
+    shadow_nlp = None
+    shadow_resolver = None
+    if (
+        app_config.model.coref_dual_run_enabled
+        and app_config.model.coref_backend_shadow
+    ):
+        try:
+            shadow_nlp = spacy.load(app_config.model.spacy_model)
+            shadow_nlp, shadow_resolver = get_ready_coref_runtime(
+                shadow_nlp,
+                app_config.model.coref_backend_shadow,
+                fallback_to_none=True,
+            )
+        except CorefAdapterError as e:
+            logger.warning(f"coref_shadow_setup_failed error={e}")
+            shadow_nlp, shadow_resolver = None, None
 
     def work(request0):
         json_data = request0.json
         text = json_data["text"]
-        response = text_to_graph_mentions_entities(text, nlp, rules, elm)
+        canary_enabled = (
+            app_config.model.coref_dual_run_enabled
+            and shadow_resolver is not None
+            and random.random() < app_config.model.coref_dual_run_sample_rate
+        )
+        response = text_to_graph_mentions_entities(
+            text,
+            nlp,
+            rules,
+            elm,
+            coref_resolver=coref_resolver,
+            nlp_shadow=shadow_nlp,
+            coref_shadow_resolver=shadow_resolver,
+            coref_dual_run_enabled=canary_enabled,
+        )
         return response
 
     # Get paths from config

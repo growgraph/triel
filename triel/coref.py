@@ -13,6 +13,7 @@ from triel.graph import (
     phrase_to_deptree,
     relabel_nodes_and_key,
 )
+from triel.coref_adapter import CorefAdapterError, CorefResolver, get_coref_resolver
 from triel.onto import AbsToken, Candidate, ChainIndex, Token, TokenIndexT
 from triel.piles import ExtCandidateList
 from triel.relation import logger
@@ -38,7 +39,9 @@ def graph_component_maps(
     return map_tree_subtree_index
 
 
-def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
+def render_coref_graph(
+    rdoc: Doc, coref_resolver: CorefResolver | None = None
+) -> nx.DiGraph:
     """
     render super graph using coreferee package
 
@@ -55,7 +58,17 @@ def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
         NB: most specific mention is encoded by blank attribute `most_specific`
     """
 
-    chains = rdoc._.coref_chains if rdoc._.coref_chains is not None else []
+    resolver = coref_resolver or get_coref_resolver()
+    try:
+        resolution = resolver.resolve_doc(rdoc)
+        chains = resolution.chains
+    except CorefAdapterError as e:
+        logger.warning(
+            "coref_resolution_failed backend=%s error=%s",
+            resolver.backend.value,
+            e,
+        )
+        chains = []
     # nodes for coref graph
     vs_coref = []
 
@@ -78,7 +91,8 @@ def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
     ]
     vertex_counter += 1
 
-    for jchain, chain in enumerate(chains):
+    for chain in chains:
+        jchain = chain.chain_index
         coref_chain = (-1, vertex_counter)
         chain_state: dict[str, Any] = {
             "tag_": "coref",
@@ -92,13 +106,12 @@ def render_coref_graph(rdoc: Doc) -> nx.DiGraph:
         vs_coref += [(coref_chain, chain_state)]
         es_coref.append((coref_root, coref_chain))
         vertex_counter += 1
-        for kth, x in enumerate(chain.mentions):
+        for x in chain.mentions:
             coref_blank = (-1, vertex_counter)
             blank_state: dict[str, Any] = {
                 "tag_": "coref",
-                "dep_": "blank"
-                + ("*" if kth == chain.most_specific_mention_index else ""),
-                "most_specific": kth == chain.most_specific_mention_index,
+                "dep_": "blank" + ("*" if x.most_specific else ""),
+                "most_specific": x.most_specific,
                 "chain": jchain,
             }
             blank_state["label"] = (
@@ -182,9 +195,13 @@ def render_coref_candidate_map(
 
 
 def render_coref_maps_wrapper(
-    rdoc, initial_phrase_index=None, map_tree_subtree_index=None, **kwargs
+    rdoc,
+    initial_phrase_index=None,
+    map_tree_subtree_index=None,
+    coref_resolver: CorefResolver | None = None,
+    **kwargs,
 ) -> tuple[list[tuple[int, tuple[int, ...]]], list[tuple[int, int]]]:
-    coref_graph = render_coref_graph(rdoc)
+    coref_graph = render_coref_graph(rdoc, coref_resolver=coref_resolver)
     plot_path = kwargs.pop("plot_path", None)
 
     if plot_path is not None:
@@ -335,7 +352,11 @@ def coref_candidates(
 
 
 def stitch_coreference(
-    phrases_for_coref: list[str], nlp: spacy.Language, window_size: int, plot_path=None
+    phrases_for_coref: list[str],
+    nlp: spacy.Language,
+    window_size: int,
+    plot_path=None,
+    coref_resolver: CorefResolver | None = None,
 ):
     """
     go over phrases with stride 1 and window `window` to identify coreferences;
@@ -354,7 +375,11 @@ def stitch_coreference(
     for i in range(nmax):
         fragment = " ".join(phrases_for_coref[i : i + window_size])
         edges_chain_token, edges_chain_order = text_to_coref_classes(
-            nlp, fragment, initial_phrase_index=i, plot_path=plot_path
+            nlp,
+            fragment,
+            initial_phrase_index=i,
+            plot_path=plot_path,
+            coref_resolver=coref_resolver,
         )
         acc_chain_token += edges_chain_token
         acc_chain_order += edges_chain_order
@@ -388,7 +413,11 @@ def stitch_coreference(
 
 
 def text_to_coref_classes(
-    nlp, text, initial_phrase_index, **kwargs
+    nlp,
+    text,
+    initial_phrase_index,
+    coref_resolver: CorefResolver | None = None,
+    **kwargs,
 ) -> tuple[
     list[tuple[ChainIndex, tuple[TokenIndexT, ...]]],
     list[tuple[ChainIndex, ChainIndex]],
@@ -409,7 +438,10 @@ def text_to_coref_classes(
     # coref maps
 
     (edges_chain_token, edges_chain_order) = render_coref_maps_wrapper(
-        rdoc, initial_phrase_index, **kwargs
+        rdoc,
+        initial_phrase_index,
+        coref_resolver=coref_resolver,
+        **kwargs,
     )
     edges_chain_tokenit: list[tuple[ChainIndex, tuple[TokenIndexT, ...]]] = [
         (
