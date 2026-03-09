@@ -6,6 +6,11 @@ import click
 import spacy
 from suthing import FileHandle
 
+from triel.coref_adapter import (
+    CorefBackend,
+    configure_nlp_coref_backend,
+    get_coref_resolver,
+)
 from triel.linking.onto import EntityLinkerManager
 from triel.top import (
     cast_response_entity_representation,
@@ -25,7 +30,21 @@ logger = logging.getLogger(__name__)
 )
 @click.option("--phrase-indexes", "-i", type=click.INT, multiple=True)
 @click.option("--localhost-linkers", type=click.STRING, multiple=True)
-def run(host, conf_el_path, input_path, output, phrase_indexes, localhost_linkers):
+@click.option(
+    "--coref-backend",
+    default=CorefBackend.COREFEREE.value,
+    show_default=True,
+    type=click.Choice([item.value for item in CorefBackend]),
+)
+def run(
+    host,
+    conf_el_path,
+    input_path,
+    output,
+    phrase_indexes,
+    localhost_linkers,
+    coref_backend,
+):
     el_conf = FileHandle.load(fpath=conf_el_path)
     for c in el_conf["linkers"]:
         if "host" not in c:
@@ -36,8 +55,10 @@ def run(host, conf_el_path, input_path, output, phrase_indexes, localhost_linker
     elm = EntityLinkerManager.from_dict(el_conf)
     rules = FileHandle.load("triel.config", "prune_noun_compound_v3.yaml")
 
+    backend = CorefBackend(coref_backend)
     nlp = spacy.load("en_core_web_trf")
-    nlp.add_pipe("coreferee")
+    nlp = configure_nlp_coref_backend(nlp, backend)
+    coref_resolver = get_coref_resolver(backend)
 
     logger.info("nlp loaded")
 
@@ -51,7 +72,12 @@ def run(host, conf_el_path, input_path, output, phrase_indexes, localhost_linker
 
     for name, data in inputs:
         response = text_to_graph_mentions_entities(
-            data["text"], nlp, rules, elm, ix_phrases=phrase_indexes
+            data["text"],
+            nlp,
+            rules,
+            elm,
+            ix_phrases=phrase_indexes,
+            coref_resolver=coref_resolver,
         )
 
         response_redux = cast_response_redux(response)

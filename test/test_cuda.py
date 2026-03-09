@@ -1,4 +1,5 @@
 import torch
+from torch import version as torch_version
 
 
 def test_cuda():
@@ -6,7 +7,7 @@ def test_cuda():
     print(f"Is CUDA supported by this system? {available}")
 
     if available:
-        print(f"CUDA version: {torch.version.cuda}")
+        print(f"CUDA version: {torch_version.cuda}")
 
         # Storing ID of current CUDA device
         cuda_id = torch.cuda.current_device()

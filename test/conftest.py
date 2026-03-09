@@ -7,6 +7,11 @@ import spacy
 import suthing
 from suthing import FileHandle
 
+from triel.coref_adapter import (
+    CorefBackend,
+    configure_nlp_coref_backend,
+    get_coref_resolver,
+)
 from triel.linking.onto import APISpec, EntityLinker, LocalEntity
 
 
@@ -153,8 +158,13 @@ def lconf(el_conf):
 @pytest.fixture(scope="module")
 def nlp_fixture():
     nlp = spacy.load("en_core_web_trf")
-    nlp.add_pipe("coreferee")
+    nlp = configure_nlp_coref_backend(nlp, CorefBackend.COREFEREE)
     return nlp
+
+
+@pytest.fixture(scope="module")
+def coref_resolver_fixture():
+    return get_coref_resolver(CorefBackend.COREFEREE)
 
 
 @pytest.fixture(scope="module")
