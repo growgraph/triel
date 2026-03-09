@@ -14,7 +14,7 @@ repos:
     hooks:
     -   id: ty
         name: ty check
-        entry: bash -c 'ty check triel'
+        entry: bash -c 'ty check triel test'
         language: system
         pass_filenames: false
         always_run: true
