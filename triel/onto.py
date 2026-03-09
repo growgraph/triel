@@ -209,38 +209,36 @@ class Token(AbsToken):
     - successors: set of successor token indices.
     """
 
-    s: TokenIndexT = (0, "")
-    predecessors: set[TokenIndexT] = dataclasses.field(default_factory=set)
-    successors: set[TokenIndexT] = dataclasses.field(default_factory=set)
+    s: TokenIndexT | int | str = (0, "")
+    predecessors: set[TokenIndexT | int | str] = dataclasses.field(default_factory=set)
+    successors: set[TokenIndexT | int | str] = dataclasses.field(default_factory=set)
+
+    @classmethod
+    def _coerce_index(cls, idx: TokenIndexT | int | str) -> TokenIndexT:
+        if isinstance(idx, tuple):
+            return cls.ituple2stuple(idx)
+        if isinstance(idx, int):
+            return 0, cls.i2s(idx)
+        if isinstance(idx, str):
+            return 0, cls.i2s(idx)
+        raise TypeError(f"Unexpected token index type: {type(idx)}")
 
     def __post_init__(self):
         """
         Post-initialization to ensure proper formatting of token indices
         and relationships.
         """
-        if isinstance(self.s, int):
-            self.s = self.i2s(self.s)
-            self.predecessors = (
-                set(self.i2s(i) for i in self.predecessors)
-                if self.predecessors
-                else set()
-            )
-            self.successors = (
-                set(self.i2s(i) for i in self.successors) if self.successors else set()
-            )
-        elif isinstance(self.s, tuple):
-            if not self.s[1]:
-                self.s = self.ituple2stuple(self.s)
-            self.predecessors = (
-                set(self.ituple2stuple(i) for i in self.predecessors)
-                if self.predecessors
-                else set()
-            )
-            self.successors = (
-                set(self.ituple2stuple(i) for i in self.successors)
-                if self.successors
-                else set()
-            )
+        self.s = self._coerce_index(self.s)
+        self.predecessors = (
+            set(self._coerce_index(i) for i in self.predecessors)
+            if self.predecessors
+            else set()
+        )
+        self.successors = (
+            set(self._coerce_index(i) for i in self.successors)
+            if self.successors
+            else set()
+        )
 
     def __repr__(self):
         """String representation of the token's attributes."""
@@ -430,6 +428,8 @@ class Candidate(AbsCandidate):
 
     @property
     def root(self):
+        if self._root is None:
+            raise MissingTokenInACandidate("candidate has no root")
         return self._tokens[self._root]
 
     @property
@@ -512,10 +512,12 @@ class Candidate(AbsCandidate):
         return txt
 
     def append(self, token: Token):
+        s = Token._coerce_index(token.s)
+        token.s = s
         if self.empty:
-            self._root = token.s
-        self._tokens[token.s] = token
-        self._index_vec.append(token.s)
+            self._root = s
+        self._tokens[s] = token
+        self._index_vec.append(s)
 
     def drop_tokens(self, drop_indices):
         """
@@ -566,11 +568,15 @@ class Candidate(AbsCandidate):
 
     def sort_index(self):
         if self._root is not None:
-            proposed_sorter = {self.sroot: (0, len(self))}
-            self._sort_wrt_tree(self.sroot, sorter=proposed_sorter)
+            root = self._root
+            proposed_sorter: dict[TokenIndexT | None, tuple[float, float]] = {
+                root: (0.0, float(len(self)))
+            }
+            self._sort_wrt_tree(root, sorter=proposed_sorter)
             self._index_vec = [
                 x
                 for x, _ in sorted(proposed_sorter.items(), key=lambda item: item[1][0])
+                if x is not None
             ]
         return self
 
@@ -937,7 +943,7 @@ def apply_map(obj, mapper):
 
 
 def partition_conjunctive_dfs(
-    c: CandidateType,
+    c: Candidate,
     deq: deque[tuple[TokenIndexT, TokenIndexT]],
     current_cand,
     accumulist: list[tuple[TokenIndexT, Candidate]],
@@ -981,7 +987,7 @@ def partition_conjunctive_dfs(
 
 
 def partition_conjunctive_wrapper(
-    candidate: CandidateType,
+    candidate: Candidate,
 ) -> list[Candidate]:
     """
 
@@ -1016,12 +1022,12 @@ def partition_conjunctive_wrapper(
 
     acc.append(root_candidate)
 
-    for _, candidate in clauses:
+    for _, clause_candidate in clauses:
         sparent, _ = clauses[0]
         c_prime = deepcopy(root_candidate)
         # it is a choice to remove subtree rather than a token
         # c_prime.replace_token_with_acandidate(i=sparent, ac=candidate)
-        c_prime.replace_subtree_with_acandidate(i=sparent, ac=candidate)
+        c_prime.replace_subtree_with_acandidate(i=sparent, ac=clause_candidate)
         acc.append(
             c_prime.drop_cc()
             .drop_punct()

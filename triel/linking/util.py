@@ -30,6 +30,8 @@ logger = logging.getLogger(__name__)
 def phrase_to_spacy_basic_entities(phrase=None, rdoc=None, nlp=None):
     # TODO add to EntityLinkerManager
     if rdoc is None:
+        if nlp is None:
+            raise ValueError("nlp must be provided when rdoc is None")
         rdoc = nlp(phrase)
     ents0 = (item for item in rdoc if item.ent_type != 0)
     ents_split = []

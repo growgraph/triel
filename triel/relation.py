@@ -5,6 +5,7 @@ import logging
 from collections import deque
 from copy import deepcopy
 from itertools import product
+from typing import Any
 
 import networkx as nx
 import pandas as pd
@@ -42,7 +43,7 @@ def find_candidates_bfs(
     how: ACandidateKind,
     terminals=None,
     robust_mode=False,
-    rules=None,
+    rules: dict[ACandidateKind, dict[str, Any]] | None = None,
 ):
     """
     tree search to find candidates
@@ -61,18 +62,20 @@ def find_candidates_bfs(
     # auxiliary verb uses of be, have, do, and get: AUX
     # the infinitive to is PART
 
-    foo_map_class = {
-        ACandidateKind.RELATION: Relation,
-        ACandidateKind.SOURCE_TARGET: SourceOrTarget,
-    }
-
+    if rules is None:
+        raise ValueError("rules must be provided")
     rules_current = rules[how]
 
     if not deq:
         return
 
     current_vertex = deq.popleft()
-    current_candidate = foo_map_class[how]()  # type: ignore
+    if how == ACandidateKind.RELATION:
+        current_candidate: Relation | SourceOrTarget = Relation()
+    elif how == ACandidateKind.SOURCE_TARGET:
+        current_candidate = SourceOrTarget()
+    else:
+        raise ValueError(f"Unsupported candidate kind: {how}")
 
     if current_vertex not in candidate_pile.tokens:
         find_subtree_dfs(
@@ -82,10 +85,10 @@ def find_candidates_bfs(
             current_candidate,
             terminals=terminals,
             rules=rules_current,
-        )  # type: ignore
+        )
 
-    if not current_candidate.empty:  # type: ignore
-        clean_candidate = current_candidate.clean_dangling_edges(robust_mode)  # type: ignore
+    if not current_candidate.empty:
+        clean_candidate = current_candidate.clean_dangling_edges(robust_mode)
         try:
             clean_candidate = clean_candidate.sort_index()
             candidate_pile.append(clean_candidate)
@@ -114,7 +117,7 @@ def find_subtree_dfs(
     original_graph: nx.DiGraph,
     deq: deque[tuple[int, int]],
     current_candidate: CandidateType,
-    rules=None,
+    rules: dict[str, Any] | None = None,
     terminals=None,
 ):
     """
@@ -130,6 +133,8 @@ def find_subtree_dfs(
 
     if not deq:
         return
+    if rules is None:
+        raise ValueError("rules must be provided")
     current_vertex, level = deq.pop()
     if current_candidate.empty and level > 0:
         return
@@ -336,18 +341,18 @@ def derive_sources_per_relation(
         if (r, s) in distance_levels
     ]
 
-    udm = pd.DataFrame(udist_to_sources, columns=["r", "s", "ud"]).sort_values(
-        ["r", "s"]
-    )
-    ldm = pd.DataFrame(ldist_to_sources, columns=["r", "s", "ld"]).sort_values(
-        ["r", "s"]
-    )
+    udm = pd.DataFrame(
+        udist_to_sources, columns=pd.Index(["r", "s", "ud"])
+    ).sort_values(["r", "s"])
+    ldm = pd.DataFrame(
+        ldist_to_sources, columns=pd.Index(["r", "s", "ld"])
+    ).sort_values(["r", "s"])
     decision = pd.merge(udm, ldm, on=["r", "s"], how="outer")
 
     # for each source add penalty if its dep_ is "attr" or "dobj"
     targetlike_penalty = pd.DataFrame(
         [(s.s, int(s.dep_ in ["attr", "dobj"])) for s in pile_sources_roots],
-        columns=["s", "syn_penalty"],
+        columns=pd.Index(["s", "syn_penalty"]),
     )
     decision = decision.merge(targetlike_penalty, how="left", on="s")
     decision = decision[decision["ud"] != 0]
@@ -370,7 +375,7 @@ def derive_sources_per_relation(
     else:
         sources_per_relation = (
             decision.groupby("r", group_keys=True)[["s"]]
-            .apply(lambda x: set(x["s"]))  # type: ignore
+            .apply(lambda x: set(x["s"].tolist()))
             .to_dict()
         )
     return sources_per_relation
@@ -709,7 +714,7 @@ def add_hash(triples_expanded):
             },
         ]
 
-        item = {"triple": subitem}
+        item: dict[str, object] = {"triple": subitem}
 
         item["triple_meta"] = {
             "hash": hashlib.sha256(
