@@ -85,6 +85,65 @@ def el_conf(linker_host):
     return config
 
 
+@pytest.fixture(autouse=True)
+def mock_el_services(request, monkeypatch):
+    """Use deterministic local EL outputs for EL-dependent tests."""
+    target_tests = {
+        "test/test_el.py::test_link_phrases",
+        "test/test_top.py::test_complete",
+    }
+    if request.node.nodeid not in target_tests:
+        return
+
+    from triel.linking.onto import EntityLinkerManager
+
+    link_phrase_text = "Diabetic ulcers are related to burns."
+    mock_phrase_response = {
+        "annotations": [
+            {
+                "id": ["mesh:D017719"],
+                "obj": "disease",
+                "mention": "Diabetic ulcers",
+                "span": {"begin": 0, "end": 15},
+                "prob": 0.99,
+            },
+            {
+                "id": ["mesh:D002056"],
+                "obj": "disease",
+                "mention": "burns",
+                "span": {"begin": 31, "end": 36},
+                "prob": 0.98,
+            },
+        ]
+    }
+
+    def _query_mock(self, text, link_mode):
+        if link_mode == EntityLinker.BERN_V2 and text == link_phrase_text:
+            return mock_phrase_response
+        if link_mode == EntityLinker.BERN_V2:
+            return {"annotations": [], "text": text}
+        if link_mode == EntityLinker.FISHING:
+            return {"entities": [], "text": text}
+        return {"text": text}
+
+    def _iterate_over_linkers_mock(phrases, entity_linker_manager, sep=" ", **kwargs):
+        _ = (entity_linker_manager, sep, kwargs)
+        max_span = len(sep.join(phrases))
+        entities = FileHandle.load("test.data", "entities.local.sample.json")
+        return [
+            LocalEntity.from_dict(item)
+            for item in entities
+            if item["a"] < item["b"] < max_span
+            and item["linker_type"] == EntityLinker.BERN_V2
+        ]
+
+    monkeypatch.setattr(EntityLinkerManager, "query", _query_mock)
+    monkeypatch.setattr(
+        "triel.top.iterate_over_linkers",
+        _iterate_over_linkers_mock,
+    )
+
+
 @pytest.fixture
 def lconf(el_conf):
     lconf = APISpec.from_dict(el_conf["linkers"][0])
